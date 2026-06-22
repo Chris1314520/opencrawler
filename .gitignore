@@ -37,3 +37,7 @@ Thumbs.db
 # 临时文件
 *.tmp
 *.bak
+
+CLAUDE_CODE_MEMORY.md
+CLAUDE_CODE_SKILLS.md
+AGENT_RESOURCES_INDEX.md
