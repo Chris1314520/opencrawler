@@ -1,0 +1,182 @@
+# ============================================================
+# 统一事件监视器 配置文件
+# ============================================================
+
+# 代理设置（Clash 默认 7890，留空则不使用代理）
+proxy: ""
+
+# 数据保留天数（超过自动清理）
+retention_days: 30
+
+# 各源抓取间隔（分钟）
+intervals:
+  github_trending: 60
+  hackernews: 30
+  rss: 30
+  curl_cffi_rss: 30
+  nvd_cve: 120
+  shortvideo_trending: 60
+  finance_data: 1440  # 每日抓取一次
+
+# ---- 监控源配置 ----
+
+# GitHub Trending 榜单（直接爬取）
+github_trending:
+  enabled: true
+  languages: [""]
+  since: ["daily", "weekly"]
+  spoken_language: ""
+
+# Hacker News（官方 API）
+hackernews:
+  enabled: true
+  max_items: 30
+
+# 标准 RSS 源（requests 即可访问）
+rss_feeds:
+  # -- 国内科技 --
+  - name: "少数派"
+    url: "https://sspai.com/feed"
+    tags: [科技, 中文]
+  - name: "36氪"
+    url: "https://36kr.com/feed"
+    tags: [科技, 创投, 中文]
+  - name: "InfoQ 中国"
+    url: "https://www.infoq.cn/feed"
+    tags: [技术, 中文]
+  - name: "CSDN AI"
+    url: "https://blog.csdn.net/nav/ai/rss"
+    tags: [AI, 编程, 中文]
+  - name: "阮一峰周刊"
+    url: "https://feeds.feedburner.com/ruanyifeng"
+    tags: [技术, 中文, 博客]
+  # -- 英文 --
+  - name: "Dev.to"
+    url: "https://dev.to/feed"
+    tags: [编程, 英文]
+  - name: "Hacker News RSS"
+    url: "https://hnrss.org/frontpage"
+    tags: [HN, 英文]
+  # -- AI / 论文 --
+  - name: "ArXiv AI"
+    url: "https://export.arxiv.org/rss/cs.AI"
+    tags: [AI, 论文]
+  - name: "机器之心"
+    url: "https://jiqizhixin.com/rss"
+    tags: [AI, 技术, 中文]
+  # -- 开源 & GitHub --
+  - name: "GitHub Blog"
+    url: "https://github.blog/feed/"
+    tags: [GitHub, 开源, 英文]
+  - name: "OS China"
+    url: "https://www.oschina.net/blog/rss"
+    tags: [开源, 中文, 编程]
+  # -- 财经 --
+  - name: "东方财富要闻"
+    url: "https://rsshub-instance/eastmoney/news"
+    tags: [金融, 中文]
+  - name: "华尔街见闻"
+    url: "https://rsshub-instance/wallstreetcn/news"
+    tags: [金融, 财经, 中文]
+  # -- 安全 --
+  - name: "FreeBuf"
+    url: "https://www.freebuf.com/feed"
+    tags: [安全, 技术, 中文]
+  - name: "安全客"
+    url: "https://www.anquanke.com/feed"
+    tags: [安全, CVE, 中文]
+
+# 需要 curl_cffi 伪装的 RSS 源（TLS 指纹检测的站点）
+curl_cffi_feeds:
+  - name: "量子位"
+    url: "https://www.qbitai.com/feed"
+    tags: [AI, 技术, 中文]
+  - name: "知乎每日精选"
+    url: "https://www.zhihu.com/rss"
+    tags: [中文, 综合]
+  - name: "IT之家"
+    url: "https://www.ithome.com/rss"
+    tags: [科技, IT, 中文]
+  # -- AI 前沿 --
+  - name: "OpenAI Blog"
+    url: "https://openai.com/blog/rss.xml"
+    tags: [AI, OpenAI, 英文]
+  - name: "Anthropic Blog"
+    url: "https://www.anthropic.com/blog/rss.xml"
+    tags: [AI, Claude, 英文]
+  - name: "DeepSeek Blog"
+    url: "https://api-docs.deepseek.com/news/rss"
+    tags: [AI, DeepSeek, 中文]
+  # -- 科技公司 --
+  - name: "小米技术博客"
+    url: "https://rsshub-instance/xiaomi/tech"
+    tags: [小米, 技术, 中文]
+  # -- 视觉特效 / 剪辑 --
+  - name: "Adobe Blog"
+    url: "https://blog.adobe.com/en/publish/rss.xml"
+    tags: [Adobe, 视觉, 设计, 英文]
+  - name: "Video Copilot"
+    url: "https://www.videocopilot.net/blog/feed"
+    tags: [AE, 特效, 插件, 英文]
+  - name: "Blender News"
+    url: "https://www.blender.org/feed"
+    tags: [3D, 开源, 视觉, 英文]
+  - name: "新片场"
+    url: "https://www.xinpianchang.com/rss"
+    tags: [视频, 创作, 中文]
+  - name: "B站 后期搬运工"
+    url: "https://rsshub-instance/bilibili/user/video/429714179"
+    tags: [B站, 剪辑, 中文]
+
+  # 以下源需自部署 RSSHub 后启用: docker run -d --name rsshub -p 1200:1200 diygod/rsshub
+  # - name: "BiliBili 热门"
+  #   url: "http://127.0.0.1:1200/bilibili/hot"
+  #   tags: [B站, 热门, 中文]
+  # - name: "微博热搜"
+  #   url: "http://127.0.0.1:1200/weibo/search/hot"
+  #   tags: [微博, 热搜, 中文]
+  # - name: "抖音热点"
+  #   url: "http://127.0.0.1:1200/douyin/hot"
+  #   tags: [抖音, 中文]
+  # - name: "微信公众号聚合"
+  #   url: "http://127.0.0.1:1200/wechat/feed"
+  #   tags: [微信, 公众号, 中文]
+
+# NVD CVE 漏洞（官方 API）
+nvd_cve:
+  enabled: true
+  days_back: 7
+  max_results: 20
+
+# 短视频热门（B站/抖音/快手/小红书/视频号）
+shortvideo_trending:
+  enabled: true
+  max_per_platform: 20  # 每个平台最大抓取条数
+
+# 金融数据（A股热门股票/板块/指数，含红率/股息率）
+finance_data:
+  enabled: true
+  max_stocks: 50  # 最大抓取股票数量
+
+# ============================================================
+# 支付与用户配置
+# ============================================================
+
+secret_key: ""
+admin_key: ""
+
+payment:
+  manual_qr:
+    alipay_image: "/static/img/alipay_qr.png"
+    wechat_image: "/static/img/wechat_qr.png"
+  codepay:
+    enabled: false
+    api_url: ""
+    app_id: ""
+    app_secret: ""
+  epay:
+    enabled: false
+    api_url: ""
+    pid: ""
+    key: ""
+  admin_contact: "your-email@example.com"

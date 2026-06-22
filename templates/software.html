@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+{% block title %}软件站 — OpenCrawler{% endblock %}
+{% set active_page = 'software' %}
+
+{% block head %}
+<style>
+.sw-layout{max-width:1200px;margin:0 auto;padding:20px 24px 48px}
+
+/* Hero */
+.sw-hero{text-align:center;margin-bottom:32px;padding:20px 0}
+.sw-hero h1{font-size:30px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px}
+.sw-hero p{color:var(--muted);font-size:15px;max-width:600px;margin:0 auto}
+
+/* ===== PLATFORM BAR: social media & content platforms ===== */
+.platform-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:36px}
+@media(max-width:768px){.platform-strip{grid-template-columns:repeat(4,1fr)}}
+.platform-pill{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:1px solid var(--border);background:var(--card);text-decoration:none;color:var(--text);transition:all .2s;cursor:pointer}
+.platform-pill:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.platform-pill .pl-icon{font-size:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.platform-pill .pl-name{font-size:12px;font-weight:600}
+.platform-pill .pl-count{font-size:10px;color:var(--muted)}
+
+/* ===== MAIN GRID: articles + sidebar ===== */
+.sw-main{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
+@media(max-width:900px){.sw-main{grid-template-columns:1fr}}
+
+/* ===== TECH ARTICLES ===== */
+.articles-section{margin-bottom:20px}
+.articles-section h2{font-size:18px;font-weight:800;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--text);letter-spacing:-0.3px}
+
+/* Featured article */
+.featured-article{position:relative;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:16px;transition:all .2s;cursor:pointer;text-decoration:none;color:var(--text);display:block}
+.featured-article:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.featured-article .fa-body{padding:20px 24px}
+.featured-article .fa-source{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.featured-article .fa-source .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.featured-article .fa-title{font-size:20px;font-weight:700;line-height:1.35;margin-bottom:8px}
+.featured-article .fa-excerpt{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:12px}
+.featured-article .fa-meta{font-size:11px;color:var(--muted);display:flex;gap:16px}
+.featured-article .fa-tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:500;background:rgba(26,115,232,.08);color:var(--accent)}
+
+/* Article row list */
+.article-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--border)}
+.article-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);text-decoration:none;color:var(--text);transition:all .15s}
+.article-row:hover{background:#f2f5f8}
+.article-row .ar-rank{font-size:20px;font-weight:800;width:28px;text-align:center;color:#ccc;flex-shrink:0}
+.article-row:nth-child(-n+3) .ar-rank{color:var(--accent)}
+.article-row .ar-body{flex:1;min-width:0}
+.article-row .ar-title{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:3px}
+.article-row .ar-source{font-size:11px;color:var(--muted)}
+.article-row .ar-platform{font-size:10px;background:var(--bg);padding:2px 10px;border-radius:10px;color:var(--muted);flex-shrink:0;white-space:nowrap}
+.article-row .ar-arrow{color:#ccc;font-size:14px;flex-shrink:0}
+
+/* ===== SIDEBAR ===== */
+.sw-sidebar{display:flex;flex-direction:column;gap:20px}
+.side-box{border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--card)}
+.side-box h4{font-size:14px;font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bg)}
+
+/* Hot topics */
+.topic-list{display:flex;flex-direction:column;gap:2px}
+.topic-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bg);font-size:13px;cursor:pointer;transition:color .12s}
+.topic-item:last-child{border-bottom:none}
+.topic-item:hover{color:var(--accent)}
+.topic-item .topic-hot{font-size:10px;color:#d93025;font-weight:600}
+.topic-item .topic-rank{font-size:11px;color:var(--muted);min-width:20px}
+
+/* Author picks */
+.author-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)}
+.author-item:last-child{border-bottom:none}
+.author-item .au-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.author-item .au-info{flex:1;min-width:0}
+.author-item .au-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.author-item .au-desc{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== DEV TOOLS ===== */
+.tools-section{margin-top:32px}
+.tools-section h2{font-size:18px;font-weight:800;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--text);letter-spacing:-0.3px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.tool-mini{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-decoration:none;color:var(--text);transition:all .15s;display:flex;align-items:center;gap:10px}
+.tool-mini:hover{border-color:var(--text);transform:translateY(-1px)}
+.tool-mini .tm-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.tool-mini .tm-info{min-width:0}
+.tool-mini .tm-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.tool-mini .tm-tag{font-size:10px;color:var(--muted)}
+
+/* Disclaimer */
+.sw-disclaimer{background:rgba(248,81,73,.04);border:1px solid rgba(248,81,73,.15);border-radius:10px;padding:14px 18px;margin-top:32px;font-size:12px;color:var(--muted);line-height:1.6}
+.sw-disclaimer strong{color:#d93025}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sw-layout">
+
+<!-- Hero -->
+<section class="sw-hero">
+  <h1>技术资源站</h1>
+  <p>精选开发者工具 · 热门技术文章 · 优质作者推荐 — 抹平信息茧房，只为技术人</p>
+</section>
+
+<!-- ===== PLATFORM BAR ===== -->
+<div class="platform-strip">
+  <a href="https://github.com/trending" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#f0f0f0;">🐙</div>
+    <div class="pl-name">GitHub</div>
+    <div class="pl-count">Trending</div>
+  </a>
+  <a href="https://www.zhihu.com/topic/19550901" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e8f0fe;">💬</div>
+    <div class="pl-name">知乎</div>
+    <div class="pl-count">技术热榜</div>
+  </a>
+  <a href="https://www.bilibili.com/v/tech" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#fce8e6;">📺</div>
+    <div class="pl-name">B站</div>
+    <div class="pl-count">科技区</div>
+  </a>
+  <a href="https://www.douyin.com/search/编程技术" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e6f4ea;">🎵</div>
+    <div class="pl-name">抖音</div>
+    <div class="pl-count">技术博主</div>
+  </a>
+  <a href="https://mp.weixin.qq.com" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e8f0fe;">🟢</div>
+    <div class="pl-name">微信</div>
+    <div class="pl-count">公众号</div>
+  </a>
+  <a href="https://juejin.cn" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e8f0fe;">⛏️</div>
+    <div class="pl-name">掘金</div>
+    <div class="pl-count">前端社区</div>
+  </a>
+  <a href="https://blog.csdn.net" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e8f0fe;">📝</div>
+    <div class="pl-name">CSDN</div>
+    <div class="pl-count">技术博客</div>
+  </a>
+  <a href="https://www.producthunt.com" target="_blank" rel="noopener" class="platform-pill">
+    <div class="pl-icon" style="background:#e8f0fe;">🚀</div>
+    <div class="pl-name">ProductHunt</div>
+    <div class="pl-count">新品发现</div>
+  </a>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="sw-main">
+
+<!-- ARTICLES -->
+<div class="articles-section">
+
+  <!-- Featured -->
+  <h2>今日精选</h2>
+  <a href="https://blog.google/technology/developers/gemini-api-2026/" target="_blank" rel="noopener" class="featured-article">
+    <div class="fa-body">
+      <div class="fa-source"><span class="dot"></span>Google AI Blog · 2小时前</div>
+      <div class="fa-title">Gemini 2.5 发布：长上下文推理突破1M tokens，API价格再次降低40%</div>
+      <div class="fa-excerpt">Google发布Gemini 2.5系列模型，在代码生成、多模态推理和长文本理解方面全面升级。开发者现在可以以更低成本构建更复杂的AI应用，支持原生多语言Agent框架。</div>
+      <div class="fa-meta">
+        <span>1.2k 阅读</span>
+        <span>38 评论</span>
+        <span class="fa-tag">AI/LLM</span>
+      </div>
+    </div>
+  </a>
+
+  <!-- Article row list -->
+  <h2 style="margin-top:24px;">技术文章热榜</h2>
+  <div class="article-list" id="articleList"></div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sw-sidebar">
+
+  <!-- Hot Topics -->
+  <div class="side-box">
+    <h4>技术热词</h4>
+    <div class="topic-list">
+      <div class="topic-item"><span>Claude Code 实战</span><span class="topic-hot">HOT</span></div>
+      <div class="topic-item"><span>DeepSeek-V4 部署</span><span class="topic-hot">HOT</span></div>
+      <div class="topic-item"><span>RAG 检索增强生成</span><span class="topic-rank">3</span></div>
+      <div class="topic-item"><span>MCP 协议接入指南</span><span class="topic-rank">4</span></div>
+      <div class="topic-item"><span>WebAssembly 前端加速</span><span class="topic-rank">5</span></div>
+      <div class="topic-item"><span>AI Agent 多智能体</span><span class="topic-rank">6</span></div>
+      <div class="topic-item"><span>Rust 重写工具链</span><span class="topic-rank">7</span></div>
+      <div class="topic-item"><span>开源协议选择指南</span><span class="topic-rank">8</span></div>
+    </div>
+  </div>
+
+  <!-- Author Picks -->
+  <div class="side-box">
+    <h4>推荐关注</h4>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#e8f0fe;color:#1a73e8;">R</div>
+      <div class="au-info"><div class="au-name">阮一峰</div><div class="au-desc">科技周刊作者 · 前端布道</div></div>
+    </div>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#fce8e6;color:#d93025;">A</div>
+      <div class="au-info"><div class="au-name">Andrej Karpathy</div><div class="au-desc">前Tesla AI总监 · LLM科普</div></div>
+    </div>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#e6f4ea;color:#0d904f;">Y</div>
+      <div class="au-info"><div class="au-name">云风</div><div class="au-desc">游戏引擎开发 · 技术随笔</div></div>
+    </div>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#fff3e0;color:#e37400;">L</div>
+      <div class="au-info"><div class="au-name">Lilian Weng</div><div class="au-desc">OpenAI安全 · LLM原理</div></div>
+    </div>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#e8f0fe;color:#1a73e8;">P</div>
+      <div class="au-info"><div class="au-name">phodal</div><div class="au-desc">全栈工程师 · 架构设计</div></div>
+    </div>
+    <div class="author-item">
+      <div class="au-avatar" style="background:#f1f3f4;color:#333;">K</div>
+      <div class="au-info"><div class="au-name">卡颂</div><div class="au-desc">React生态 · 前端架构</div></div>
+    </div>
+  </div>
+
+  <!-- Platform Tech Feeds -->
+  <div class="side-box">
+    <h4>平台技术频道直通车</h4>
+    <div class="topic-list">
+      <a href="https://www.zhihu.com/column/c_181982208" target="_blank" rel="noopener" class="topic-item" style="text-decoration:none;color:inherit;">
+        <span>知乎 · 程序员周刊</span><span style="font-size:12px;color:var(--accent);">→</span>
+      </a>
+      <a href="https://space.bilibili.com/123456" target="_blank" rel="noopener" class="topic-item" style="text-decoration:none;color:inherit;">
+        <span>B站 · 技术宅聚集地</span><span style="font-size:12px;color:var(--accent);">→</span>
+      </a>
+      <a href="https://juejin.cn/frontend" target="_blank" rel="noopener" class="topic-item" style="text-decoration:none;color:inherit;">
+        <span>掘金 · 前端 monthly</span><span style="font-size:12px;color:var(--accent);">→</span>
+      </a>
+      <a href="https://www.infoq.cn" target="_blank" rel="noopener" class="topic-item" style="text-decoration:none;color:inherit;">
+        <span>InfoQ · 架构师月刊</span><span style="font-size:12px;color:var(--accent);">→</span>
+      </a>
+      <a href="https://sspai.com" target="_blank" rel="noopener" class="topic-item" style="text-decoration:none;color:inherit;">
+        <span>少数派 · 效率工具</span><span style="font-size:12px;color:var(--accent);">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== DEV TOOLS ===== -->
+<div class="tools-section">
+  <h2>开发者工具精选</h2>
+  <div class="tools-grid">
+    <a href="https://code.visualstudio.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">💻</span>
+      <div class="tm-info"><div class="tm-name">VS Code</div><div class="tm-tag">开源编辑器</div></div>
+    </a>
+    <a href="https://cursor.sh" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🤖</span>
+      <div class="tm-info"><div class="tm-name">Cursor</div><div class="tm-tag">AI编辑器</div></div>
+    </a>
+    <a href="https://ollama.ai" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🦙</span>
+      <div class="tm-info"><div class="tm-name">Ollama</div><div class="tm-tag">本地大模型</div></div>
+    </a>
+    <a href="https://git-scm.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🔀</span>
+      <div class="tm-info"><div class="tm-name">Git</div><div class="tm-tag">版本控制</div></div>
+    </a>
+    <a href="https://www.docker.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🐳</span>
+      <div class="tm-info"><div class="tm-name">Docker</div><div class="tm-tag">容器平台</div></div>
+    </a>
+    <a href="https://www.jetbrains.com/idea" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">☕</span>
+      <div class="tm-info"><div class="tm-name">IntelliJ IDEA</div><div class="tm-tag">Java IDE</div></div>
+    </a>
+    <a href="https://obsidian.md" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">📓</span>
+      <div class="tm-info"><div class="tm-name">Obsidian</div><div class="tm-tag">知识管理</div></div>
+    </a>
+    <a href="https://github.com/clash-verge-rev/clash-verge-rev" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🔌</span>
+      <div class="tm-info"><div class="tm-name">Clash Verge</div><div class="tm-tag">代理客户端</div></div>
+    </a>
+    <a href="https://www.postman.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">📮</span>
+      <div class="tm-info"><div class="tm-name">Postman</div><div class="tm-tag">API调试</div></div>
+    </a>
+    <a href="https://github.com/DIYgod/RSSHub" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">📡</span>
+      <div class="tm-info"><div class="tm-name">RSSHub</div><div class="tm-tag">万物皆RSS</div></div>
+    </a>
+    <a href="https://keepassxc.org" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🔐</span>
+      <div class="tm-info"><div class="tm-name">KeePassXC</div><div class="tm-tag">密码管理</div></div>
+    </a>
+    <a href="https://github.com/microsoft/PowerToys" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">⚡</span>
+      <div class="tm-info"><div class="tm-name">PowerToys</div><div class="tm-tag">效率工具</div></div>
+    </a>
+    <a href="https://www.voidtools.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🔍</span>
+      <div class="tm-info"><div class="tm-name">Everything</div><div class="tm-tag">文件秒搜</div></div>
+    </a>
+    <a href="https://getsharex.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">📸</span>
+      <div class="tm-info"><div class="tm-name">ShareX</div><div class="tm-tag">截图OCR</div></div>
+    </a>
+    <a href="https://www.ventoy.net" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">💾</span>
+      <div class="tm-info"><div class="tm-name">Ventoy</div><div class="tm-tag">启动U盘</div></div>
+    </a>
+    <a href="https://cherry-ai.com" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🍒</span>
+      <div class="tm-info"><div class="tm-name">Cherry Studio</div><div class="tm-tag">AI工作站</div></div>
+    </a>
+    <a href="https://lmstudio.ai" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🧠</span>
+      <div class="tm-info"><div class="tm-name">LM Studio</div><div class="tm-tag">本地模型</div></div>
+    </a>
+    <a href="https://github.com/open-webui/open-webui" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🌐</span>
+      <div class="tm-info"><div class="tm-name">Open WebUI</div><div class="tm-tag">AI聊天界面</div></div>
+    </a>
+    <a href="https://www.torproject.org" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🛡️</span>
+      <div class="tm-info"><div class="tm-name">Tor Browser</div><div class="tm-tag">匿名浏览</div></div>
+    </a>
+    <a href="https://www.veracrypt.fr" target="_blank" rel="noopener" class="tool-mini">
+      <span class="tm-icon">🔒</span>
+      <div class="tm-info"><div class="tm-name">VeraCrypt</div><div class="tm-tag">磁盘加密</div></div>
+    </a>
+  </div>
+</div>
+
+<div class="sw-disclaimer">
+  <strong>声明：</strong>本站仅做信息聚合与推荐，不存储任何软件文件。所有下载链接均指向官方渠道或可信源。文章内容版权归原作者所有。请自行判断安全性和适用性，本站不对第三方内容负责。部分工具可能需要网络代理访问。
+</div>
+
+</div><!-- /sw-layout -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tech article hot list data
+var ARTICLES = [
+  {title:'Claude Code 实战：用AI Agent一天完成一个月的开发工作',source:'掘金 · 前端',plat:'掘金',url:'https://juejin.cn',hot:'12k'},
+  {title:'DeepSeek-V4 推理优化：从FlashAttention到量化部署的完整路线图',source:'知乎 · 机器之心',plat:'知乎',url:'https://zhuanlan.zhihu.com',hot:'9.8k'},
+  {title:'Rust 重写 JavaScript 工具链：Oxc 比 SWC 快 3 倍的秘密',source:'GitHub Blog',plat:'GitHub',url:'https://github.blog',hot:'7.5k'},
+  {title:'MCP 协议深度解析：让 LLM 与外部世界交互的标准化方案',source:'Anthropic Blog',plat:'Anthropic',url:'https://www.anthropic.com',hot:'6.2k'},
+  {title:'WebAssembly 运行时对比 2026：Wasmtime vs Wasmer vs WAMR',source:'InfoQ 中国',plat:'InfoQ',url:'https://www.infoq.cn',hot:'5.4k'},
+  {title:'Docker 的替代品：Podman + Quadlet 部署指南（无需守护进程）',source:'CSDN · 运维',plat:'CSDN',url:'https://blog.csdn.net',hot:'4.8k'},
+  {title:'Kimi K2 vs DeepSeek-V4：国产开源大模型技术架构全面对比',source:'机器之心',plat:'机器之心',url:'https://jiqizhixin.com',hot:'4.1k'},
+  {title:'Git 高级技巧：rebase、bisect 和 worktree 的最佳实践',source:'阮一峰 · 周刊',plat:'博客',url:'https://www.ruanyifeng.com',hot:'3.6k'},
+  {title:'AI Coding 工具横评：Claude Code vs Cursor vs Copilot 谁更好用',source:'少数派',plat:'少数派',url:'https://sspai.com',hot:'3.2k'},
+  {title:'从零训练一个 GPT-2 级别的模型：数据准备、训练与评估全流程',source:'公众号 · 深度学习前沿',plat:'微信公众号',url:'https://mp.weixin.qq.com',hot:'2.9k'},
+  {title:'TypeScript 5.8 发布：新增 const 类型参数和更好的类型收窄',source:'Dev.to',plat:'Dev.to',url:'https://dev.to',hot:'2.6k'},
+  {title:'开源协议避坑指南：GPL/MIT/Apache 的区别及商用注意事项',source:'OSChina · 开源中国',plat:'OSChina',url:'https://www.oschina.net',hot:'2.1k'}
+];
+
+function renderArticles() {
+  var html = ARTICLES.map(function(a, i) {
+    return '<a href="'+a.url+'" target="_blank" rel="noopener" class="article-row">' +
+      '<span class="ar-rank">' + (i+1) + '</span>' +
+      '<div class="ar-body">' +
+        '<div class="ar-title">' + a.title + '</div>' +
+        '<div class="ar-source">' + a.source + ' · ' + a.hot + ' 阅读</div>' +
+      '</div>' +
+      '<span class="ar-platform">' + a.plat + '</span>' +
+      '<span class="ar-arrow">→</span>' +
+    '</a>';
+  }).join('');
+  document.getElementById('articleList').innerHTML = html;
+}
+
+// Init
+renderArticles();
+</script>
+{% endblock %}

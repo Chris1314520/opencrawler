@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+{% block title %}OpenCrawler — 高精度资讯聚合平台{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+<style>
+/* ── Hero — 黑金双层标题 ── */
+.landing-hero{text-align:center;padding:100px 24px 72px;max-width:880px;margin:0 auto;position:relative}
+.landing-hero .brand{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;animation:fadeInUp 0.6s var(--ease-decel) 0.1s both}
+.hero-title-wrap{position:relative;display:inline-block;cursor:default}
+.hero-title-line1{
+    font-size:64px;font-weight:900;line-height:1.1;letter-spacing:-2px;margin-bottom:4px;
+    background:linear-gradient(135deg,#1a1a1a 0%,#3a3a3a 30%,#d4af37 50%,#3a3a3a 70%,#1a1a1a 100%);
+    background-size:200% 200%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    animation:fadeInUp 0.7s var(--ease-spring) 0.2s both,gradientShift 6s var(--ease-smooth) infinite;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    position:relative;
+}
+.hero-title-line2{
+    font-size:52px;font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:20px;
+    background:linear-gradient(135deg,#d4af37 0%,#f5d76e 25%,#1a1a1a 50%,#d4af37 75%,#b8860b 100%);
+    background-size:200% 200%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    animation:fadeInUp 0.7s var(--ease-spring) 0.35s both,gradientShift 6s var(--ease-smooth) infinite reverse;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    position:relative;
+}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+/* 鼠标接近透明遮罩 */
+.hero-title-wrap::after{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle 120px at var(--mx,50%) var(--my,50%),rgba(255,255,255,.85) 0%,rgba(255,255,255,0) 100%);
+    opacity:0;transition:opacity .3s var(--ease-smooth);
+    pointer-events:none;z-index:2;border-radius:8px;
+    mix-blend-mode:screen;
+}
+.hero-title-wrap:hover::after{opacity:1}
+.landing-hero .subtitle{font-size:17px;color:var(--muted);line-height:1.7;margin-bottom:36px;max-width:600px;margin-left:auto;margin-right:auto;animation:fadeInUp 0.6s var(--ease-decel) 0.5s both}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fadeInUp 0.6s var(--ease-decel) 0.65s both}
+.hero-btns .btn{font-size:15px;padding:14px 32px;border-radius:24px;font-weight:600;transition:transform 0.2s var(--ease-spring),box-shadow 0.2s var(--ease-smooth),opacity 0.15s}
+.btn-white{background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#d4af37 !important;border:1px solid rgba(212,175,55,.3);box-shadow:0 4px 16px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.06);font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;letter-spacing:1px}
+.btn-white:hover{opacity:1;text-decoration:none;transform:translateY(-3px);box-shadow:0 8px 24px rgba(212,175,55,.2),inset 0 1px 0 rgba(255,255,255,.1);border-color:rgba(212,175,55,.5)}
+.btn-white:active{transform:scale(0.96)}
+.btn-line{background:transparent;color:var(--text);border:1.5px solid #ccc}
+.btn-line:hover{border-color:#d4af37;color:#b8860b;text-decoration:none;transform:translateY(-2px)}
+.btn-line:active{transform:scale(0.97)}
+
+/* ── Highlights strip ── */
+.highlights{max-width:1050px;margin:0 auto 64px;padding:0 24px}
+.highlights h2{font-size:22px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.highlights h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.hl-grid{grid-template-columns:repeat(2,1fr)}}
+.hl-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;transition:transform 0.3s var(--ease-spring),box-shadow 0.3s var(--ease-smooth),border-color 0.3s var(--ease-smooth);text-decoration:none;color:var(--text);display:block}
+.hl-card:hover{border-color:#1a1a1a;box-shadow:var(--shadow-md);text-decoration:none;transform:translateY(-3px)}
+.hl-card:active{transform:scale(0.98)}
+.hl-card .hl-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:inline-block;padding:2px 8px;border-radius:4px}
+.hl-tag.github{background:#f0f0f0;color:#333}
+.hl-tag.finance{background:#fff3e0;color:#b45309}
+.hl-tag.ai{background:#e8f0fe;color:#1a73e8}
+.hl-tag.opensource{background:#e6f4ea;color:#0d904f}
+.hl-card .hl-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hl-card .hl-meta{font-size:11px;color:var(--muted)}
+
+/* ── 树状分类导航 ── */
+.topic-tree{max-width:1050px;margin:0 auto 48px;padding:0 24px;display:flex;justify-content:center}
+.topic-tree-root{position:relative;display:inline-block}
+.topic-tree-btn{
+    padding:10px 28px;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;
+    border:1.5px solid rgba(212,175,55,.3);
+    background:linear-gradient(135deg,#1a1a1a,#2d2d2d);
+    color:#d4af37;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    letter-spacing:1px;
+    transition:transform .2s var(--ease-spring),box-shadow .25s var(--ease-smooth),border-color .2s var(--ease-smooth);
+    box-shadow:0 2px 12px rgba(212,175,55,.1),inset 0 1px 0 rgba(255,255,255,.06);
+    display:flex;align-items:center;gap:8px;
+    position:relative;overflow:hidden;
+}
+.topic-tree-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(110deg,transparent 30%,rgba(212,175,55,.1) 50%,transparent 70%);
+    background-size:200% 100%;animation:shine 4s var(--ease-smooth) infinite;
+}
+.topic-tree-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,175,55,.2);border-color:rgba(212,175,55,.5)}
+.topic-tree-btn:active{transform:scale(.96)}
+.topic-tree-btn .arrow{font-size:10px;transition:transform .3s var(--ease-spring)}
+.topic-tree-btn.expanded .arrow{transform:rotate(180deg)}
+.topic-tree-panel{
+    position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-8px) scale(.95);
+    transform-origin:top center;
+    min-width:280px;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    border:1px solid rgba(212,175,55,.2);
+    border-radius:14px;
+    box-shadow:0 12px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
+    padding:8px;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s var(--ease-smooth),transform .3s var(--ease-spring);
+    z-index:50;
+}
+.topic-tree-panel.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0) scale(1)}
+.topic-tree-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 16px;border-radius:8px;
+    font-size:13px;font-weight:500;color:var(--text);
+    cursor:pointer;text-decoration:none;
+    transition:background .2s var(--ease-smooth),transform .15s var(--ease-spring),color .2s var(--ease-smooth);
+    position:relative;
+}
+.topic-tree-item:hover{background:rgba(212,175,55,.08);color:#b8860b;text-decoration:none;transform:translateX(4px)}
+.topic-tree-item:active{transform:scale(.97)}
+.topic-tree-item .item-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .2s var(--ease-smooth)}
+.topic-tree-item:hover .item-dot{background:#d4af37}
+.topic-tree-divider{height:1px;background:var(--border);margin:6px 8px}
+
+/* ── Service grid ── */
+.services{max-width:1050px;margin:0 auto;padding:0 24px 64px}
+.services .section-head{text-align:center;margin-bottom:40px}
+.services .section-head h2{font-size:28px;font-weight:700;margin-bottom:6px}
+.services .section-head p{color:var(--muted);font-size:15px}
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.service-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.service-grid{grid-template-columns:1fr}}
+.service-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:28px 24px;transition:transform 0.3s var(--ease-spring),box-shadow 0.3s var(--ease-smooth),border-color 0.3s var(--ease-smooth);text-decoration:none;color:var(--text);display:flex;flex-direction:column;opacity:0;transform:translateY(30px);will-change:transform}
+.service-card:hover{border-color:#1a1a1a;box-shadow:0 12px 32px rgba(0,0,0,.08);text-decoration:none;transform:translateY(-6px)}
+.service-card:active{transform:translateY(-2px) scale(0.99)}
+.service-card .card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.service-card .card-icon{font-size:28px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:10px;flex-shrink:0}
+.card-icon.blue{background:#e8f0fe}.card-icon.green{background:#e6f4ea}
+.card-icon.purple{background:#f3e8fd}.card-icon.orange{background:#fff3e0}
+.card-icon.gold{background:#fff8e1}.card-icon.gray{background:#f1f3f4}
+.service-card h3{font-size:16px;font-weight:700;margin-bottom:2px}
+.service-card .card-desc{font-size:13px;color:var(--muted);line-height:1.6;flex:1}
+.service-card .card-tags{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap}
+.service-card .card-tags span{font-size:11px;padding:3px 10px;border-radius:12px;background:#f1f3f4;color:var(--muted)}
+.service-card .card-tags span.hot{background:#fff3e0;color:#b45309;font-weight:600}
+
+/* ── 使用指南 ── */
+.guide-section{max-width:1050px;margin:0 auto 64px;padding:0 24px}
+.guide-section .section-head{text-align:center;margin-bottom:40px}
+.guide-section .section-head h2{font-size:28px;font-weight:700;margin-bottom:6px}
+.guide-section .section-head p{color:var(--muted);font-size:15px}
+.guide-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:relative}
+@media(max-width:900px){.guide-grid{grid-template-columns:1fr}}
+.guide-card{
+    background:#fff;border:1px solid var(--border);border-radius:14px;padding:32px 24px;
+    text-align:center;position:relative;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+}
+.guide-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-md);border-color:rgba(212,175,55,.3)}
+.guide-card .step-num{
+    width:40px;height:40px;margin:0 auto 16px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#1a1a1a,#2d2d2d);
+    color:#d4af37;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    font-size:16px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(212,175,55,.3);
+    box-shadow:0 2px 12px rgba(212,175,55,.1),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.guide-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.guide-card .guide-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.guide-card .guide-icon{font-size:28px;margin-bottom:12px;display:block}
+
+/* ── 实时数据预览 ── */
+.live-preview-section{max-width:1050px;margin:0 auto 64px;padding:0 24px}
+.live-preview-section .section-head{text-align:center;margin-bottom:36px}
+.live-preview-section .section-head h2{font-size:28px;font-weight:700;margin-bottom:6px}
+.live-preview-section .section-head p{color:var(--muted);font-size:15px}
+.live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.live-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .3s var(--ease-spring)}
+.live-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.lc-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;position:relative}
+.lc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.lc-title{font-size:14px;font-weight:700}
+.lc-sub{font-size:11px;color:var(--muted)}
+.lc-dot{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#3fb950;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,185,80,.4)}50%{opacity:.6;box-shadow:0 0 0 6px rgba(63,185,80,0)}}
+.lc-body{display:flex;flex-direction:column;gap:8px}
+.lc-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);transition:all .2s var(--ease-spring);text-decoration:none;color:inherit}
+.lc-item:hover{border-color:var(--accent);transform:translateX(2px)}
+.lc-item-title{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-item-meta{font-size:10px;color:var(--muted);flex-shrink:0}
+.lc-loading{font-size:12px;color:var(--muted);text-align:center;padding:20px 0}
+
+/* ── 平台数据 ── */
+.stats-section{max-width:1050px;margin:0 auto 64px;padding:0 24px}
+.stats-bar{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);
+    border-radius:16px;padding:36px 24px;
+    border:1px solid rgba(212,175,55,.15);
+    box-shadow:0 8px 32px rgba(0,0,0,.1);
+}
+@media(max-width:700px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+.stat-box{text-align:center;color:#fff}
+.stat-box .stat-num{
+    font-size:32px;font-weight:800;
+    background:linear-gradient(135deg,#d4af37,#f5d76e);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    margin-bottom:4px;
+}
+.stat-box .stat-label{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase}
+
+/* ── Footer CTA ── */
+.footer-cta{text-align:center;padding-bottom:72px}
+.footer-cta .btn{font-size:15px;padding:14px 40px;border-radius:24px}
+
+/* ── Toast ── */
+.toast-container{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 18px;min-width:300px;max-width:400px;box-shadow:0 8px 28px rgba(0,0,0,.12);display:flex;gap:10px;align-items:flex-start;animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(50px)}}
+.toast.removing{animation:toastOut .25s ease forwards}
+.toast .toast-icon{font-size:18px;flex-shrink:0}
+.toast .toast-body{flex:1}
+.toast .toast-title{font-size:13px;font-weight:600;margin-bottom:1px}
+.toast .toast-msg{font-size:12px;color:var(--muted);line-height:1.4}
+.toast .toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0}
+.toast.success{border-color:#0d904f}
+.toast.success .toast-title{color:var(--green)}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="landing-hero" id="hero">
+  <div class="brand" id="brand">OpenCrawler</div>
+  <div class="hero-title-wrap" id="heroTitleWrap">
+    <div class="hero-title-line1">Vibe Coding</div>
+    <div class="hero-title-line2">抹平信息茧房</div>
+  </div>
+  <p class="subtitle" id="hero-sub">
+    高精度资讯聚合平台 — 实时追踪 GitHub、AI 前沿、金融动态、开源技术<br>
+    API 数据接口 · 开源项目 · Agent 部署 · 脚本市场
+  </p>
+  <div class="hero-btns" id="hero-btns">
+    <a href="/console" class="btn btn-white">开始使用</a>
+    <a href="/github" class="btn btn-line">探索项目</a>
+  </div>
+</section>
+
+<!-- Daily Highlights -->
+<section class="highlights" id="highlights" data-reveal>
+  <h2><span class="dot"></span>今日热点</h2>
+  <div class="hl-grid stagger" id="hl-grid">
+    <a href="/github" class="hl-card">
+      <span class="hl-tag github">GitHub</span>
+      <div class="hl-title">AI Agent 开源项目持续爆发，本周热门仓库一览</div>
+      <div class="hl-meta">⭐ trending today</div>
+    </a>
+    <a href="/finance" class="hl-card">
+      <span class="hl-tag finance">金融</span>
+      <div class="hl-title">A 股三大指数集体收涨，AI 芯片板块领涨</div>
+      <div class="hl-meta">上证 3358 · +0.42%</div>
+    </a>
+    <a href="/console" class="hl-card">
+      <span class="hl-tag ai">AI 前沿</span>
+      <div class="hl-title">OpenAI 发布新一代推理模型，API 成本再降 60%</div>
+      <div class="hl-meta">Claude · DeepSeek · 最新进展</div>
+    </a>
+    <a href="/github" class="hl-card">
+      <span class="hl-tag opensource">开源</span>
+      <div class="hl-title">小米开源 MiSans 字体 & Vela 物联网平台更新</div>
+      <div class="hl-meta">雷军 · 小米 · 开源生态</div>
+    </a>
+  </div>
+</section>
+
+<!-- Topic tree -->
+<section class="topic-tree" id="topics" data-reveal>
+  <div class="topic-tree-root">
+    <button class="topic-tree-btn" id="topicTreeBtn" onclick="toggleTopicTree()">
+      全部分类 <span class="arrow">▼</span>
+    </button>
+    <div class="topic-tree-panel" id="topicTreePanel">
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>全部资讯</a>
+      <div class="topic-tree-divider"></div>
+      <a href="/github" class="topic-tree-item"><span class="item-dot"></span>GitHub Trending</a>
+      <a href="/finance" class="topic-tree-item"><span class="item-dot"></span>金融股市</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>OpenAI</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>Anthropic</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>DeepSeek</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>小米 / 雷军</a>
+      <a href="/github" class="topic-tree-item"><span class="item-dot"></span>开源技术</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>CVE 漏洞</a>
+      <a href="/console" class="topic-tree-item"><span class="item-dot"></span>Hacker News</a>
+    </div>
+  </div>
+</section>
+
+<!-- Service cards -->
+<section class="services" id="services">
+  <div class="section-head">
+    <h2>开发者资源站</h2>
+    <p>从数据获取到工具推荐，从 Agent 部署到脚本交易 — 一站式服务</p>
+  </div>
+  <div class="service-grid" id="service-grid" data-reveal>
+    <a href="/console" class="service-card">
+      <div class="card-top"><div class="card-icon blue"></div><h3>资讯站</h3></div>
+      <div class="card-desc">实时聚合 GitHub Trending、Hacker News、CVE 漏洞、RSS 资讯。关键词搜索、技术过滤、导出下载。</div>
+      <div class="card-tags"><span>数据聚合</span><span>实时监控</span><span>导出下载</span></div>
+    </a>
+    <a href="/github" class="service-card">
+      <div class="card-top"><div class="card-icon gray"></div><h3>GitHub 资源</h3></div>
+      <div class="card-desc">100+ 精选开源项目，10大分类：AI Agent、LLM、DevOps、安全。支持批量 ZIP 下载。</div>
+      <div class="card-tags"><span>开源项目</span><span>批量下载</span><span class="hot">热门</span></div>
+    </a>
+    <a href="/finance" class="service-card">
+      <div class="card-top"><div class="card-icon green"></div><h3>金融股市</h3></div>
+      <div class="card-desc">A 股指数实时追踪、热门板块、概念题材、财经资讯聚合。数据索引，仅供参考。</div>
+      <div class="card-tags"><span>实时指数</span><span>板块热度</span><span>财经资讯</span></div>
+    </a>
+    <a href="/agent-deploy" class="service-card">
+      <div class="card-top"><div class="card-icon gold"></div><h3>Agent 部署</h3></div>
+      <div class="card-desc">OpenClaw / Hermes / OpenHuman 从零到一完整部署。29.9 元永久，解锁全部教程。</div>
+      <div class="card-tags"><span class="hot">教程</span><span>Claude Code</span><span>Dify</span></div>
+    </a>
+    <a href="/script-market" class="service-card">
+      <div class="card-top"><div class="card-icon orange"></div><h3>脚本市场</h3></div>
+      <div class="card-desc">免费开源脚本 + 创作者付费脚本。AI、爬虫、量化交易。发布脚本赚取收益。</div>
+      <div class="card-tags"><span>免费脚本</span><span>创作者</span><span class="hot">新上线</span></div>
+    </a>
+    <a href="/software" class="service-card">
+      <div class="card-top"><div class="card-icon purple"></div><h3>软件站</h3></div>
+      <div class="card-desc">30+ 精选免费开发工具、AI 应用、安全加密。只提供官方渠道，不存储文件。</div>
+      <div class="card-tags"><span>免费软件</span><span>开发工具</span><span>AI 应用</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- 实时数据预览 — Aha Moment -->
+<section class="live-preview-section" data-reveal>
+  <div class="section-head">
+    <h2>实时数据流</h2>
+    <p>平台正在运行 · 数据每 30 分钟自动更新</p>
+  </div>
+  <div class="live-grid">
+    <div class="live-card" id="liveGithub">
+      <div class="lc-header">
+        <div class="lc-icon" style="background:linear-gradient(135deg,#24292e,#586069)">G</div>
+        <div><div class="lc-title">GitHub Trending</div><div class="lc-sub" id="liveGithubTime">加载中...</div></div>
+        <div class="lc-dot"></div>
+      </div>
+      <div class="lc-body" id="liveGithubBody"><div class="lc-loading">获取最新数据...</div></div>
+    </div>
+    <div class="live-card" id="liveSV">
+      <div class="lc-header">
+        <div class="lc-icon" style="background:linear-gradient(135deg,#fb7299,#00a1d6)">B</div>
+        <div><div class="lc-title">短视频热门</div><div class="lc-sub" id="liveSVTime">加载中...</div></div>
+        <div class="lc-dot"></div>
+      </div>
+      <div class="lc-body" id="liveSVBody"><div class="lc-loading">获取最新数据...</div></div>
+    </div>
+    <div class="live-card" id="liveFin">
+      <div class="lc-header">
+        <div class="lc-icon" style="background:linear-gradient(135deg,#d93025,#e8710a)">金</div>
+        <div><div class="lc-title">金融数据</div><div class="lc-sub" id="liveFinTime">加载中...</div></div>
+        <div class="lc-dot"></div>
+      </div>
+      <div class="lc-body" id="liveFinBody"><div class="lc-loading">获取最新数据...</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 使用指南 -->
+<section class="guide-section" data-reveal>
+  <div class="section-head">
+    <h2>三步上手</h2>
+    <p>从数据获取到 API 集成，30 秒完成</p>
+  </div>
+  <div class="guide-grid">
+    <div class="guide-card">
+      <div class="step-num">1</div>
+      <span class="guide-icon">📡</span>
+      <h3>选择数据源</h3>
+      <div class="guide-desc">GitHub Trending、Hacker News、RSS 资讯、CVE 漏洞、金融动态 — 5+ 数据源自由组合，按需订阅。</div>
+    </div>
+    <div class="guide-card">
+      <div class="step-num">2</div>
+      <span class="guide-icon">🔍</span>
+      <h3>搜索与过滤</h3>
+      <div class="guide-desc">关键词搜索、技术过滤、时间范围筛选。智能去重，只保留高价值内容，告别信息噪音。</div>
+    </div>
+    <div class="guide-card">
+      <div class="step-num">3</div>
+      <span class="guide-icon">⚡</span>
+      <h3>导出与集成</h3>
+      <div class="guide-desc">一键导出 JSON，RESTful API 直连。接入 Agent、Bot、量化系统，数据即服务。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 平台数据 -->
+<section class="stats-section" data-reveal>
+  <div class="stats-bar">
+    <div class="stat-box">
+      <div class="stat-num" data-count="7">0</div>
+      <div class="stat-label">数据源</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" data-count="10000" data-duration="2000">0</div>
+      <div class="stat-label">资讯条目</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" data-count="30" data-suffix="min">0</div>
+      <div class="stat-label">更新频率</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" data-count="100" data-suffix="%">0</div>
+      <div class="stat-label">免费额度</div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-cta" data-reveal>
+  <a href="/console" class="btn btn-white">立即体验</a>
+  <p style="margin-top:8px;font-size:13px;color:var(--muted);">无需注册 · Free 层永久免费</p>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero entrance
+var heroTl = gsap.timeline({ defaults: { duration: .6, ease: "power2.out" } });
+heroTl.from("#brand", { y: -20, autoAlpha: 0 })
+      .from("#heroTitleWrap", { y: 30, autoAlpha: 0, scale: .95 }, "-=0.3")
+      .from("#hero-sub", { y: 20, autoAlpha: 0 }, "-=0.3")
+      .from("#hero-btns", { y: 16, autoAlpha: 0 }, "-=0.2");
+
+// 鼠标接近标题透明效果
+(function() {
+  var wrap = document.getElementById('heroTitleWrap');
+  if (!wrap) return;
+  wrap.addEventListener('mousemove', function(e) {
+    var rect = wrap.getBoundingClientRect();
+    var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+    wrap.style.setProperty('--mx', x + '%');
+    wrap.style.setProperty('--my', y + '%');
+  });
+})();
+
+// 树状分类切换
+window.toggleTopicTree = function() {
+  var btn = document.getElementById('topicTreeBtn');
+  var panel = document.getElementById('topicTreePanel');
+  var isOpen = panel.classList.contains('show');
+  if (isOpen) {
+    panel.classList.remove('show');
+    btn.classList.remove('expanded');
+  } else {
+    panel.classList.add('show');
+    btn.classList.add('expanded');
+  }
+};
+// 点击外部关闭
+document.addEventListener('click', function(e) {
+  var root = document.querySelector('.topic-tree-root');
+  var panel = document.getElementById('topicTreePanel');
+  var btn = document.getElementById('topicTreeBtn');
+  if (root && !root.contains(e.target)) {
+    panel.classList.remove('show');
+    btn.classList.remove('expanded');
+  }
+});
+
+// Service cards scroll reveal
+var cards = document.querySelectorAll('.service-card');
+cards.forEach(function(card, i) {
+  gsap.from(card, {
+    y: 40, autoAlpha: 0, duration: .5, ease: "power2.out",
+    scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none none" }
+  });
+});
+
+// Highlights stagger
+var hlCards = document.querySelectorAll('.hl-card');
+hlCards.forEach(function(c, i) {
+  gsap.from(c, {
+    y: 20, autoAlpha: 0, duration: .4, delay: i * .08, ease: "power2.out",
+    scrollTrigger: { trigger: "#highlights", start: "top 80%", toggleActions: "play none none none" }
+  });
+});
+
+// Toast
+(function() {
+  var container = document.createElement('div');
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  window.showToast = function(type, title, msg, duration) {
+    var icons = { success: '✅', error: '❌', info: 'ℹ️', warn: '⚠️' };
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    toast.innerHTML =
+      '<div class="toast-icon">' + (icons[type] || icons.info) + '</div>' +
+      '<div class="toast-body"><div class="toast-title">' + title + '</div>' +
+      '<div class="toast-msg">' + msg + '</div></div>' +
+      '<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
+    container.appendChild(toast);
+    setTimeout(function() {
+      toast.classList.add('removing');
+      setTimeout(function() { if (toast.parentElement) toast.remove(); }, 250);
+    }, duration || 4000);
+  };
+})();
+
+// ── 实时数据预览 ──
+(function loadLiveData() {
+  function fmtTime(ts) {
+    if (!ts) return '刚刚';
+    var diff = Math.floor(Date.now() / 1000 - ts);
+    if (diff < 60) return diff + ' 秒前';
+    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+    return Math.floor(diff / 3600) + ' 小时前';
+  }
+
+  // GitHub Trending
+  fetch('/api/items?source=github_trending&limit=4&hours=168').then(function(r) { return r.json(); }).then(function(data) {
+    var body = document.getElementById('liveGithubBody');
+    var time = document.getElementById('liveGithubTime');
+    if (!body) return;
+    var items = data.items || [];
+    if (items.length === 0) { body.innerHTML = '<div class="lc-loading">暂无数据</div>'; return; }
+    time.textContent = fmtTime(items[0].fetched_at) + ' · ' + (data.total || items.length) + ' 条';
+    body.innerHTML = items.slice(0, 4).map(function(item) {
+      var extra = typeof item.extra === 'string' ? JSON.parse(item.extra || '{}') : (item.extra || {});
+      var stars = extra.today_stars || extra.stars || '';
+      return '<a class="lc-item" href="' + item.url + '" target="_blank" rel="noopener"><span class="lc-item-title">' + item.title + '</span>' + (stars ? '<span class="lc-item-meta">★' + stars + '</span>' : '') + '</a>';
+    }).join('');
+  }).catch(function() {});
+
+  // 短视频
+  fetch('/api/shortvideo').then(function(r) { return r.json(); }).then(function(data) {
+    var body = document.getElementById('liveSVBody');
+    var time = document.getElementById('liveSVTime');
+    if (!body) return;
+    if (!data.ok || data.count === 0) { body.innerHTML = '<div class="lc-loading">等待爬虫首次抓取</div>'; return; }
+    var allItems = [];
+    Object.keys(data.platforms).forEach(function(p) {
+      data.platforms[p].forEach(function(item) {
+        var ex = item.extra || {};
+        allItems.push({ title: item.title, url: ex.video_url || item.url, platform: p });
+      });
+    });
+    time.textContent = data.count + ' 条 · 实时';
+    body.innerHTML = allItems.slice(0, 4).map(function(item) {
+      return '<a class="lc-item" href="' + item.url + '" target="_blank" rel="noopener"><span class="lc-item-title">' + item.title.substring(0, 40) + '</span><span class="lc-item-meta">' + item.platform + '</span></a>';
+    }).join('');
+  }).catch(function() {});
+
+  // 金融
+  fetch('/api/finance').then(function(r) { return r.json(); }).then(function(data) {
+    var body = document.getElementById('liveFinBody');
+    var time = document.getElementById('liveFinTime');
+    if (!body) return;
+    if (!data.ok || data.count === 0) { body.innerHTML = '<div class="lc-loading">等待爬虫首次抓取</div>'; return; }
+    var stocks = (data.stocks || []).slice(0, 4);
+    time.textContent = data.count + ' 条 · 每日更新';
+    body.innerHTML = stocks.map(function(s) {
+      var ex = s.extra || {};
+      var dy = ex.dividend_yield != null ? ex.dividend_yield.toFixed(2) + '%' : '';
+      return '<a class="lc-item" href="' + s.url + '" target="_blank" rel="noopener"><span class="lc-item-title">' + ex.name + ' ' + ex.code + '</span><span class="lc-item-meta">红率 ' + dy + '</span></a>';
+    }).join('');
+  }).catch(function() {});
+})();
+</script>
+{% endblock %}

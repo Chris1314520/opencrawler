@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% block title %}剪辑与视觉 — OpenCrawler{% endblock %}
+{% set active_page = 'visual' %}
+
+{% block head %}
+<style>
+.visual-layout{max-width:1200px;margin:0 auto;padding:20px 24px 48px}
+
+.vis-hero{text-align:center;margin-bottom:32px;padding:24px 0}
+.vis-hero h1{font-size:30px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px}
+.vis-hero p{color:var(--muted);font-size:15px}
+
+/* Software showcase */
+.vis-section{margin-bottom:32px}
+.vis-section h2{font-size:18px;font-weight:800;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--text)}
+.vis-software-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+.vis-soft-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;text-decoration:none;color:var(--text);display:flex;align-items:flex-start;gap:14px}
+.vis-soft-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.vis-soft-card .vs-icon{font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;flex-shrink:0}
+.vis-soft-card .vs-info{flex:1;min-width:0}
+.vis-soft-card .vs-name{font-size:15px;font-weight:700;margin-bottom:3px}
+.vis-soft-card .vs-desc{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:6px}
+.vis-soft-card .vs-links{display:flex;gap:8px;flex-wrap:wrap}
+.vis-soft-card .vs-links a{font-size:11px;padding:4px 12px;border-radius:14px;text-decoration:none;font-weight:500;transition:all .12s}
+.vs-dl{background:var(--accent);color:#fff}
+.vs-dl:hover{opacity:.85}
+.vs-doc{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.vs-doc:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Article/news row */
+.vis-news-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--border);margin-bottom:20px}
+.vis-news-row{display:flex;align-items:center;gap:14px;padding:13px 18px;background:var(--card);text-decoration:none;color:var(--text);transition:all .12s}
+.vis-news-row:hover{background:#f2f5f8}
+.vis-news-row .vn-platform{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;background:var(--bg);color:var(--muted);flex-shrink:0;min-width:56px;text-align:center}
+.vis-news-row .vn-body{flex:1;min-width:0}
+.vis-news-row .vn-title{font-size:13px;font-weight:600;line-height:1.4}
+.vis-news-row .vn-meta{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Template showcase */
+.vis-template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.vis-tpl-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s;cursor:pointer}
+.vis-tpl-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.vis-tpl-card .vt-preview{height:100px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.vis-tpl-card .vt-body{padding:14px}
+.vis-tpl-card .vt-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.vis-tpl-card .vt-for{font-size:11px;color:var(--muted);margin-bottom:6px}
+.vis-tpl-card .vt-tags{display:flex;gap:4px;flex-wrap:wrap}
+.vis-tpl-card .vt-tag{font-size:10px;padding:2px 8px;border-radius:8px;background:var(--bg);color:var(--muted)}
+
+/* Plugin section */
+.vis-plugin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.vis-plugin-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:all .15s}
+.vis-plugin-card:hover{border-color:var(--text)}
+.vis-plugin-card .vp-name{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.vis-plugin-card .vp-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.vp-badge.free{background:rgba(13,144,79,.1);color:#0d904f}
+.vp-badge.paid{background:rgba(210,153,29,.1);color:#b45309}
+.vis-plugin-card .vp-desc{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px}
+.vis-plugin-card .vp-link{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600}
+.vis-plugin-card .vp-link:hover{opacity:.8}
+
+/* Disclaimer */
+.vis-disclaimer{font-size:12px;color:var(--muted);margin-top:32px;padding:14px 18px;background:rgba(248,81,73,.04);border:1px solid rgba(248,81,73,.15);border-radius:10px;line-height:1.6}
+
+@media(max-width:768px){
+  .vis-template-grid{grid-template-columns:repeat(2,1fr)}
+  .vis-software-grid{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="visual-layout">
+
+<section class="vis-hero">
+  <h1>剪辑与视觉</h1>
+  <p>AE / PR / PS / 剪映 / NodeVideo · 视觉特效软件资讯 · 工程模板 · 插件资源 · 官方下载</p>
+</section>
+
+<!-- ===== 主流软件 ===== -->
+<div class="vis-section">
+  <h2>主流软件</h2>
+  <div class="vis-software-grid">
+
+    <a href="https://www.adobe.com/products/aftereffects.html" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(122,90,248,.12);">🎬</div>
+      <div class="vs-info">
+        <div class="vs-name">Adobe After Effects</div>
+        <div class="vs-desc">行业标准运动图形与视觉特效合成软件。用于2D/3D动画、合成、跟踪、抠像。</div>
+        <div class="vs-links">
+          <a href="https://www.adobe.com/products/aftereffects.html" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://helpx.adobe.com/after-effects/tutorials.html" target="_blank" rel="noopener" class="vs-doc">教程</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.adobe.com/products/premiere.html" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(234,118,232,.12);">🎞️</div>
+      <div class="vs-info">
+        <div class="vs-name">Adobe Premiere Pro</div>
+        <div class="vs-desc">专业视频编辑软件，支持多轨道编辑、色彩校正、音频混音。影视行业标准剪辑工具。</div>
+        <div class="vs-links">
+          <a href="https://www.adobe.com/products/premiere.html" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://helpx.adobe.com/premiere-pro/tutorials.html" target="_blank" rel="noopener" class="vs-doc">教程</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.adobe.com/products/photoshop.html" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(0,170,238,.12);">🖼️</div>
+      <div class="vs-info">
+        <div class="vs-name">Adobe Photoshop</div>
+        <div class="vs-desc">图像编辑与数字艺术标杆软件。图层合成、修图、数字绘画、3D设计全能工具。</div>
+        <div class="vs-links">
+          <a href="https://www.adobe.com/products/photoshop.html" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://helpx.adobe.com/photoshop/tutorials.html" target="_blank" rel="noopener" class="vs-doc">教程</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.capcut.cn" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(0,0,0,.06);">✂️</div>
+      <div class="vs-info">
+        <div class="vs-name">剪映 / CapCut</div>
+        <div class="vs-desc">字节跳动旗下免费视频剪辑工具。AI字幕、自动节拍、海量模板，移动端/桌面端全覆盖。</div>
+        <div class="vs-links">
+          <a href="https://www.capcut.cn" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://www.capcut.cn/guide" target="_blank" rel="noopener" class="vs-doc">教程</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.nodevideo.com" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(13,144,79,.12);">📱</div>
+      <div class="vs-info">
+        <div class="vs-name">NodeVideo</div>
+        <div class="vs-desc">移动端专业视频编辑与特效合成工具。支持节点式合成、关键帧动画、调色与特效。</div>
+        <div class="vs-links">
+          <a href="https://www.nodevideo.com" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://space.bilibili.com/search?keyword=NodeVideo教程" target="_blank" rel="noopener" class="vs-doc">B站教程</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.blackmagicdesign.com/products/davinciresolve" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(248,129,73,.12);">🎨</div>
+      <div class="vs-info">
+        <div class="vs-name">DaVinci Resolve</div>
+        <div class="vs-desc">专业级调色+剪辑+音频+视觉特效一体化工具。免费版功能已极其强大，好莱坞级调色引擎。</div>
+        <div class="vs-links">
+          <a href="https://www.blackmagicdesign.com/products/davinciresolve" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://www.blackmagicdesign.com/products/davinciresolve/training" target="_blank" rel="noopener" class="vs-doc">官方培训</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.blender.org" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(234,118,50,.12);">🧊</div>
+      <div class="vs-info">
+        <div class="vs-name">Blender</div>
+        <div class="vs-desc">开源免费3D创作套件。建模、雕刻、动画、渲染、合成、视频编辑全流程。</div>
+        <div class="vs-links">
+          <a href="https://www.blender.org/download" target="_blank" rel="noopener" class="vs-dl">下载</a>
+          <a href="https://docs.blender.org" target="_blank" rel="noopener" class="vs-doc">文档</a>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://www.apple.com/final-cut-pro" target="_blank" rel="noopener" class="vis-soft-card">
+      <div class="vs-icon" style="background:rgba(139,148,158,.12);">🍎</div>
+      <div class="vs-info">
+        <div class="vs-name">Final Cut Pro</div>
+        <div class="vs-desc">Apple 专业视频剪辑软件。磁力时间线、Metal引擎加速、ProRes全流程支持。</div>
+        <div class="vs-links">
+          <a href="https://www.apple.com/final-cut-pro" target="_blank" rel="noopener" class="vs-dl">官网</a>
+          <a href="https://www.apple.com/final-cut-pro/resources" target="_blank" rel="noopener" class="vs-doc">资源</a>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- ===== 资讯聚合 ===== -->
+<div class="vis-section">
+  <h2>视觉特效资讯</h2>
+  <div class="vis-news-list" id="visNews"></div>
+</div>
+
+<!-- ===== 工程模板 ===== -->
+<div class="vis-section">
+  <h2>PR / AE 工程模板推荐</h2>
+  <div class="vis-template-grid">
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#667eea,#764ba2);">🏷️</div>
+      <div class="vt-body">
+        <div class="vt-name">动态文字标题套装</div>
+        <div class="vt-for">After Effects · MOGRT 通用</div>
+        <div class="vt-tags"><span class="vt-tag">标题动画</span><span class="vt-tag">30套</span><span class="vt-tag">免费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#f093fb,#f5576c);">🎆</div>
+      <div class="vt-body">
+        <div class="vt-name">粒子光效转场包</div>
+        <div class="vt-for">Premiere Pro · 插件通用</div>
+        <div class="vt-tags"><span class="vt-tag">转场</span><span class="vt-tag">50组</span><span class="vt-tag">付费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">🌊</div>
+      <div class="vt-body">
+        <div class="vt-name">科技感HUD信息图</div>
+        <div class="vt-for">After Effects · 表达式驱动</div>
+        <div class="vt-tags"><span class="vt-tag">科技风</span><span class="vt-tag">15套</span><span class="vt-tag">付费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#fa709a,#fee140);">📺</div>
+      <div class="vt-body">
+        <div class="vt-name">YouTube片头模板</div>
+        <div class="vt-for">Premiere Pro / AE 双版本</div>
+        <div class="vt-tags"><span class="vt-tag">片头</span><span class="vt-tag">20套</span><span class="vt-tag">免费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">💫</div>
+      <div class="vt-body">
+        <div class="vt-name">MG动画角色绑定</div>
+        <div class="vt-for">After Effects · Duik/RubberHose</div>
+        <div class="vt-tags"><span class="vt-tag">角色动画</span><span class="vt-tag">8套</span><span class="vt-tag">付费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#30cfd0,#330867);">🎵</div>
+      <div class="vt-body">
+        <div class="vt-name">音乐可视化模板</div>
+        <div class="vt-for">After Effects · Trapcode Sound Keys</div>
+        <div class="vt-tags"><span class="vt-tag">音频可视化</span><span class="vt-tag">12套</span><span class="vt-tag">免费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#f7971e,#ffd200);">📱</div>
+      <div class="vt-body">
+        <div class="vt-name">短视频竖版包装</div>
+        <div class="vt-for">剪映 / Premiere Pro 通用</div>
+        <div class="vt-tags"><span class="vt-tag">短视频</span><span class="vt-tag">40套</span><span class="vt-tag">免费</span></div>
+      </div>
+    </div>
+    <div class="vis-tpl-card">
+      <div class="vt-preview" style="background:linear-gradient(135deg,#11998e,#38ef7d);">🌈</div>
+      <div class="vt-body">
+        <div class="vt-name">LUTs 电影调色预设</div>
+        <div class="vt-for">PR/PS/达芬奇 通用 .cube</div>
+        <div class="vt-tags"><span class="vt-tag">调色</span><span class="vt-tag">100+</span><span class="vt-tag">免费</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 插件推荐 ===== -->
+<div class="vis-section">
+  <h2>必备插件包</h2>
+  <div class="vis-plugin-grid">
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Red Giant Complete <span class="vp-badge paid">付费</span></div>
+      <div class="vp-desc">Trapcode Suite (粒子) + Magic Bullet (调色) + Universe (特效) + VFX Suite (合成)。视觉特效全流程工具。</div>
+      <a href="https://www.maxon.net/red-giant" target="_blank" rel="noopener" class="vp-link">官网下载 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Video Copilot Saber <span class="vp-badge free">免费</span></div>
+      <div class="vp-desc">Andrew Kramer 出品的经典能量光剑/光束插件。AE/Premiere 通用，GPU加速，参数丰富。</div>
+      <a href="https://www.videocopilot.net/blog/2016/03/new-plug-in-saber-now-available-100-free" target="_blank" rel="noopener" class="vp-link">免费下载 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Element 3D <span class="vp-badge paid">付费</span></div>
+      <div class="vp-desc">Video Copilot 出品。AE 内实时3D渲染引擎，导入OBJ/C4D模型，PBR材质，运动模糊。</div>
+      <a href="https://www.videocopilot.net/products/element2" target="_blank" rel="noopener" class="vp-link">官网 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Boris FX Sapphire <span class="vp-badge paid">付费</span></div>
+      <div class="vp-desc">300+ 高端视觉特效与转场。好莱坞级光效、胶片损伤、镜头光晕。AE/PR/达芬奇/Nuke 通用。</div>
+      <a href="https://borisfx.com/products/sapphire" target="_blank" rel="noopener" class="vp-link">官网 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Animation Composer <span class="vp-badge free">免费</span></div>
+      <div class="vp-desc">AE 动画预设管理器。上千种文字动画、转场、图标的拖放预设，大幅提升效率。</div>
+      <a href="https://misterhorse.com/animation-composer" target="_blank" rel="noopener" class="vp-link">免费下载 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 FX Console <span class="vp-badge free">免费</span></div>
+      <div class="vp-desc">Video Copilot 出品。AE 快速搜索添加特效插件，支持截图保存。必备效率工具。</div>
+      <a href="https://www.videocopilot.net/blog/2018/05/fx-console-updated-to-v1-0-3" target="_blank" rel="noopener" class="vp-link">免费下载 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Duik Bassel <span class="vp-badge free">免费</span></div>
+      <div class="vp-desc">开源AE角色动画绑定工具。IK/FK控制、自动走路循环、骨骼绑定。动画师必备。</div>
+      <a href="https://rxlaboratory.org/tools/duik" target="_blank" rel="noopener" class="vp-link">免费下载 →</a>
+    </div>
+    <div class="vis-plugin-card">
+      <div class="vp-name">🔌 Motion Bro <span class="vp-badge paid">付费</span></div>
+      <div class="vp-desc">PR/AE 转场和预设管理器。海量高品质转场、文字动画、调色预设，一键应用。</div>
+      <a href="https://motionbro.net" target="_blank" rel="noopener" class="vp-link">官网 →</a>
+    </div>
+  </div>
+</div>
+
+<div class="vis-disclaimer">
+  <strong>声明：</strong>本站仅提供软件信息聚合与官方渠道链接。所有软件版权归原开发商所有。模板与插件信息来自公开渠道，我们不存储任何文件。请通过官方渠道下载，确保安全。部分软件需要付费订阅。
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Visual effects news/articles
+var VISUAL_NEWS = [
+  {title:'After Effects 2026 新功能盘点：AI驱动Roto笔刷3.0与实时3D草稿预览',platform:'Adobe Blog',url:'https://blog.adobe.com',time:'2天前'},
+  {title:'Premiere Pro 剪辑效率提升技巧：10个被忽视的快捷键与工作流优化',platform:'B站 · 影视飓风',url:'https://space.bilibili.com/946974',time:'3天前'},
+  {title:'Blender 4.5 发布：EEVEE Next 实时渲染引擎全面升级，支持光线追踪',platform:'Blender.org',url:'https://www.blender.org/download/releases',time:'5天前'},
+  {title:'达芬奇 Resolve 19 深度评测：AI音频转文本、智能遮罩与云端协作',platform:'知乎 · 调色师',url:'https://www.zhihu.com/topic/20077672',time:'1周前'},
+  {title:'CapCut 剪映专业版 5.0：AI数字人播报、智能抠像Pro与多机位同步',platform:'剪映官网',url:'https://www.capcut.cn',time:'1周前'},
+  {title:'用 NodeVideo 制作赛博朋克风格Vlog：节点合成完整流程教学',platform:'B站 · 特效师阿飞',url:'https://www.bilibili.com/v/tech',time:'1周前'},
+  {title:'AE 表达式进阶：无需插件实现高级MG动画 — 从入门到放弃',platform:'知乎 · 动效设计',url:'https://www.zhihu.com',time:'2周前'},
+  {title:'短视频调色终极指南：剪映/PR/达芬奇三平台 LUT 工作流对比',platform:'新片场',url:'https://www.xinpianchang.com',time:'2周前'},
+  {title:'2026年视觉设计师必装的10个Figma插件 — 效率提升300%',platform:'掘金 · 设计',url:'https://juejin.cn',time:'2周前'},
+  {title:'从零开始学C4D+Redshift：产品渲染全流程（附工程文件）',platform:'B站 · 李涛',url:'https://space.bilibili.com',time:'3周前'},
+  {title:'Trapcode Particular 7 粒子插件完全指南：从基础到高级特效',platform:'Video Copilot',url:'https://www.videocopilot.net',time:'3周前'},
+  {title:'开源视频剪辑工具 Olive 0.3 发布：跨平台、节点式、支持OpenColorIO',platform:'GitHub',url:'https://github.com/olive-editor/olive',time:'3周前'}
+];
+
+function renderVisNews() {
+  var html = VISUAL_NEWS.map(function(n) {
+    return '<a href="'+n.url+'" target="_blank" rel="noopener" class="vis-news-row">' +
+      '<span class="vn-platform">'+n.platform+'</span>' +
+      '<div class="vn-body"><div class="vn-title">'+n.title+'</div></div>' +
+      '<span style="font-size:11px;color:var(--muted);flex-shrink:0;">'+n.time+'</span>' +
+    '</a>';
+  }).join('');
+  document.getElementById('visNews').innerHTML = html;
+}
+
+renderVisNews();
+</script>
+{% endblock %}

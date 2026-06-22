@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <title>{% block title %}OpenCrawler{% endblock %}</title>
+    <link rel="stylesheet" href="/static/product.css">
+    <link rel="stylesheet" href="/static/animations.css">
+    <style>
+    .gold-nav{color:#b45309 !important;font-weight:600}
+    .gold-nav:hover{color:#92400e !important}
+    .gold-nav.active{color:#92400e !important;border-bottom-color:#b45309 !important}
+
+    /* 黑底白字质感按钮 */
+    .nav-cta-gold{
+        background:#1a1a1a;
+        color:#fff !important;
+        font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+        font-weight:700;
+        font-size:14px;
+        padding:8px 22px;
+        border-radius:20px;
+        border:1px solid #1a1a1a;
+        box-shadow:0 2px 8px rgba(0,0,0,.12);
+        letter-spacing:1px;
+        transition:transform .2s var(--ease-spring),box-shadow .25s var(--ease-smooth),background .2s var(--ease-smooth),color .2s var(--ease-smooth);
+        position:relative;
+        overflow:hidden;
+    }
+    .nav-cta-gold:hover{
+        text-decoration:none;
+        transform:translateY(-2px);
+        background:#fff;
+        color:#1a1a1a !important;
+        box-shadow:0 6px 20px rgba(0,0,0,.15);
+    }
+    .nav-cta-gold:active{transform:scale(.95)}
+
+    /* Page transition: fade + scale crossfade */
+    .pt-overlay{position:fixed;inset:0;z-index:9999;background:#fff;opacity:0;pointer-events:none;transition:opacity .3s ease}
+    .pt-overlay.pt-leave{opacity:1;pointer-events:auto}
+    .pt-enter main{animation:ptFadeIn .45s cubic-bezier(.22,1,.36,1) both}
+    @keyframes ptFadeIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+    @keyframes shine{0%{background-position:-200% center}100%{background-position:200% center}}
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="pt-overlay" id="ptOverlay"></div>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="nav-logo">OpenCrawler</a>
+            <div class="nav-links">
+                <a href="/console" class="{% if active_page == 'console' %}active{% endif %}">资讯站</a>
+                <a href="/platforms" class="{% if active_page == 'platforms' %}active{% endif %}">平台</a>
+                <a href="/github" class="{% if active_page == 'github' %}active{% endif %}">GitHub</a>
+                <a href="/finance" class="{% if active_page == 'finance' %}active{% endif %}">金融</a>
+                <a href="/software" class="{% if active_page == 'software' %}active{% endif %}">软件站</a>
+                <a href="/agent-deploy" class="{% if active_page == 'agent_deploy' %}active{% endif %} gold-nav">Agent部署</a>
+                <a href="/script-market" class="{% if active_page == 'script_market' %}active{% endif %}">脚本市场</a>
+                <a href="/about" class="{% if active_page == 'about' %}active{% endif %} gold-nav">开发实践</a>
+            </div>
+            <a href="/console" class="nav-cta-gold">OpenCrawler</a>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        OpenCrawler &copy; 2026 — 抹平信息茧房 · 开发者资源站
+    </footer>
+    <script>
+    // Page transition: fade-in on load
+    (function(){
+      var overlay = document.getElementById('ptOverlay');
+      if (overlay) {
+        overlay.classList.add('pt-leave');
+        setTimeout(function(){ overlay.classList.remove('pt-leave'); }, 350);
+      }
+      document.body.classList.add('pt-enter');
+    })();
+
+    // Intercept internal nav links for exit transition
+    document.addEventListener('click', function(e){
+      var a = e.target.closest('a');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('//') || a.getAttribute('target')) return;
+      if (a.dataset.notransition !== undefined) return;
+      e.preventDefault();
+      var overlay = document.getElementById('ptOverlay');
+      if (overlay) {
+        overlay.classList.add('pt-leave');
+        var u = href;
+        setTimeout(function(){ window.location = u; }, 300);
+      } else {
+        window.location = href;
+      }
+    });
+    </script>
+    {% block scripts %}{% endblock %}
+    <script src="/static/animations.js"></script>
+</body>
+</html>

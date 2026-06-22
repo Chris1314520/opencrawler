@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}Agent 部署 — OpenCrawler{% endblock %}
+{% set active_page = 'agents' %}
+
+{% block head %}
+<style>
+.agents-layout{max-width:1000px;margin:0 auto;padding:20px}
+.hero{text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(188,140,255,.08));border-radius:12px;margin-bottom:32px;border:1px solid var(--border)}
+.hero h1{font-size:30px;margin-bottom:10px}
+.hero p{font-size:15px;color:var(--muted);max-width:600px;margin:0 auto}
+.section-title{font-size:20px;margin:36px 0 16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.section-title .emoji{font-size:24px}
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .15s}
+.agent-card:hover{border-color:var(--accent)}
+.agent-card .agent-name{font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.agent-card .agent-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.agent-card .agent-tags{margin-bottom:10px}
+.agent-card .agent-tags span{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:var(--accent-dim);color:var(--accent);margin-right:4px;margin-bottom:4px}
+.agent-card .agent-links{display:flex;gap:8px;flex-wrap:wrap}
+.agent-card .agent-links a{font-size:12px;padding:5px 12px;border-radius:4px;text-decoration:none;border:1px solid var(--border);color:var(--text);transition:all .15s}
+.agent-card .agent-links a:hover{border-color:var(--accent);color:var(--accent)}
+.agent-card .agent-links a.primary-link{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* 教程产品卡 */
+.tutorial-card{background:linear-gradient(135deg,rgba(63,185,80,.06),rgba(88,166,255,.06));border:2px solid var(--accent);border-radius:12px;padding:28px;margin:20px 0;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.tutorial-info{flex:1;min-width:250px}
+.tutorial-info h3{font-size:20px;margin-bottom:8px;color:var(--accent)}
+.tutorial-info ul{margin:12px 0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.8}
+.tutorial-price{text-align:center;min-width:160px}
+.tutorial-price .price{font-size:42px;font-weight:800;color:var(--accent)}
+.tutorial-price .unit{font-size:14px;color:var(--muted)}
+.tutorial-price .buy-btn{display:block;margin-top:12px;padding:12px 28px;font-size:15px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;text-decoration:none;font-weight:600;transition:opacity .2s}
+.tutorial-price .buy-btn:hover{opacity:.85}
+/* 服务表 */
+.service-table{width:100%;border-collapse:collapse;font-size:14px;margin:16px 0}
+.service-table th,.service-table td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border)}
+.service-table th{font-size:12px;color:var(--muted);font-weight:500;background:var(--bg)}
+.service-table .price-col{font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agents-layout">
+    <div class="hero">
+        <h1>Agent 部署服务</h1>
+        <p>从零到一，帮你在国内网络环境下部署全球最前沿的 AI Agent。提供教程、镜像、一键脚本、远程代部署</p>
+    </div>
+
+    <!-- 教程产品 -->
+    <div class="tutorial-card">
+        <div class="tutorial-info">
+            <h3>Agent 部署完全指南（付费教程）</h3>
+            <p style="font-size:14px;color:var(--muted);margin-bottom:8px">一份教程覆盖所有主流 Agent 的部署方案，国内网络友好，持续更新</p>
+            <ul>
+                <li>通用 Agent：OpenClaw / Hermes / OpenHuman / OpenManus 部署详解</li>
+                <li>编码 Agent：Claude Code / Codex CLI / Aider / Cursor 配置指南</li>
+                <li>视频生成：Wan2.1 / CogVideo / EasyAnimate 本地部署</li>
+                <li>图像生成：ComfyUI / Flux / SD3 工作流搭建</li>
+                <li>文本写作：Dify / FastGPT / LangChain 知识库搭建</li>
+                <li>国内模型适配：通义千问 / DeepSeek / 智谱 API 对接方案</li>
+                <li>网络方案：Docker 镜像加速、HuggingFace 镜像、模型下载加速</li>
+                <li>附带：一键部署脚本 + Docker Compose 配置 + 常见问题排错</li>
+            </ul>
+        </div>
+        <div class="tutorial-price">
+            <div class="price">29.9</div>
+            <div class="unit">元 / 永久更新</div>
+            <a href="/pay?tier=tutorial" class="buy-btn">立即购买</a>
+        </div>
+    </div>
+
+    <!-- 通用 Agent -->
+    <div class="section-title"><span class="emoji"></span>通用 Agent</div>
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="agent-name">OpenClaw</div>
+            <div class="agent-desc">开源通用 AI Agent 框架，支持浏览器操控、文件管理、命令行执行，可对接多种 LLM</div>
+            <div class="agent-tags"><span>开源</span><span>通用</span><span>Python</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/browser-use/openclaw" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://docs.openclaw.ai" target="_blank" rel="noopener">文档</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Hermes (browser-use)</div>
+            <div class="agent-desc">浏览器自动化 Agent，让 AI 像人一样操作网页，支持视觉理解和复杂多步任务</div>
+            <div class="agent-tags"><span>开源</span><span>浏览器</span><span>Agent</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/browser-use/browser-use" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://docs.browser-use.com" target="_blank" rel="noopener">文档</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">OpenHuman</div>
+            <div class="agent-desc">多模态 Agent 框架，结合视觉/语音/文本理解，能做桌面操作、图像分析、视频理解</div>
+            <div class="agent-tags"><span>开源</span><span>多模态</span><span>桌面</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/openhuman/openhuman" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">OpenManus</div>
+            <div class="agent-desc">开源版 Manus，多 Agent 协作框架，规划-执行-验证流水线</div>
+            <div class="agent-tags"><span>开源</span><span>多Agent</span><span>协作</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/mannaandpoem/OpenManus" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">CrewAI</div>
+            <div class="agent-desc">多 Agent 角色扮演框架，定义 AI 团队角色、任务分工、协作流程</div>
+            <div class="agent-tags"><span>开源</span><span>多Agent</span><span>Python</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/crewAIInc/crewAI" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://docs.crewai.com" target="_blank" rel="noopener">文档</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">AutoGPT</div>
+            <div class="agent-desc">老牌自主 Agent，给定目标自动拆解任务、搜索信息、执行操作</div>
+            <div class="agent-tags"><span>开源</span><span>自主</span><span>经典</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/Significant-Gravitas/AutoGPT" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编码 Agent -->
+    <div class="section-title"><span class="emoji"></span>编码 Agent</div>
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="agent-name">Claude Code</div>
+            <div class="agent-desc">Anthropic 官方 CLI 编码 Agent，直接在终端中理解代码库、修复 Bug、重构项目</div>
+            <div class="agent-tags"><span>CLI</span><span>编码</span><span>Anthropic</span></div>
+            <div class="agent-links">
+                <a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank" rel="noopener">官方文档</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Codex CLI (OpenAI)</div>
+            <div class="agent-desc">OpenAI 开源 CLI 编码 Agent，轻量级，支持本地模型和云端 API</div>
+            <div class="agent-tags"><span>开源</span><span>CLI</span><span>编码</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/openai/codex" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Aider</div>
+            <div class="agent-desc">AI 结对编程工具，支持多文件编辑、Git 集成、地图式代码理解</div>
+            <div class="agent-tags"><span>开源</span><span>编码</span><span>Python</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/Aider-AI/aider" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://aider.chat" target="_blank" rel="noopener">官网</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Cursor</div>
+            <div class="agent-desc">AI 代码编辑器，深度集成 Agent 能力，支持代码库理解、多文件重构</div>
+            <div class="agent-tags"><span>编辑器</span><span>编码</span><span>IDE</span></div>
+            <div class="agent-links">
+                <a href="https://cursor.sh" target="_blank" rel="noopener">官网</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Continue.dev</div>
+            <div class="agent-desc">开源 AI 编码助手，支持 VS Code / JetBrains，可接 Ollama 本地模型</div>
+            <div class="agent-tags"><span>开源</span><span>插件</span><span>本地模型</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/continuedev/continue" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Qwen Code</div>
+            <div class="agent-desc">阿里 Qwen Coder 模型 + CLI 工具，国内访问友好，中文代码理解强</div>
+            <div class="agent-tags"><span>国内</span><span>编码</span><span>阿里</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/QwenLM/Qwen2.5-Coder" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频生成 -->
+    <div class="section-title"><span class="emoji"></span>视频生成模型</div>
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="agent-name">Wan2.1 (阿里)</div>
+            <div class="agent-desc">阿里开源视频生成模型，支持文生视频、图生视频，效果接近 Sora</div>
+            <div class="agent-tags"><span>开源</span><span>视频</span><span>阿里</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/Wan-Video/Wan2.1" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">CogVideo (智谱)</div>
+            <div class="agent-desc">智谱开源视频生成模型，支持中英文提示词，消费级显卡可跑</div>
+            <div class="agent-tags"><span>开源</span><span>视频</span><span>智谱</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/THUDM/CogVideo" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">EasyAnimate</div>
+            <div class="agent-desc">阿里开源视频生成框架，支持长视频生成、动作控制</div>
+            <div class="agent-tags"><span>开源</span><span>视频</span><span>长视频</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/aigc-apps/EasyAnimate" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">AnimateDiff</div>
+            <div class="agent-desc">SD 插件动画生成，让静态图动起来，社区生态丰富</div>
+            <div class="agent-tags"><span>开源</span><span>动画</span><span>SD</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/guoyww/AnimateDiff" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图像生成 -->
+    <div class="section-title"><span class="emoji"></span>图像生成</div>
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="agent-name">ComfyUI</div>
+            <div class="agent-desc">节点式 AI 绘图工作流，灵活度最高，支持 SD/Flux/Kolors 等所有主流模型</div>
+            <div class="agent-tags"><span>开源</span><span>绘图</span><span>工作流</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/comfyanonymous/ComfyUI" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Flux (Black Forest Labs)</div>
+            <div class="agent-desc">SD 原班人马打造的新一代图像模型，文字渲染极强，画质顶级</div>
+            <div class="agent-tags"><span>开源</span><span>绘图</span><span>新一代</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/black-forest-labs/flux" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Kolors (快手)</div>
+            <div class="agent-desc">快手开源文生图模型，中文理解优秀，支持中英双语提示词</div>
+            <div class="agent-tags"><span>开源</span><span>绘图</span><span>中文</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/Kwai-Kolors/Kolors" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">Fooocus</div>
+            <div class="agent-desc">傻瓜式 SD 界面，一键出图，适合不想折腾的入门用户</div>
+            <div class="agent-tags"><span>开源</span><span>入门</span><span>SD</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/lllyasviel/Fooocus" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 写文 / 知识库 -->
+    <div class="section-title"><span class="emoji"></span>写文 / 知识库 / RAG</div>
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="agent-name">Dify</div>
+            <div class="agent-desc">开源 LLM 应用开发平台，可视化搭建 AI 工作流、RAG 知识库、Agent</div>
+            <div class="agent-tags"><span>开源</span><span>RAG</span><span>工作流</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/langgenius/dify" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://dify.ai" target="_blank" rel="noopener">官网</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">FastGPT</div>
+            <div class="agent-desc">国内开源的 AI 知识库问答系统，中文友好，支持私有化部署</div>
+            <div class="agent-tags"><span>开源</span><span>知识库</span><span>国内</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/labring/FastGPT" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">LangChain</div>
+            <div class="agent-desc">LLM 应用开发框架，RAG/Chain/Agent 三大范式，生态最全</div>
+            <div class="agent-tags"><span>开源</span><span>框架</span><span>Python/JS</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/langchain-ai/langchain" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">AnythingLLM</div>
+            <div class="agent-desc">一键式 RAG 桌面应用，拖入文档即可问答，支持 Ollama/OpenAI 等</div>
+            <div class="agent-tags"><span>开源</span><span>RAG</span><span>桌面</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/Mintplex-Labs/anything-llm" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">MaxKB</div>
+            <div class="agent-desc">飞致云开源知识库问答系统，中文优化，开箱即用</div>
+            <div class="agent-tags"><span>开源</span><span>知识库</span><span>国内</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/1Panel-dev/MaxKB" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-name">RAGFlow</div>
+            <div class="agent-desc">深度文档理解 RAG 引擎，支持复杂格式 PDF/Word/Excel 解析</div>
+            <div class="agent-tags"><span>开源</span><span>RAG</span><span>文档</span></div>
+            <div class="agent-links">
+                <a href="https://github.com/infiniflow/ragflow" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 代部署服务 -->
+    <div class="section-title"><span class="emoji"></span>代部署服务</div>
+    <p style="color:var(--muted);margin-bottom:16px;font-size:14px">不会部署？我们提供远程代部署服务，你准备好服务器，我们帮你搞定</p>
+    <table class="service-table">
+        <tr><th>服务</th><th>内容</th><th>价格</th><th></th></tr>
+        <tr>
+            <td style="font-weight:600">Agent 基础部署</td>
+            <td>一台服务器部署 1 个 Agent（自选），含 Docker + 网络优化</td>
+            <td class="price-col">99 元 / 次</td>
+            <td><a href="/pay?tier=pro" class="buy-btn" style="font-size:12px;padding:6px 14px">购买</a></td>
+        </tr>
+        <tr>
+            <td style="font-weight:600">Agent 全家桶</td>
+            <td>一台服务器部署全部 Agent 环境（ComfyUI + Dify + Claude Code + 3个通用Agent + 网络加速）</td>
+            <td class="price-col">499 元 / 次</td>
+            <td><a href="/pay?tier=team" class="buy-btn" style="font-size:12px;padding:6px 14px">购买</a></td>
+        </tr>
+        <tr>
+            <td style="font-weight:600">视频/生图 专项部署</td>
+            <td>ComfyUI + Flux + Wan2.1 + CogVideo 全家环境，含 GPU 驱动配置</td>
+            <td class="price-col">299 元 / 次</td>
+            <td><a href="/pay?tier=pro" class="buy-btn" style="font-size:12px;padding:6px 14px">联系客服</a></td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

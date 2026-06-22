@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+{% block title %}GitHub 开源项目 — OpenCrawler{% endblock %}
+{% set active_page = 'github' %}
+
+{% block head %}
+<style>
+.github-layout{max-width:1200px;margin:0 auto;padding:20px 24px}
+
+.github-hero{text-align:center;margin-bottom:36px}
+.github-hero h1{font-size:30px;font-weight:700;margin-bottom:8px}
+.github-hero p{color:var(--muted);font-size:15px}
+
+/* Category tabs */
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.cat-tab{padding:7px 16px;border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--muted);transition:all .15s;white-space:nowrap}
+.cat-tab:hover{border-color:#1a73e8;color:var(--text)}
+.cat-tab.active{background:#1a73e8;color:#fff;border-color:#1a73e8}
+.cat-count{font-size:11px;opacity:.6;margin-left:4px}
+
+/* Batch mode bar */
+.batch-bar{display:none;align-items:center;gap:12px;padding:12px 16px;background:#e8f0fe;border:1px solid #1a73e8;border-radius:10px;margin-bottom:16px}
+.batch-bar.active{display:flex}
+.batch-bar .batch-count{font-size:13px;color:#1a73e8;flex:1}
+.batch-bar button{padding:7px 18px;border-radius:6px;font-size:13px;cursor:pointer;border:none;font-weight:600}
+.batch-dl-btn{background:#1a73e8;color:#fff}
+.batch-dl-btn:hover{opacity:.85}
+.batch-clear-btn{background:var(--bg);color:var(--muted);border:1px solid var(--border)!important}
+
+/* Toolbar */
+.github-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.github-toolbar input{flex:1;min-width:200px;padding:8px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px}
+.github-toolbar input:focus{outline:none;border-color:#1a73e8}
+.github-toolbar button{padding:8px 16px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+.github-toolbar button:hover{opacity:.85}
+.github-toolbar .sort-btn{padding:8px 14px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;cursor:pointer}
+.github-toolbar .sort-btn.active{background:#e8f0fe;border-color:#1a73e8;color:#1a73e8}
+
+/* Project grid */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:32px}
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;transition:all .2s;display:flex;flex-direction:column;position:relative}
+.project-card:hover{border-color:#1a73e8;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.project-card.selected{border-color:#1a73e8;box-shadow:0 0 0 2px rgba(88,166,255,.25)}
+.project-card .check-box{position:absolute;top:12px;right:12px;width:20px;height:20px;border:2px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
+.project-card.selected .check-box{background:#1a73e8;border-color:#1a73e8;color:#fff}
+.project-card .proj-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.project-card .proj-icon{font-size:24px;flex-shrink:0}
+.project-card .proj-name{font-size:15px;font-weight:600;color:#1a73e8;word-break:break-word}
+.project-card .proj-owner{font-size:11px;color:var(--muted)}
+.project-card .proj-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px;flex:1}
+.project-card .proj-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:12px}
+.project-card .proj-meta span{display:inline-flex;align-items:center;gap:3px}
+.proj-lang-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.project-card .proj-actions{display:flex;gap:8px}
+.proj-actions a,.proj-actions button{font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;text-decoration:none;transition:all .15s;display:inline-block}
+.btn-dl{background:#1a73e8;color:#fff;border:none;font-weight:600}
+.btn-dl:hover{opacity:.85}
+.btn-gh{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn-gh:hover{border-color:#1a73e8;color:#1a73e8}
+
+/* Featured section */
+.featured-section{background:linear-gradient(135deg,rgba(188,140,255,.04),rgba(88,166,255,.03));border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:32px}
+.featured-section h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.featured-section .feat-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.ai-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ai-card{background:var(--bg);border-radius:10px;padding:16px;text-align:center}
+.ai-card .ai-name{font-size:14px;font-weight:600;margin-bottom:4px}
+.ai-card .ai-desc{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4}
+.ai-card a{font-size:11px;color:#1a73e8;text-decoration:none}
+
+/* Course section */
+.course-section{margin-top:40px;margin-bottom:32px}
+.course-section h3{font-size:18px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.course-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;gap:12px;align-items:flex-start}
+.course-card .course-num{font-size:28px;font-weight:800;color:#1a73e8;opacity:.3;flex-shrink:0;width:36px;text-align:center}
+.course-card .course-info{flex:1}
+.course-card .course-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.course-card .course-src{font-size:11px;color:var(--muted);margin-bottom:4px}
+.course-card a{font-size:12px;color:#1a73e8;text-decoration:none}
+
+/* Responsive */
+@media (max-width:768px){
+    .project-grid{grid-template-columns:1fr}
+    .ai-cards{grid-template-columns:1fr 1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="github-layout">
+
+    <div class="github-hero">
+        <h1>GitHub 开源项目资源中心</h1>
+        <p>AI Agent · AI Skill · 大模型 · 计算机视觉 · DevOps — 分类索引 + 批量下载</p>
+    </div>
+
+    <!-- AI 专题 -->
+    <div class="featured-section">
+        <h3>AI Agent &amp; Skill 项目精选</h3>
+        <p class="feat-sub">全部开源 · 免费批量下载 · 持续追踪更新</p>
+        <div class="ai-cards">
+            <div class="ai-card">
+                <div class="ai-name">Claude Code</div>
+                <div class="ai-desc">Anthropic 官方 CLI Agent，终端内编码调试一条龙</div>
+                <a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">OpenManus</div>
+                <div class="ai-desc">开源通用 AI Agent 框架，多工具调用 + 浏览器操控</div>
+                <a href="https://github.com/mannaandpoem/OpenManus" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">CrewAI</div>
+                <div class="ai-desc">多 Agent 协作框架，角色扮演 + 任务委派</div>
+                <a href="https://github.com/crewAIInc/crewAI" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">AutoGPT</div>
+                <div class="ai-desc">自主 AI Agent 鼻祖，长链任务规划执行</div>
+                <a href="https://github.com/Significant-Gravitas/AutoGPT" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">LangChain</div>
+                <div class="ai-desc">LLM 应用开发框架，链式调用 + Tool + RAG</div>
+                <a href="https://github.com/langchain-ai/langchain" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">Dify</div>
+                <div class="ai-desc">开源 LLMOps 平台，可视化 AI 应用搭建</div>
+                <a href="https://github.com/langgenius/dify" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">Aider</div>
+                <div class="ai-desc">AI 结对编程工具，终端内 Git 感知的代码助手</div>
+                <a href="https://github.com/Aider-AI/aider" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">Open WebUI</div>
+                <div class="ai-desc">类 ChatGPT 前端，可连接 Ollama/OpenAI/Claude</div>
+                <a href="https://github.com/open-webui/open-webui" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">MaxKB</div>
+                <div class="ai-desc">飞致云开源知识库问答，RAG + 企业级</div>
+                <a href="https://github.com/1Panel-dev/MaxKB" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">RAGFlow</div>
+                <div class="ai-desc">深度文档理解 RAG 引擎，OCR + 表格解析</div>
+                <a href="https://github.com/infiniflow/ragflow" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">ComfyUI</div>
+                <div class="ai-desc">节点式 AI 绘画工作流，SD/Flux 最强前端</div>
+                <a href="https://github.com/comfyanonymous/ComfyUI" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+            <div class="ai-card">
+                <div class="ai-name">Ollama</div>
+                <div class="ai-desc">本地大模型一键运行，LLaMA/Mistral/Qwen 全支持</div>
+                <a href="https://github.com/ollama/ollama" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="cat-tabs" id="cat-tabs">
+        <span class="cat-tab active" data-cat="">全部项目</span>
+        <span class="cat-tab" data-cat="ai-agent">AI Agent<span class="cat-count">12+</span></span>
+        <span class="cat-tab" data-cat="ai-skill">AI Skill<span class="cat-count">8+</span></span>
+        <span class="cat-tab" data-cat="llm">大模型 LLM<span class="cat-count">15+</span></span>
+        <span class="cat-tab" data-cat="cv">计算机视觉<span class="cat-count">10+</span></span>
+        <span class="cat-tab" data-cat="nlp">NLP / 文本<span class="cat-count">8+</span></span>
+        <span class="cat-tab" data-cat="devops">DevOps<span class="cat-count">10+</span></span>
+        <span class="cat-tab" data-cat="frontend">前端框架<span class="cat-count">12+</span></span>
+        <span class="cat-tab" data-cat="backend">后端服务<span class="cat-count">12+</span></span>
+        <span class="cat-tab" data-cat="security">安全工具<span class="cat-count">8+</span></span>
+        <span class="cat-tab" data-cat="data">数据科学<span class="cat-count">10+</span></span>
+    </div>
+
+    <div class="github-toolbar">
+        <input type="text" id="proj-search" placeholder="搜索项目名称、描述、语言..." onkeydown="if(event.keyCode===13)filterProjects()">
+        <button onclick="filterProjects()">搜索</button>
+        <button class="sort-btn active" data-sort="stars" onclick="setSort(this,'stars')">Star 最多</button>
+        <button class="sort-btn" data-sort="updated" onclick="setSort(this,'updated')">综合推荐</button>
+        <button class="sort-btn" data-sort="name" onclick="setSort(this,'name')">名称排序</button>
+        <button onclick="toggleBatchMode()" style="background:var(--bg);border:1px solid #1a73e8;color:#1a73e8" id="batch-toggle-btn">批量下载模式</button>
+    </div>
+
+    <!-- Batch bar -->
+    <div class="batch-bar" id="batch-bar">
+        <span class="batch-count" id="batch-count">已选 0 个项目</span>
+        <button class="batch-dl-btn" onclick="batchDownload()">批量下载 ZIP</button>
+        <button class="batch-clear-btn" onclick="clearSelection()">清空选择</button>
+        <span style="font-size:11px;color:var(--muted)">提示：点击项目卡片右上角复选框选择</span>
+    </div>
+
+    <!-- Project Grid -->
+    <div class="project-grid" id="project-grid"></div>
+
+    <!-- Technical Courses -->
+    <div class="course-section">
+        <h3>配套技术课程 &amp; 教程资源</h3>
+        <div class="course-grid" id="course-grid"></div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ========== 项目数据库 ==========
+const PROJECTS = [
+    // AI Agent
+    {name:"Claude Code",owner:"anthropics",desc:"Anthropic 官方 CLI Agent，终端内编码调试",lang:"Python",stars:58000,tags:["ai-agent","llm"],url:"https://github.com/anthropics/claude-code"},
+    {name:"OpenManus",owner:"mannaandpoem",desc:"开源通用 AI Agent 框架，多工具+浏览器操控",lang:"Python",stars:42000,tags:["ai-agent"],url:"https://github.com/mannaandpoem/OpenManus"},
+    {name:"CrewAI",owner:"crewAIInc",desc:"多 Agent 协作框架，角色扮演+任务委派",lang:"Python",stars:28000,tags:["ai-agent"],url:"https://github.com/crewAIInc/crewAI"},
+    {name:"AutoGPT",owner:"Significant-Gravitas",desc:"自主 AI Agent 鼻祖，长链任务规划执行",lang:"Python",stars:172000,tags:["ai-agent"],url:"https://github.com/Significant-Gravitas/AutoGPT"},
+    {name:"MetaGPT",owner:"geekan",desc:"多 Agent 协作软件公司模拟，产品经理+架构师+工程师",lang:"Python",stars:51000,tags:["ai-agent"],url:"https://github.com/geekan/MetaGPT"},
+    {name:"AgentGPT",owner:"reworkd",desc:"浏览器内配置部署 AI Agent，无需写代码",lang:"TypeScript",stars:33000,tags:["ai-agent"],url:"https://github.com/reworkd/AgentGPT"},
+    {name:"SuperAGI",owner:"TransformerOptimus",desc:"开源自主 AI Agent 框架，工具市场+向量记忆",lang:"Python",stars:16000,tags:["ai-agent"],url:"https://github.com/TransformerOptimus/SuperAGI"},
+    {name:"BabyAGI",owner:"yoheinakajima",desc:"极简任务驱动的自主 Agent，任务创建+优先级排序",lang:"Python",stars:21000,tags:["ai-agent"],url:"https://github.com/yoheinakajima/babyagi"},
+    {name:"XAgent",owner:"OpenBMB",desc:"清华开源超自主 Agent，双循环机制解决复杂任务",lang:"Python",stars:8500,tags:["ai-agent"],url:"https://github.com/OpenBMB/XAgent"},
+    {name:"OpenClaw",owner:"openclaw",desc:"通用 AI Agent 平台，全平台消息渠道接入",lang:"Python",stars:3500,tags:["ai-agent"],url:"https://github.com/openclaw/openclaw"},
+    {name:"Cognee",owner:"topoteretes",desc:"AI Agent 记忆和图谱引擎，RAG+GraphRAG",lang:"Python",stars:6200,tags:["ai-agent"],url:"https://github.com/topoteretes/cognee"},
+    {name:"TinyTroupe",owner:"microsoft",desc:"微软开源 AI Agent 人格模拟框架",lang:"Python",stars:7200,tags:["ai-agent"],url:"https://github.com/microsoft/TinyTroupe"},
+
+    // AI Skill
+    {name:"Claude Code Skills",owner:"anthropics",desc:"Claude Code 官方技能市场，可复用的 AI 编码技能模板",lang:"Python",stars:3800,tags:["ai-skill"],url:"https://github.com/anthropics/skills"},
+    {name:"OpenAI Codex CLI",owner:"openai",desc:"OpenAI 官方终端编程助手，自然语言→代码",lang:"Go",stars:24000,tags:["ai-skill","ai-agent"],url:"https://github.com/openai/codex"},
+    {name:"Aider",owner:"Aider-AI",desc:"AI 结对编程，Git 感知的终端代码助手",lang:"Python",stars:26000,tags:["ai-skill"],url:"https://github.com/Aider-AI/aider"},
+    {name:"Continue",owner:"continuedev",desc:"开源 AI 代码助手 IDE 插件，VS Code/JetBrains",lang:"TypeScript",stars:22000,tags:["ai-skill"],url:"https://github.com/continuedev/continue"},
+    {name:"GPT-Engineer",owner:"gpt-engineer-org",desc:"自然语言描述→完整代码项目生成",lang:"Python",stars:54000,tags:["ai-skill"],url:"https://github.com/gpt-engineer-org/gpt-engineer"},
+    {name:"Sweep AI",owner:"sweepai",desc:"AI 驱动的代码修复 PR，像人类工程师一样改 Bug",lang:"Python",stars:8200,tags:["ai-skill"],url:"https://github.com/sweepai/sweep"},
+    {name:"TabbyML",owner:"TabbyML",desc:"自托管 AI 代码补全，替代 GitHub Copilot",lang:"Rust",stars:24000,tags:["ai-skill"],url:"https://github.com/TabbyML/tabby"},
+    {name:"V0 Clone",owner:"nutlope",desc:"开源 v0.dev 替代，AI 生成 React 组件 UI",lang:"TypeScript",stars:9800,tags:["ai-skill","frontend"],url:"https://github.com/nutlope/v0-clone"},
+
+    // LLM
+    {name:"LLaMA",owner:"meta-llama",desc:"Meta 开源大模型，从 7B 到 405B 全覆盖",lang:"Python",stars:62000,tags:["llm"],url:"https://github.com/meta-llama/llama"},
+    {name:"Qwen2.5",owner:"QwenLM",desc:"阿里通义千问开源模型，中文最强，多尺寸可选",lang:"Python",stars:21000,tags:["llm"],url:"https://github.com/QwenLM/Qwen2.5"},
+    {name:"DeepSeek-V3",owner:"deepseek-ai",desc:"国产开源大模型天花板，MoE 架构 671B 参数",lang:"Python",stars:45000,tags:["llm"],url:"https://github.com/deepseek-ai/DeepSeek-V3"},
+    {name:"Mistral",owner:"mistralai",desc:"法国开源大模型，7B/8x7B/8x22B 多尺寸",lang:"Python",stars:16000,tags:["llm"],url:"https://github.com/mistralai/mistral-inference"},
+    {name:"vLLM",owner:"vllm-project",desc:"高性能 LLM 推理引擎，PagedAttention 加速",lang:"Python",stars:48000,tags:["llm"],url:"https://github.com/vllm-project/vllm"},
+    {name:"Ollama",owner:"ollama",desc:"本地一键运行大模型，LLaMA/Mistral/Qwen 全支持",lang:"Go",stars:125000,tags:["llm","ai-agent"],url:"https://github.com/ollama/ollama"},
+    {name:"LM Studio",owner:"lmstudio-ai",desc:"桌面端本地模型运行器，GUI+HuggingFace",lang:"TypeScript",stars:15000,tags:["llm"],url:"https://github.com/lmstudio-ai/lms"},
+    {name:"llama.cpp",owner:"ggml-org",desc:"C++ 大模型推理，CPU/GPU 混合，量化加速",lang:"C++",stars:78000,tags:["llm"],url:"https://github.com/ggml-org/llama.cpp"},
+    {name:"Open WebUI",owner:"open-webui",desc:"类 ChatGPT 聊天界面，支持 Ollama/OpenAI/Claude",lang:"Python",stars:65000,tags:["llm"],url:"https://github.com/open-webui/open-webui"},
+    {name:"Dify",owner:"langgenius",desc:"开源 LLMOps 平台，可视化搭建 AI 应用",lang:"Python",stars:68000,tags:["llm"],url:"https://github.com/langgenius/dify"},
+    {name:"FastGPT",owner:"labring",desc:"开源知识库问答，RAG+工作流编排",lang:"TypeScript",stars:22000,tags:["llm"],url:"https://github.com/labring/FastGPT"},
+    {name:"MaxKB",owner:"1Panel-dev",desc:"飞致云开源知识库问答，RAG+企业级",lang:"Python",stars:16000,tags:["llm"],url:"https://github.com/1Panel-dev/MaxKB"},
+    {name:"RAGFlow",owner:"infiniflow",desc:"深度文档理解 RAG 引擎，OCR+表格解析",lang:"Python",stars:38000,tags:["llm"],url:"https://github.com/infiniflow/ragflow"},
+    {name:"LangChain",owner:"langchain-ai",desc:"LLM 应用开发框架，链式调用+Tool+RAG",lang:"Python",stars:102000,tags:["llm"],url:"https://github.com/langchain-ai/langchain"},
+    {name:"AnythingLLM",owner:"Mintplex-Labs",desc:"全能 AI 桌面应用，文档对话/Agent/RAG 一应俱全",lang:"JavaScript",stars:35000,tags:["llm"],url:"https://github.com/Mintplex-Labs/anything-llm"},
+
+    // CV
+    {name:"ComfyUI",owner:"comfyanonymous",desc:"节点式 AI 绘画工作流，SD/Flux 最强前端",lang:"Python",stars:72000,tags:["cv"],url:"https://github.com/comfyanonymous/ComfyUI"},
+    {name:"Stable Diffusion WebUI",owner:"AUTOMATIC1111",desc:"SD WebUI 一键启动包，AI 绘画入门首选",lang:"Python",stars:152000,tags:["cv"],url:"https://github.com/AUTOMATIC1111/stable-diffusion-webui"},
+    {name:"YOLO v10",owner:"THU-MIG",desc:"清华实时目标检测，YOLO 最新进化版",lang:"Python",stars:14000,tags:["cv"],url:"https://github.com/THU-MIG/yolov10"},
+    {name:"Flux",owner:"black-forest-labs",desc:"Stable Diffusion 原团队最新生图模型",lang:"Python",stars:21000,tags:["cv"],url:"https://github.com/black-forest-labs/flux"},
+    {name:"Segment Anything 2",owner:"facebookresearch",desc:"Meta 开源最强图像分割模型 SAM2",lang:"Python",stars:24000,tags:["cv"],url:"https://github.com/facebookresearch/sam2"},
+    {name:"CogVideo",owner:"THUDM",desc:"清华开源视频生成模型，CogVideoX",lang:"Python",stars:11000,tags:["cv"],url:"https://github.com/THUDM/CogVideo"},
+    {name:"Wan2.1",owner:"Wan-Video",desc:"阿里万相视频生成模型，开源 SOTA",lang:"Python",stars:15000,tags:["cv"],url:"https://github.com/Wan-Video/Wan2.1"},
+    {name:"EasyAnimate",owner:"aigc-apps",desc:"阿里开源视频生成+动画框架",lang:"Python",stars:6200,tags:["cv"],url:"https://github.com/aigc-apps/EasyAnimate"},
+    {name:"Fooocus",owner:"lllyasviel",desc:"Stable Diffusion 傻瓜化前端，零门槛 AI 绘画",lang:"Python",stars:43000,tags:["cv"],url:"https://github.com/lllyasviel/Fooocus"},
+    {name:"LivePortrait",owner:"KwaiVGI",desc:"快手开源 AI 人像动画，单张照片驱动视频",lang:"Python",stars:16000,tags:["cv"],url:"https://github.com/KwaiVGI/LivePortrait"},
+
+    // NLP
+    {name:"ChatGLM",owner:"THUDM",desc:"清华开源对话模型，中英双语，企业级可用",lang:"Python",stars:41000,tags:["nlp","llm"],url:"https://github.com/THUDM/ChatGLM-6B"},
+    {name:"Whisper",owner:"openai",desc:"OpenAI 开源语音识别，100+ 语言支持",lang:"Python",stars:79000,tags:["nlp"],url:"https://github.com/openai/whisper"},
+    {name:"Bert-VITS2",owner:"fishaudio",desc:"中文 AI 语音合成，Bert 特征增强 VITS",lang:"Python",stars:11000,tags:["nlp"],url:"https://github.com/fishaudio/Bert-VITS2"},
+    {name:"FunASR",owner:"modelscope",desc:"阿里达摩院工业级语音识别框架",lang:"Python",stars:8500,tags:["nlp"],url:"https://github.com/modelscope/FunASR"},
+    {name:"ChatTTS",owner:"2noise",desc:"对话场景语音生成，自然度极高",lang:"Python",stars:34000,tags:["nlp"],url:"https://github.com/2noise/ChatTTS"},
+    {name:"LangChain",owner:"langchain-ai",desc:"LLM 应用开发框架，文本处理链",lang:"Python",stars:102000,tags:["nlp","llm"],url:"https://github.com/langchain-ai/langchain"},
+    {name:"Sentence Transformers",owner:"UKPLab",desc:"句子/文本向量化，语义搜索+聚类",lang:"Python",stars:16000,tags:["nlp"],url:"https://github.com/UKPLab/sentence-transformers"},
+    {name:"Unstructured",owner:"Unstructured-IO",desc:"文档解析预处理，PDF/HTML/图片→LLM 就绪文本",lang:"Python",stars:11000,tags:["nlp"],url:"https://github.com/Unstructured-IO/unstructured"},
+
+    // DevOps
+    {name:"Docker",owner:"docker",desc:"容器化引擎，开发者标配",lang:"Go",stars:78000,tags:["devops"],url:"https://github.com/docker/docker-ce"},
+    {name:"Kubernetes",owner:"kubernetes",desc:"容器编排平台，云原生基石",lang:"Go",stars:114000,tags:["devops"],url:"https://github.com/kubernetes/kubernetes"},
+    {name:"Nginx",owner:"nginx",desc:"高性能 Web 服务器+反向代理",lang:"C",stars:26000,tags:["devops"],url:"https://github.com/nginx/nginx"},
+    {name:"Grafana",owner:"grafana",desc:"数据可视化和监控仪表盘",lang:"TypeScript",stars:67000,tags:["devops"],url:"https://github.com/grafana/grafana"},
+    {name:"Prometheus",owner:"prometheus",desc:"开源监控和告警系统",lang:"Go",stars:58000,tags:["devops"],url:"https://github.com/prometheus/prometheus"},
+    {name:"Ansible",owner:"ansible",desc:"IT 自动化配置管理工具",lang:"Python",stars:64000,tags:["devops"],url:"https://github.com/ansible/ansible"},
+    {name:"1Panel",owner:"1Panel-dev",desc:"国产开源 Linux 服务器运维面板",lang:"Go",stars:26000,tags:["devops"],url:"https://github.com/1Panel-dev/1Panel"},
+    {name:"NocoDB",owner:"nocodb",desc:"开源 Airtable 替代，智能表格平台",lang:"TypeScript",stars:52000,tags:["devops"],url:"https://github.com/nocodb/nocodb"},
+    {name:"Portainer",owner:"portainer",desc:"Docker 可视化管理面板",lang:"TypeScript",stars:32000,tags:["devops"],url:"https://github.com/portainer/portainer"},
+    {name:"Coolify",owner:"coollabsio",desc:"开源 Vercel/Heroku 替代，自托管 PaaS",lang:"PHP",stars:38000,tags:["devops"],url:"https://github.com/coollabsio/coolify"},
+
+    // Frontend
+    {name:"React",owner:"facebook",desc:"Facebook 开源前端 UI 库，生态最大",lang:"JavaScript",stars:234000,tags:["frontend"],url:"https://github.com/facebook/react"},
+    {name:"Vue",owner:"vuejs",desc:"渐进式前端框架，中文社区最活跃",lang:"TypeScript",stars:49000,tags:["frontend"],url:"https://github.com/vuejs/core"},
+    {name:"Next.js",owner:"vercel",desc:"React 全栈框架，SSR/SSG/ISR 全支持",lang:"TypeScript",stars:132000,tags:["frontend"],url:"https://github.com/vercel/next.js"},
+    {name:"Tailwind CSS",owner:"tailwindlabs",desc:"原子化 CSS 框架，快速构建 UI",lang:"TypeScript",stars:87000,tags:["frontend"],url:"https://github.com/tailwindlabs/tailwindcss"},
+    {name:"Shadcn UI",owner:"shadcn-ui",desc:"React 组件库，复制粘贴即用，设计精美",lang:"TypeScript",stars:82000,tags:["frontend"],url:"https://github.com/shadcn-ui/ui"},
+    {name:"Ant Design",owner:"ant-design",desc:"蚂蚁集团企业级 UI 组件库，React 生态最大的设计体系",lang:"TypeScript",stars:94000,tags:["frontend"],url:"https://github.com/ant-design/ant-design"},
+    {name:"Element Plus",owner:"element-plus",desc:"Vue3 组件库，中文最流行的后台 UI 方案",lang:"Vue",stars:25000,tags:["frontend"],url:"https://github.com/element-plus/element-plus"},
+    {name:"TDesign",owner:"Tencent",desc:"腾讯开源企业级设计体系，Vue/React/小程序全覆盖",lang:"TypeScript",stars:3800,tags:["frontend"],url:"https://github.com/Tencent/tdesign"},
+    {name:"Naive UI",owner:"tusen-ai",desc:"Vue3 组件库，TypeScript 优先，Tree-shaking",lang:"TypeScript",stars:17000,tags:["frontend"],url:"https://github.com/tusen-ai/naive-ui"},
+    {name:"Arco Design",owner:"arco-design",desc:"字节跳动开源企业级设计系统",lang:"TypeScript",stars:5200,tags:["frontend"],url:"https://github.com/arco-design/arco-design"},
+    {name:"ECharts",owner:"apache",desc:"百度开源数据可视化图表库",lang:"JavaScript",stars:62000,tags:["frontend","data"],url:"https://github.com/apache/echarts"},
+    {name:"Svelte",owner:"sveltejs",desc:"编译型前端框架，无虚拟 DOM，极致性能",lang:"JavaScript",stars:82000,tags:["frontend"],url:"https://github.com/sveltejs/svelte"},
+
+    // Backend
+    {name:"FastAPI",owner:"fastapi",desc:"Python 高性能 Web 框架，异步+自动文档",lang:"Python",stars:82000,tags:["backend"],url:"https://github.com/fastapi/fastapi"},
+    {name:"Spring Boot",owner:"spring-projects",desc:"Java 企业级微服务框架",lang:"Java",stars:77000,tags:["backend"],url:"https://github.com/spring-projects/spring-boot"},
+    {name:"Flask",owner:"pallets",desc:"Python 轻量 Web 框架，简洁灵活",lang:"Python",stars:69000,tags:["backend"],url:"https://github.com/pallets/flask"},
+    {name:"Express",owner:"expressjs",desc:"Node.js Web 框架，中间件生态丰富",lang:"JavaScript",stars:66000,tags:["backend"],url:"https://github.com/expressjs/express"},
+    {name:"Gin",owner:"gin-gonic",desc:"Go 高性能 HTTP Web 框架",lang:"Go",stars:81000,tags:["backend"],url:"https://github.com/gin-gonic/gin"},
+    {name:"Redis",owner:"redis",desc:"高性能内存数据库，缓存/消息队列",lang:"C",stars:68000,tags:["backend"],url:"https://github.com/redis/redis"},
+    {name:"PostgreSQL",owner:"postgres",desc:"最先进的开源关系型数据库",lang:"C",stars:17000,tags:["backend"],url:"https://github.com/postgres/postgres"},
+    {name:"MySQL",owner:"mysql",desc:"全球最流行的开源数据库",lang:"C++",stars:12000,tags:["backend"],url:"https://github.com/mysql/mysql-server"},
+    {name:"MongoDB",owner:"mongodb",desc:"文档型 NoSQL 数据库",lang:"C++",stars:27000,tags:["backend"],url:"https://github.com/mongodb/mongo"},
+    {name:"RocketMQ",owner:"apache",desc:"阿里开源分布式消息队列",lang:"Java",stars:22000,tags:["backend"],url:"https://github.com/apache/rocketmq"},
+    {name:"Nacos",owner:"alibaba",desc:"阿里开源服务发现+配置中心",lang:"Java",stars:31000,tags:["backend"],url:"https://github.com/alibaba/nacos"},
+    {name:"SkyWalking",owner:"apache",desc:"国产开源 APM 分布式追踪系统",lang:"Java",stars:24000,tags:["backend"],url:"https://github.com/apache/skywalking"},
+
+    // Security
+    {name:"Burp Suite Extensions",owner:"PortSwigger",desc:"Web 安全测试扩展生态",lang:"Java",stars:12000,tags:["security"],url:"https://github.com/PortSwigger"},
+    {name:"Nuclei",owner:"projectdiscovery",desc:"快速漏洞扫描器，模板化 YAML 驱动",lang:"Go",stars:22000,tags:["security"],url:"https://github.com/projectdiscovery/nuclei"},
+    {name:"Nmap",owner:"nmap",desc:"网络发现和安全审计工具",lang:"C",stars:11000,tags:["security"],url:"https://github.com/nmap/nmap"},
+    {name:"Metasploit",owner:"rapid7",desc:"渗透测试框架，漏洞利用开发平台",lang:"Ruby",stars:35000,tags:["security"],url:"https://github.com/rapid7/metasploit-framework"},
+    {name:"SQLMap",owner:"sqlmapproject",desc:"自动化 SQL 注入检测工具",lang:"Python",stars:34000,tags:["security"],url:"https://github.com/sqlmapproject/sqlmap"},
+    {name:"OSQuery",owner:"osquery",desc:"操作系统 SQL 查询分析，Facebook 开源",lang:"C++",stars:22000,tags:["security"],url:"https://github.com/osquery/osquery"},
+    {name:"Wazuh",owner:"wazuh",desc:"开源 SIEM+XDR 安全平台",lang:"C",stars:12000,tags:["security"],url:"https://github.com/wazuh/wazuh"},
+    {name:"ClamAV",owner:"Cisco-Talos",desc:"思科开源杀毒引擎",lang:"C",stars:5000,tags:["security"],url:"https://github.com/Cisco-Talos/clamav"},
+
+    // Data Science
+    {name:"Pandas",owner:"pandas-dev",desc:"Python 数据分析库，DataFrame 王者",lang:"Python",stars:45000,tags:["data"],url:"https://github.com/pandas-dev/pandas"},
+    {name:"Apache Spark",owner:"apache",desc:"大规模数据处理引擎",lang:"Scala",stars:41000,tags:["data"],url:"https://github.com/apache/spark"},
+    {name:"TensorFlow",owner:"tensorflow",desc:"Google 开源深度学习框架",lang:"C++",stars:188000,tags:["data"],url:"https://github.com/tensorflow/tensorflow"},
+    {name:"PyTorch",owner:"pytorch",desc:"Facebook 开源深度学习框架",lang:"Python",stars:88000,tags:["data"],url:"https://github.com/pytorch/pytorch"},
+    {name:"Apache Flink",owner:"apache",desc:"流式计算引擎，实时数据处理",lang:"Java",stars:25000,tags:["data"],url:"https://github.com/apache/flink"},
+    {name:"DolphinScheduler",owner:"apache",desc:"国产开源分布式任务调度平台",lang:"Java",stars:14000,tags:["data"],url:"https://github.com/apache/dolphinscheduler"},
+    {name:"DataX",owner:"alibaba",desc:"阿里开源异构数据源离线同步工具",lang:"Java",stars:16000,tags:["data"],url:"https://github.com/alibaba/DataX"},
+    {name:"Seatunnel",owner:"apache",desc:"高性能分布式数据集成平台",lang:"Java",stars:8500,tags:["data"],url:"https://github.com/apache/seatunnel"},
+    {name:"Jupyter",owner:"jupyter",desc:"交互式笔记本，数据科学标配",lang:"Python",stars:12000,tags:["data"],url:"https://github.com/jupyter/notebook"},
+    {name:"Kibana",owner:"elastic",desc:"Elasticsearch 数据可视化平台",lang:"TypeScript",stars:21000,tags:["data"],url:"https://github.com/elastic/kibana"},
+];
+
+const COURSES = [
+    {title:"AI Agent 从零到一：手把手构建你的第一个智能体",src:"GitHub 开源教程",url:"https://github.com/microsoft/autogen"},
+    {title:"LangChain 实战：构建检索增强生成 (RAG) 应用",src:"LangChain 官方文档",url:"https://github.com/langchain-ai/langchain"},
+    {title:"LLM 大模型微调完全指南：LoRA/QLoRA 实战",src:"HuggingFace 社区",url:"https://github.com/huggingface/peft"},
+    {title:"ComfyUI 工作流从入门到精通",src:"ComfyUI 社区",url:"https://github.com/comfyanonymous/ComfyUI"},
+    {title:"Stable Diffusion 绘画全攻略：提示词+ControlNet",src:"SD WebUI Wiki",url:"https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki"},
+    {title:"Dify 企业级 AI 应用搭建教程",src:"Dify 官方文档",url:"https://github.com/langgenius/dify"},
+    {title:"FastGPT 知识库问答系统部署指南",src:"FastGPT 文档",url:"https://github.com/labring/FastGPT"},
+    {title:"OpenManus Agent 定制开发教程",src:"OpenManus 文档",url:"https://github.com/mannaandpoem/OpenManus"},
+    {title:"vLLM 大模型高性能推理部署实战",src:"vLLM 官方文档",url:"https://github.com/vllm-project/vllm"},
+    {title:"1Panel + Docker 一站式运维面板搭建",src:"1Panel 社区",url:"https://github.com/1Panel-dev/1Panel"},
+];
+
+// ========== 状态 ==========
+let currentCat = '';
+let currentSort = 'stars';
+let batchMode = false;
+let selectedRepos = new Set();
+
+// ========== 渲染 ==========
+function getCatLabel(cat){ return ({'ai-agent':'AI Agent','ai-skill':'AI Skill','llm':'大模型','cv':'计算机视觉','nlp':'NLP','devops':'DevOps','frontend':'前端','backend':'后端','security':'安全','data':'数据科学'})[cat]||cat; }
+
+function langColor(lang){
+    const m={Python:'#3572A5',JavaScript:'#f1e05a',TypeScript:'#3178c6',Go:'#00ADD8',Rust:'#dea584',Java:'#b07219',C:'#555',Cpp:'#f34b7d','C++':'#f34b7d',Ruby:'#701516',PHP:'#4F5D95',Vue:'#41b883',Scala:'#c22d40'};
+    return m[lang]||'#8b949e';
+}
+
+function filterProjects(){
+    const kw = (document.getElementById('proj-search').value||'').toLowerCase();
+    let items = PROJECTS;
+    if(currentCat) items = items.filter(p => p.tags.includes(currentCat));
+    if(kw) items = items.filter(p => (p.name+' '+p.desc+' '+p.lang+' '+p.owner+' '+p.tags.join(' ')).toLowerCase().includes(kw));
+    if(currentSort==='stars') items.sort((a,b)=>b.stars-a.stars);
+    else if(currentSort==='updated') items.sort((a,b)=>b.stars-a.stars || a.name.localeCompare(b.name));
+    else items.sort((a,b)=>a.name.localeCompare(b.name));
+    renderProjects(items);
+}
+
+function renderProjects(items){
+    const grid = document.getElementById('project-grid');
+    if(!items.length){ grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">未找到匹配项目</div>'; return; }
+    grid.innerHTML = items.map(p => {
+        const sel = selectedRepos.has(p.url) ? ' selected' : '';
+        const safeUrl = escAttr(p.url);
+        return `<div class="project-card${sel}" data-url="${safeUrl}">
+            <div class="check-box" onclick="toggleSelect(this.parentElement,this.parentElement.dataset.url)">${selectedRepos.has(p.url)?'✓':''}</div>
+            <div class="proj-header">
+                <div class="proj-icon"></div>
+                <div>
+                    <div class="proj-name">${esc(p.name)}</div>
+                    <div class="proj-owner">${esc(p.owner)}</div>
+                </div>
+            </div>
+            <div class="proj-desc">${esc(p.desc)}</div>
+            <div class="proj-meta">
+                <span><span class="proj-lang-dot" style="background:${langColor(p.lang)}"></span> ${p.lang}</span>
+                <span>⭐ ${p.stars.toLocaleString()}</span>
+                <span>${p.tags.map(t=>'<span style="background:#e8f0fe;padding:1px 6px;border-radius:10px;font-size:10px">'+getCatLabel(t)+'</span>').join(' ')}</span>
+            </div>
+            <div class="proj-actions">
+                <a href="${safeUrl}" target="_blank" rel="noopener" class="btn-gh">GitHub</a>
+                <a href="${safeUrl}/archive/refs/heads/main.zip" class="btn-dl">下载 ZIP</a>
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('batch-count').textContent = '已选 '+selectedRepos.size+' 个项目';
+    document.getElementById('batch-toggle-btn').textContent = batchMode ? '退出批量模式' : '批量下载模式';
+    document.getElementById('batch-toggle-btn').style.background = batchMode ? '#1a73e8' : 'var(--bg)';
+    document.getElementById('batch-toggle-btn').style.color = batchMode ? '#fff' : '#1a73e8';
+}
+
+function renderCourses(){
+    document.getElementById('course-grid').innerHTML = COURSES.map((c,i) => `
+        <div class="course-card">
+            <div class="course-num">${String(i+1).padStart(2,'0')}</div>
+            <div class="course-info">
+                <div class="course-title">${esc(c.title)}</div>
+                <div class="course-src">${esc(c.src)}</div>
+                <a href="${escAttr(c.url)}" target="_blank" rel="noopener">查看教程 →</a>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ========== 交互 ==========
+function setSort(btn, type){ currentSort=type; document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); filterProjects(); }
+
+function toggleBatchMode(){ batchMode=!batchMode; document.getElementById('batch-bar').classList.toggle('active',batchMode); document.querySelectorAll('.project-card').forEach(c=>c.querySelector('.check-box').style.display=batchMode?'flex':'none'); if(!batchMode)clearSelection(); filterProjects(); }
+
+function toggleSelect(card, url){
+    if(!batchMode) return;
+    if(selectedRepos.has(url)){ selectedRepos.delete(url); card.classList.remove('selected'); card.querySelector('.check-box').textContent=''; }
+    else { selectedRepos.add(url); card.classList.add('selected'); card.querySelector('.check-box').textContent='✓'; }
+    document.getElementById('batch-count').textContent = '已选 '+selectedRepos.size+' 个项目';
+}
+
+function clearSelection(){ selectedRepos.clear(); document.querySelectorAll('.project-card.selected').forEach(c=>{c.classList.remove('selected');c.querySelector('.check-box').textContent='';}); document.getElementById('batch-count').textContent='已选 0 个项目'; }
+
+function batchDownload(){
+    if(selectedRepos.size===0){ alert('请先在批量模式下选择项目'); return; }
+    const urls = Array.from(selectedRepos).map(u => u + '/archive/refs/heads/main.zip');
+    let html = '<div style="text-align:left"><p style="margin-bottom:12px"><strong>已生成 '+urls.length+' 个项目的下载链接：</strong></p>';
+    urls.forEach((u,i) => { html += '<p style="font-size:13px;margin-bottom:4px">'+(i+1)+'. <a href="'+u+'" target="_blank" style="color:#1a73e8">'+u+'</a></p>'; });
+    html += '<p style="margin-top:12px;font-size:12px;color:var(--muted);">提示：点击链接逐个下载（GitHub ZIP 由 GitHub 官方提供，完全合法）</p></div>';
+    const w = window.open('','_blank','width=600,height=500'); w.document.write('<html><head><meta charset="utf-8"><title>批量下载</title><style>body{font-family:sans-serif;background:#0d1117;color:#c9d1d9;padding:24px;line-height:1.8}a{color:#58a6ff}</style></head><body>'+html+'</body></html>');
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Events
+document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.onclick = function(){
+        document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+        this.classList.add('active');
+        currentCat = this.dataset.cat;
+        filterProjects();
+    };
+});
+
+// Init
+renderProjects(PROJECTS);
+renderCourses();
+</script>
+{% endblock %}

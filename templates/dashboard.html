@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>统一事件监视器</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;
+    --accent:#58a6ff;--green:#3fb950;--orange:#d2991d;--red:#f85149;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+
+  /* ── 顶部栏 ── */
+  .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:14px;z-index:100}
+  .topbar h1{font-size:17px;font-weight:600;white-space:nowrap}
+  .topbar .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .topbar .tick{font-size:11px;color:var(--muted)}
+  .topbar .spacer{flex:1}
+  .topbar button{background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:5px;cursor:pointer;font-size:12px}
+  .topbar button:hover{opacity:.85}
+  .topbar button.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+  /* ── 双栏布局 ── */
+  .main{display:flex;height:calc(100vh - 46px)}
+  .left{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+  .right{width:50%;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+  .right.collapsed{display:none}
+  .left.expanded{flex:1}
+
+  /* ── 统计栏 ── */
+  .stats{display:flex;gap:10px;padding:12px 16px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--card)}
+  .stat-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;white-space:nowrap;flex-shrink:0}
+  .stat-card .label{font-size:11px;color:var(--muted)}
+  .stat-card .value{font-size:20px;font-weight:700;margin-top:2px}
+  .stat-card .sub{font-size:10px;color:var(--muted);margin-top:1px}
+
+  /* ── 过滤器 ── */
+  .filters{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap;flex-shrink:0;background:var(--card);border-bottom:1px solid var(--border)}
+  .filters select,.filters input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:12px}
+  .filters select:focus,.filters input:focus{outline:none;border-color:var(--accent)}
+  .filters input{flex:1;min-width:160px;max-width:260px}
+  .filters .count{font-size:11px;color:var(--muted);padding:5px 0}
+
+  /* ── 条目列表 ── */
+  .list{flex:1;overflow-y:auto;padding:8px 12px}
+  .item{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+  .item:hover{border-color:var(--accent)}
+  .item.active{border-color:var(--accent);background:#1a2332}
+  .item .title{font-size:14px;font-weight:600;color:var(--text)}
+  .item .title a{color:inherit;text-decoration:none}
+  .item .title a:hover{color:var(--accent)}
+  .item .desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .item .meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+  .item .tag{font-size:10px;padding:2px 7px;border-radius:10px;background:#1c2a3d;color:var(--accent);border:1px solid #1f3a5f}
+  .item .tag.src{background:#1d2b1f;color:var(--green);border-color:#1f3d2e}
+  .item .time{font-size:10px;color:var(--muted);margin-left:auto}
+  .item .read-btn{font-size:10px;color:var(--accent);cursor:pointer;border:1px solid var(--border);padding:2px 8px;border-radius:10px;background:transparent}
+  .item .read-btn:hover{background:#1c2a3d}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+  .pager{display:flex;justify-content:center;gap:6px;padding:10px;flex-shrink:0;border-top:1px solid var(--border);background:var(--card)}
+  .pager button{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 12px;border-radius:5px;cursor:pointer;font-size:12px}
+  .pager button:hover:not(:disabled){border-color:var(--accent)}
+  .pager button:disabled{opacity:.4;cursor:default}
+  .pager span{font-size:12px;color:var(--muted);padding:4px 6px}
+
+  /* ── 阅读面板 ── */
+  .reader{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .reader-header{background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .reader-header .r-title{font-size:14px;font-weight:600;flex:1}
+  .reader-header button{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px}
+  .reader-header button:hover{color:var(--text);border-color:var(--text)}
+  .reader-body{flex:1;overflow-y:auto;padding:20px 24px;line-height:1.8;font-size:15px;color:#d0d7de}
+  .reader-body h1,.reader-body h2{font-size:20px;margin:24px 0 12px;border-bottom:1px solid var(--border);padding-bottom:8px}
+  .reader-body h3,.reader-body h4{font-size:16px;margin:20px 0 8px}
+  .reader-body p{margin:12px 0}
+  .reader-body pre{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px}
+  .reader-body code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:13px}
+  .reader-body blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:6px 16px;color:var(--muted)}
+  .reader-body img{max-width:100%;border-radius:6px;margin:8px 0}
+  .reader-body ul,.reader-body ol{margin:8px 0;padding-left:24px}
+  .reader-body li{margin:4px 0}
+  .reader-body figure{margin:16px 0}
+  .reader-body figcaption{font-size:12px;color:var(--muted);text-align:center;margin-top:4px}
+  .reader-body a{color:var(--accent)}
+  .reader-body table{border-collapse:collapse;width:100%;margin:12px 0}
+  .reader-body td,.reader-body th{border:1px solid var(--border);padding:6px 12px;font-size:13px}
+  .reader-placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
+  .reader-loading{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .reader-error{color:var(--red);padding:20px;text-align:center}
+  .resizer{width:4px;cursor:col-resize;background:var(--border);flex-shrink:0;transition:background .15s}
+  .resizer:hover{background:var(--accent)}
+
+  @media(max-width:768px){
+    .right{width:100%;position:fixed;top:46px;left:0;right:0;bottom:0;z-index:50}
+    .right.collapsed{display:none}
+    .resizer{display:none}
+    .reader-header .close-mobile{display:inline!important}
+  }
+  .close-mobile{display:none}
+</style>
+</head>
+<body>
+
+<!-- ── 顶部栏 ── -->
+<div class="topbar">
+  <div class="dot"></div>
+  <h1>事件监视器</h1>
+  <span class="tick" id="last-tick"></span>
+  <span class="spacer"></span>
+  <button class="ghost" onclick="toggleFetch()" id="btn-fetch" title="暂停/恢复自动抓取">⏸ 暂停抓取</button>
+  <button onclick="fetchNow()">⚡ 立即抓取</button>
+  <button onclick="loadAll()">🔄 刷新</button>
+</div>
+
+<!-- ── 双栏 ── -->
+<div class="main">
+  <!-- 左侧：列表 -->
+  <div class="left" id="left-panel">
+    <div class="stats" id="stats-bar">加载中...</div>
+    <div class="filters">
+      <select id="fl-source" onchange="loadItems(0)"><option value="">全部来源</option></select>
+      <select id="fl-tag" onchange="loadItems(0)"><option value="">全部标签</option></select>
+      <select id="fl-hours" onchange="loadItems(0)">
+        <option value="">不限时间</option><option value="1">1 小时内</option><option value="6">6 小时内</option><option value="24">24 小时内</option><option value="72">3 天内</option><option value="168">7 天内</option>
+      </select>
+      <input type="text" id="fl-kw" placeholder="搜索关键词..." oninput="debounceSearch()">
+      <span class="count" id="item-count"></span>
+    </div>
+    <div class="list" id="item-list"><div class="empty-state">加载中...</div></div>
+    <div class="pager" id="pager"></div>
+  </div>
+
+  <!-- 拖拽分隔条 -->
+  <div class="resizer" id="resizer"></div>
+
+  <!-- 右侧：阅读面板 -->
+  <div class="right" id="right-panel">
+    <div class="reader" id="reader">
+      <div class="reader-header">
+        <span class="r-title" id="r-title">选择左侧文章开始阅读</span>
+        <button onclick="openOriginal()" id="btn-original" style="display:none">🔗 原文</button>
+        <button onclick="translateArticle()" id="btn-translate" style="display:none">🌐 翻译中文</button>
+        <button onclick="closeReader()" class="close-mobile">✕ 关闭</button>
+      </div>
+      <div class="reader-body" id="r-body">
+        <div class="reader-placeholder">点击左侧条目阅读全文</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_KEY = '{{ admin_key }}';
+// ── 状态 ──
+let currentPage = 0, pageSize = 50, searchTimeout, activeItemId = null, activeUrl = null;
+let fetching = true;
+
+// ── 顶层操作 ──
+async function loadAll() {
+  await Promise.all([loadStats(), loadItems(currentPage), loadFilters()]);
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(`/api/stats?admin_key=${ADMIN_KEY}`);
+    const data = await r.json();
+    const sources = data.sources || {};
+    const entries = Object.entries(sources).sort((a,b) => b[1].count - a[1].count);
+    document.getElementById('stats-bar').innerHTML = entries.map(([k,v]) =>
+      `<div class="stat-card"><div class="label">${k}</div><div class="value">${v.count}</div><div class="sub">最后: ${v.last_fetch||'N/A'}</div></div>`
+    ).join('') || '<div class="stat-card"><div class="label">暂无数据</div></div>';
+  } catch(e) { console.error(e); }
+}
+
+async function loadFilters() {
+  try {
+    const r = await fetch(`/api/filters?admin_key=${ADMIN_KEY}`);
+    const data = await r.json();
+    const src = document.getElementById('fl-source');
+    src.innerHTML = '<option value="">全部来源</option>' + (data.sources||[]).map(s => `<option>${s}</option>`).join('');
+    const tag = document.getElementById('fl-tag');
+    tag.innerHTML = '<option value="">全部标签</option>' + (data.tags||[]).map(t => `<option>${t}</option>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function loadItems(page) {
+  currentPage = page;
+  const source = document.getElementById('fl-source').value;
+  const tag = document.getElementById('fl-tag').value;
+  const hours = document.getElementById('fl-hours').value;
+  const keyword = document.getElementById('fl-kw').value;
+  const params = new URLSearchParams({limit: pageSize, offset: page * pageSize});
+  if (source) params.set('source', source);
+  if (tag) params.set('tag', tag);
+  if (hours) params.set('hours', hours);
+  if (keyword) params.set('keyword', keyword);
+
+  document.getElementById('item-count').textContent = '';
+  const el = document.getElementById('item-list');
+  el.innerHTML = '<div class="empty-state">加载中...</div>';
+  try {
+    const r = await fetch(`/api/items?${params}&admin_key=${ADMIN_KEY}`);
+    const data = await r.json();
+    document.getElementById('item-count').textContent = `共 ${data.total} 条`;
+    if (!data.items.length) {
+      el.innerHTML = '<div class="empty-state">暂无数据</div>';
+    } else {
+      el.innerHTML = data.items.map((item, i) => {
+        const desc = item.description || '';
+        const time = item.fetched_at ? new Date(item.fetched_at * 1000) : null;
+        const timeStr = time ? time.toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+        const tags = (item.tags || '').split(',').filter(Boolean);
+        const extra = item.extra || {};
+        const extraStr = extra.stars_today ? `⭐ ${extra.stars_today} today` :
+                         extra.score ? `▲ ${extra.score} | ${extra.author||''}` :
+                         extra.published ? extra.published.substring(0, 16) :
+                         extra.cvss ? `CVSS ${extra.cvss}` : '';
+        const kw = document.getElementById('fl-kw').value;
+        const hlDesc = kw ? highlight(desc, kw) : esc(desc);
+        const hlTitle = kw ? highlight(item.title, kw) : esc(item.title);
+        const id = item.id || i;
+        return `<div class="item${id===activeItemId?' active':''}" id="item-${id}" data-id="${id}" data-url="${escAttr(item.url)}" data-title="${escAttr(item.title)}">
+          <div class="title">${hlTitle}</div>
+          ${desc ? `<div class="desc">${hlDesc}</div>` : ''}
+          <div class="meta">
+            <span class="tag src">${esc(item.source_label||item.source)}</span>
+            ${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+            ${extraStr ? `<span class="tag">${esc(extraStr)}</span>` : ''}
+            <span class="time">${timeStr}</span>
+            <span class="read-btn" onclick="event.stopPropagation();readItem(this.parentElement.parentElement.dataset.url,this.parentElement.parentElement.dataset.title)">阅读</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    // bind click
+    el.querySelectorAll('.item').forEach(el => {
+      el.addEventListener('click', function() {
+        const url = this.dataset.url;
+        const title = this.dataset.title;
+        readItem(url, title);
+      });
+    });
+    // pager
+    const pager = document.getElementById('pager');
+    const totalPages = Math.ceil(data.total / pageSize);
+    if (totalPages <= 1) { pager.innerHTML = ''; return; }
+    pager.innerHTML = `
+      <button ${currentPage===0?'disabled':''} onclick="loadItems(${currentPage-1})">上一页</button>
+      <span>${currentPage+1} / ${totalPages}</span>
+      <button ${currentPage>=totalPages-1?'disabled':''} onclick="loadItems(${currentPage+1})">下一页</button>`;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">加载失败，请检查服务器</div>';
+    console.error(e);
+  }
+}
+
+// ── 阅读面板 ──
+async function readItem(url, title) {
+  activeUrl = url;
+  const right = document.getElementById('right-panel');
+  right.classList.remove('collapsed');
+  document.getElementById('left-panel').classList.remove('expanded');
+  document.getElementById('r-title').textContent = title || '加载中...';
+  document.getElementById('r-body').innerHTML = '<div class="reader-loading">正在抓取全文...</div>';
+  document.getElementById('btn-original').style.display = 'inline';
+  document.getElementById('btn-translate').style.display = 'none';
+  // highlight active item
+  document.querySelectorAll('.item.active').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.item').forEach(e => { if (e.dataset.url === url) { e.classList.add('active'); activeItemId = e.dataset.id; } });
+
+  try {
+    const r = await fetch(`/api/read?url=${encodeURIComponent(url)}&admin_key=${ADMIN_KEY}`);
+    const data = await r.json();
+    if (data.error) {
+      document.getElementById('r-body').innerHTML = `<div class="reader-error">${esc(data.error)}<br><br><a href="${esc(url)}" target="_blank">在浏览器中打开原文</a></div>`;
+    } else {
+      document.getElementById('r-title').textContent = data.title || title;
+      document.getElementById('r-body').innerHTML = data.content;
+      document.getElementById('btn-translate').style.display = 'inline';
+      document.getElementById('btn-translate').textContent = '🌐 翻译中文';
+      document.getElementById('btn-translate').onclick = translateArticle;
+      document.getElementById('btn-translate').disabled = false;
+    }
+  } catch(e) {
+    document.getElementById('r-body').innerHTML = `<div class="reader-error">请求失败<br><br><a href="${esc(url)}" target="_blank">在浏览器中打开原文</a></div>`;
+  }
+}
+
+function openOriginal() {
+  if (activeUrl) window.open(activeUrl, '_blank');
+}
+
+async function translateArticle() {
+  const body = document.getElementById('r-body');
+  const btn = document.getElementById('btn-translate');
+  const originalHTML = body.innerHTML;
+  btn.textContent = '翻译中...'; btn.disabled = true;
+  try {
+    // 提取纯文本
+    const temp = document.createElement('div');
+    temp.innerHTML = originalHTML;
+    const text = temp.textContent.trim();
+    if (!text) return;
+    const r = await fetch(`/api/translate?admin_key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text}),
+    });
+    const data = await r.json();
+    if (data.translated) {
+      // 用翻译替换内容（保留段落格式）
+      const lines = data.translated.split('\n').filter(l => l.trim());
+      body.innerHTML = lines.map(l => `<p>${esc(l)}</p>`).join('\n');
+      btn.textContent = '📋 显示原文'; btn.disabled = false;
+      btn.onclick = () => { body.innerHTML = originalHTML; btn.textContent = '🌐 翻译中文'; btn.onclick = translateArticle; };
+    }
+  } catch(e) {
+    console.error(e);
+    btn.textContent = '🌐 翻译中文'; btn.disabled = false;
+  }
+}
+
+function closeReader() {
+  document.getElementById('right-panel').classList.add('collapsed');
+}
+
+// ── 抓取控制 ──
+async function fetchNow() {
+  const btn = document.querySelector('.topbar button:last-child');
+  btn.textContent = '抓取中...'; btn.disabled = true;
+  try {
+    await fetch(`/api/fetch?admin_key=${ADMIN_KEY}`, {method:'POST'});
+    await loadAll();
+    document.getElementById('last-tick').textContent = new Date().toLocaleTimeString('zh-CN');
+  } catch(e) { console.error(e); }
+  btn.textContent = '⚡ 立即抓取'; btn.disabled = false;
+}
+
+function toggleFetch() {
+  fetching = !fetching;
+  const btn = document.getElementById('btn-fetch');
+  btn.textContent = fetching ? '⏸ 暂停抓取' : '▶ 恢复抓取';
+  fetch(`/api/toggle-fetch?admin_key=${ADMIN_KEY}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({fetching})});
+}
+
+// ── 工具函数 ──
+function highlight(text, kw) {
+  if (!kw) return esc(text);
+  const escaped = esc(text);
+  return escaped.replace(new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark style="background:rgba(210,153,29,.35);padding:1px 2px;border-radius:2px">$1</mark>');
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = (s==null?'':s); return d.innerHTML; }
+function escAttr(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => loadItems(0), 300); }
+
+// ── 拖拽分隔条 ──
+const resizer = document.getElementById('resizer');
+const left = document.getElementById('left-panel');
+const right = document.getElementById('right-panel');
+let resizeX = 0;
+resizer.addEventListener('mousedown', e => { resizeX = e.clientX; document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag); });
+function onDrag(e) {
+  const dx = e.clientX - resizeX;
+  const leftW = left.getBoundingClientRect().width + dx;
+  const totalW = left.parentElement.getBoundingClientRect().width;
+  const pct = Math.max(30, Math.min(70, (leftW / totalW) * 100));
+  left.style.flex = '1';
+  left.style.width = pct + '%';
+  right.style.width = (100 - pct) + '%';
+  resizeX = e.clientX;
+}
+function stopDrag() { document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', stopDrag); }
+
+// ── 键盘快捷键 ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeReader();
+});
+
+// ── 自动刷新 ──
+setInterval(loadAll, 5 * 60 * 1000);
+
+// ── 初始加载 ──
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,1004 @@
+{% extends "base.html" %}
+{% block title %}平台资源 — OpenCrawler{% endblock %}
+{% set active_page = 'platforms' %}
+
+{% block head %}
+<style>
+.platforms-layout{max-width:1100px;margin:0 auto;padding:20px 24px}
+
+.global-disclaimer{background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:10px;padding:14px 20px;margin-bottom:28px;font-size:12px;color:var(--muted);line-height:1.7;text-align:center}
+.global-disclaimer strong{color:var(--accent)}
+
+.platforms-hero{text-align:center;margin-bottom:36px}
+.platforms-hero h1{font-size:28px;font-weight:700;margin-bottom:8px}
+.platforms-hero p{color:var(--muted);font-size:15px}
+
+.cat-section{margin-bottom:36px}
+.cat-section h2{font-size:20px;margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.cat-section .cat-desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.plat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;transition:all .2s;display:flex;flex-direction:column}
+.plat-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.plat-card .plat-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.plat-card .plat-icon{font-size:28px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;flex-shrink:0}
+.plat-card .plat-name{font-size:15px;font-weight:600}
+.plat-card .plat-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1;margin-bottom:10px}
+.plat-card .plat-actions{display:flex;gap:6px;flex-wrap:wrap}
+.plat-card .plat-actions a,.plat-card .plat-actions span{font-size:11px;padding:3px 10px;border-radius:14px;text-decoration:none;display:inline-block;transition:all .15s}
+.plat-tag-official{background:var(--accent-dim);color:var(--accent)}
+.plat-tag-official:hover{background:var(--accent);color:#fff;text-decoration:none}
+.plat-tag-stats{background:rgba(63,185,80,.12);color:var(--green)}
+.plat-tag-search{background:rgba(188,140,255,.12);color:#bc8cff}
+.plat-tag-link{background:rgba(210,153,29,.12);color:var(--orange)}
+
+/* ── iOS 质感平台胶囊卡片 ── */
+.sv-platform-strip{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.sv-plat-pill{display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;background:linear-gradient(135deg,#fff 0%,#f8f9fa 100%);border:1px solid var(--border);border-radius:16px;text-decoration:none;color:inherit;transition:all .3s var(--ease-spring);position:relative;overflow:hidden;min-width:160px}
+.sv-plat-pill::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--brand) 0%,var(--brand2) 100%);opacity:0;transition:opacity .3s var(--ease-smooth);z-index:0}
+.sv-plat-pill:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 24px rgba(0,0,0,.1);border-color:transparent;text-decoration:none}
+.sv-plat-pill:hover::before{opacity:.08}
+.sv-plat-pill>*{position:relative;z-index:1}
+.sv-plat-logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.sv-plat-logo img{width:28px;height:28px;border-radius:6px;object-fit:cover}
+.sv-plat-fallback{display:none;font-size:20px;font-weight:900;color:#fff;font-family:"YouYuan","幼圆",sans-serif}
+.sv-plat-info{display:flex;flex-direction:column;gap:2px}
+.sv-plat-name{font-size:14px;font-weight:700;color:var(--text)}
+.sv-plat-sub{font-size:11px;color:var(--muted)}
+
+.trending-section{background:linear-gradient(135deg,rgba(88,166,255,.04),rgba(63,185,80,.03));border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:36px}
+.trending-section h3{font-size:20px;font-weight:700;margin-bottom:4px}
+.trending-section .trending-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.trending-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.trend-item{background:var(--bg);border-radius:8px;padding:14px;text-align:center}
+.trend-item .trend-num{font-size:24px;font-weight:700;color:var(--accent)}
+.trend-item .trend-label{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── 短视频趋势板块 ── */
+.sv-section{margin-bottom:40px}
+.sv-section h2{font-size:20px;font-weight:700;margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sv-section .cat-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+.sv-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.sv-tab{padding:6px 16px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .2s var(--ease-spring)}
+.sv-tab:hover{border-color:#1a1a1a;color:var(--text);transform:translateY(-1px)}
+.sv-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+
+/* 数据来源指示器 */
+.sv-source-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:16px;padding:4px 12px;background:var(--card);border-radius:20px;border:1px solid var(--border)}
+.sv-source-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+.sv-source-badge.crawled .dot{background:#0d904f}
+.sv-source-badge.fallback .dot{background:var(--orange)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* 话题热梗 */
+.sv-topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:32px}
+.sv-topic-card{background:linear-gradient(135deg,#fff 0%,#fafafa 100%);border:1px solid var(--border);border-radius:14px;padding:20px;transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);position:relative;overflow:hidden}
+.sv-topic-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s var(--ease-smooth)}
+.sv-topic-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:var(--accent)}
+.sv-topic-card:hover::before{opacity:1}
+.sv-topic-card .topic-rank{position:absolute;top:10px;right:14px;font-size:32px;font-weight:900;color:rgba(0,0,0,.05);font-family:"YouYuan","幼圆",sans-serif}
+.sv-topic-card .topic-tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.sv-topic-card .topic-tag.hot{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e37400}
+.sv-topic-card .topic-tag.rising{background:linear-gradient(135deg,#e8f0fe,#d4e4fc);color:#1a73e8}
+.sv-topic-card .topic-tag.viral{background:linear-gradient(135deg,#fce8e6,#f9d0cc);color:#d93025}
+.sv-topic-card .topic-title{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.4}
+.sv-topic-card .topic-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.sv-topic-card .topic-growth{display:flex;gap:14px;font-size:11px}
+.sv-topic-card .topic-growth span{display:flex;align-items:center;gap:3px}
+.sv-topic-card .topic-growth .growth-up{color:var(--green)}
+.sv-topic-card .topic-growth .growth-num{font-weight:700}
+
+/* 快速增长视频 */
+.sv-videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:32px}
+.sv-video-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);text-decoration:none;color:inherit;display:flex;flex-direction:column}
+.sv-video-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.1);border-color:var(--accent)}
+.sv-video-thumb{height:130px;background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 50%,#1a1a1a 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.sv-video-thumb::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.05) 0%,transparent 70%)}
+.sv-video-thumb .play-icon{font-size:32px;color:rgba(255,255,255,.7);transition:transform .3s var(--ease-spring)}
+.sv-video-card:hover .play-icon{transform:scale(1.2)}
+.sv-video-thumb .platform-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;backdrop-filter:blur(4px)}
+.sv-video-thumb .duration-badge{position:absolute;bottom:8px;right:8px;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);color:#fff;backdrop-filter:blur(4px)}
+.sv-video-body{padding:16px;flex:1;display:flex;flex-direction:column}
+.sv-video-title{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sv-video-author{font-size:11px;color:var(--muted);margin-bottom:12px}
+.sv-video-stats{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-bottom:12px}
+.sv-video-stats .vstat{display:flex;flex-direction:column;gap:2px}
+.sv-video-stats .vstat .vstat-num{font-size:15px;font-weight:700;color:var(--text);transition:color .3s var(--ease-smooth),transform .3s var(--ease-spring)}
+.sv-video-stats .vstat .vstat-num.growing{color:var(--green)}
+.sv-video-stats .vstat .vstat-label{font-size:10px}
+.sv-video-link{display:block;margin-top:auto;text-align:center;font-size:12px;font-weight:600;padding:9px;border-radius:10px;background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#fff;text-decoration:none;transition:all .2s var(--ease-spring)}
+.sv-video-link:hover{background:linear-gradient(135deg,#2d2d2d,#1a1a1a);text-decoration:none;transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+/* 领域趋势分析 */
+.sv-domains{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.sv-domain-card{background:linear-gradient(135deg,#fff 0%,#fafafa 100%);border:1px solid var(--border);border-radius:12px;padding:18px;transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth)}
+.sv-domain-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.sv-domain-card .domain-name{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sv-domain-card .domain-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-bottom:8px}
+.sv-domain-card .domain-bar-fill{height:100%;border-radius:4px;transition:width 1s var(--ease-decel)}
+.sv-domain-card .domain-stats{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.sv-domain-card .domain-stats .domain-change{font-weight:700}
+.sv-domain-card .domain-stats .domain-change.up{color:var(--green)}
+.sv-domain-card .domain-stats .domain-change.down{color:var(--red)}
+
+/* ── 平台生态位卡片 ── */
+.sv-eco-card{
+    background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);
+    border-radius:14px;padding:24px;margin-bottom:24px;
+    border:1px solid rgba(212,175,55,.15);
+    display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;
+}
+@media(max-width:700px){.sv-eco-card{grid-template-columns:1fr;text-align:center}}
+.sv-eco-card .eco-logo{
+    width:56px;height:56px;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;font-weight:900;color:#d4af37;
+    font-family:"YouYuan","幼圆",sans-serif;
+    border:1px solid rgba(212,175,55,.3);
+    background:rgba(212,175,55,.08);
+    overflow:hidden;flex-shrink:0;
+}
+.sv-eco-card .eco-logo img{width:36px;height:36px;border-radius:8px;object-fit:cover}
+.sv-eco-card .eco-logo .eco-logo-fallback{display:none}
+.sv-eco-card .eco-body h3{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.sv-eco-card .eco-body .eco-tagline{font-size:12px;color:#d4af37;margin-bottom:8px;letter-spacing:1px}
+.sv-eco-card .eco-body .eco-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
+.sv-eco-card .eco-stats{display:flex;gap:20px;margin-top:10px}
+.sv-eco-card .eco-stats .eco-stat{font-size:11px;color:rgba(255,255,255,.4)}
+.sv-eco-card .eco-stats .eco-stat strong{display:block;font-size:18px;font-weight:700;color:#d4af37;font-family:"YouYuan","幼圆",sans-serif}
+
+/* ── 时间区间切换 ── */
+.sv-range{
+    display:inline-flex;gap:4px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:20px;padding:3px;margin-bottom:20px;
+}
+.sv-range-btn{
+    padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;
+    cursor:pointer;border:none;background:transparent;color:var(--muted);
+    transition:all .2s var(--ease-spring);
+}
+.sv-range-btn:hover{color:var(--text)}
+.sv-range-btn.active{background:#1a1a1a;color:#fff}
+
+/* ── 平台面板 ── */
+.sv-panel{display:none}
+.sv-panel.active{display:block;animation:fadeInUp .4s var(--ease-decel) both}
+
+/* ── 项目落地 ── */
+.sv-projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px}
+.sv-project-card{
+    background:#fff;border:1px solid var(--border);border-radius:12px;
+    padding:18px;position:relative;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+}
+.sv-project-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--accent)}
+.sv-project-card .proj-status{
+    position:absolute;top:14px;right:14px;
+    font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;
+}
+.sv-project-card .proj-status.live{background:#e6f4ea;color:var(--green)}
+.sv-project-card .proj-status.beta{background:#e8f0fe;color:var(--accent)}
+.sv-project-card .proj-status.concept{background:#fff3e0;color:var(--orange)}
+.sv-project-card .proj-title{font-size:14px;font-weight:700;margin-bottom:6px;padding-right:60px}
+.sv-project-card .proj-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.sv-project-card .proj-metrics{display:flex;gap:14px;font-size:11px;margin-bottom:10px}
+.sv-project-card .proj-metrics .metric{display:flex;flex-direction:column}
+.sv-project-card .proj-metrics .metric .metric-val{font-size:15px;font-weight:700;color:var(--text)}
+.sv-project-card .proj-metrics .metric .metric-label{font-size:10px;color:var(--muted)}
+.sv-project-card .proj-tags{display:flex;gap:6px;flex-wrap:wrap}
+.sv-project-card .proj-tags span{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--card);color:var(--muted)}
+.sv-project-card .proj-link{display:block;margin-top:10px;text-align:center;font-size:12px;font-weight:600;padding:8px;border-radius:8px;background:var(--card);color:var(--text);text-decoration:none;transition:all .2s var(--ease-spring)}
+.sv-project-card .proj-link:hover{background:#1a1a1a;color:#fff;text-decoration:none;transform:scale(1.02)}
+
+.platforms-footer{text-align:center;padding:32px 0 48px;color:var(--muted);font-size:13px;line-height:1.8}
+.platforms-footer strong{color:var(--text)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="platforms-layout">
+
+    <div class="global-disclaimer">
+        <strong>OpenCrawler 是高精度资讯聚合平台。</strong>本站仅提供公开数据的索引、检索和链接跳转服务，不存储、不缓存、不提供任何第三方内容的下载。<strong>所有链接均指向原始平台官方渠道，用户点击后跳转至原平台，一切内容责任由原平台承担。</strong>本站不对第三方平台内容的版权、合法性及安全性负责。
+    </div>
+
+    <div class="platforms-hero">
+        <h1>平台资源</h1>
+        <p>覆盖国内主流媒体、开发者社区、文库、短视频平台 — 一站式资讯索引与检索</p>
+    </div>
+
+    <!-- 短视频平台 — iOS 质感卡片 -->
+    <div class="cat-section">
+        <h2>短视频平台</h2>
+        <p class="cat-desc">技术类视频热度追踪、创作者内容索引。本站提供数据统计和原平台跳转链接，不提供视频下载</p>
+        <div class="sv-platform-strip">
+            <a href="https://www.douyin.com" target="_blank" rel="noopener" class="sv-plat-pill" style="--brand:#000000;--brand2:#fe2c55">
+                <div class="sv-plat-logo"><img src="/static/logos/douyin.png" alt="抖音" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sv-plat-fallback">抖</span></div>
+                <div class="sv-plat-info"><span class="sv-plat-name">抖音</span><span class="sv-plat-sub">日活 8 亿</span></div>
+            </a>
+            <a href="https://www.bilibili.com" target="_blank" rel="noopener" class="sv-plat-pill" style="--brand:#fb7299;--brand2:#00a1d6">
+                <div class="sv-plat-logo"><img src="/static/logos/bilibili.png" alt="B站" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sv-plat-fallback">B</span></div>
+                <div class="sv-plat-info"><span class="sv-plat-name">B站</span><span class="sv-plat-sub">月活 3.5 亿</span></div>
+            </a>
+            <a href="https://www.kuaishou.com" target="_blank" rel="noopener" class="sv-plat-pill" style="--brand:#ff4906;--brand2:#ff7a45">
+                <div class="sv-plat-logo"><img src="/static/logos/kuaishou.png" alt="快手" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sv-plat-fallback">快</span></div>
+                <div class="sv-plat-info"><span class="sv-plat-name">快手</span><span class="sv-plat-sub">日活 4 亿</span></div>
+            </a>
+            <a href="https://www.xiaohongshu.com" target="_blank" rel="noopener" class="sv-plat-pill" style="--brand:#ff2442;--brand2:#ff6b81">
+                <div class="sv-plat-logo"><img src="/static/logos/xiaohongshu.png" alt="小红书" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sv-plat-fallback">红</span></div>
+                <div class="sv-plat-info"><span class="sv-plat-name">小红书</span><span class="sv-plat-sub">月活 2.8 亿</span></div>
+            </a>
+            <a href="https://channels.weixin.qq.com" target="_blank" rel="noopener" class="sv-plat-pill" style="--brand:#07c160;--brand2:#5fd68a">
+                <div class="sv-plat-logo"><img src="/static/logos/weixin.png" alt="视频号" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sv-plat-fallback">视</span></div>
+                <div class="sv-plat-info"><span class="sv-plat-name">视频号</span><span class="sv-plat-sub">日活 4.5 亿</span></div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 短视频趋势板块 -->
+    <div class="cat-section sv-section">
+        <h2>短视频趋势</h2>
+        <p class="cat-desc">5 大平台生态位分析 · 热门话题追踪 · 快速增长视频 · 领域趋势 · 项目落地案例 — 数据动态更新</p>
+
+        <!-- 平台切换 -->
+        <div class="sv-tabs">
+            <button class="sv-tab active" data-sv-platform="douyin">抖音</button>
+            <button class="sv-tab" data-sv-platform="bilibili">B站</button>
+            <button class="sv-tab" data-sv-platform="kuaishou">快手</button>
+            <button class="sv-tab" data-sv-platform="xiaohongshu">小红书</button>
+            <button class="sv-tab" data-sv-platform="weixin">视频号</button>
+        </div>
+
+        <!-- 时间区间切换 -->
+        <div class="sv-range">
+            <button class="sv-range-btn active" data-range="24h">24 小时</button>
+            <button class="sv-range-btn" data-range="7d">7 天</button>
+            <button class="sv-range-btn" data-range="30d">30 天</button>
+        </div>
+
+        <!-- 数据来源指示器 -->
+        <div class="sv-source-badge fallback" id="svSourceBadge">
+            <span class="dot"></span>
+            <span id="svSourceText">静态示例数据 · 等待爬虫首次抓取</span>
+        </div>
+
+        <!-- ════ 抖音面板 ════ -->
+        <div class="sv-panel active" id="panel-douyin">
+            <div class="sv-eco-card">
+                <div class="eco-logo"><img src="/static/logos/douyin.png" alt="抖音" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="eco-logo-fallback">抖</span></div>
+                <div class="eco-body">
+                    <h3>抖音 Douyin</h3>
+                    <div class="eco-tagline">日活8亿 · 算法推荐之王</div>
+                    <div class="eco-desc">短视频赛道绝对龙头,算法推荐精准度行业第一。技术类内容近一年增长340%,AI/编程话题成为流量新入口。创作者生态成熟,星图接单+直播带货+知识付费三条变现路径。</div>
+                    <div class="eco-stats">
+                        <div class="eco-stat"><strong data-sv-count="800000000">8亿</strong>日活</div>
+                        <div class="eco-stat"><strong data-sv-count="120000">12万+</strong>技术创作者</div>
+                        <div class="eco-stat"><strong data-sv-count="340">340%</strong>月均增长</div>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">热门话题 & 热梗</h3>
+            <div class="sv-topics">
+                <div class="sv-topic-card"><div class="topic-rank">#1</div><span class="topic-tag viral">爆款</span><div class="topic-title">AI 一键生成短视频</div><div class="topic-desc">ChatGPT+剪映全自动生成,技术博主集体跟拍</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="2840000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="18600">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#2</div><span class="topic-tag hot">热门</span><div class="topic-title">Cursor 编程挑战赛</div><div class="topic-desc">AI编辑器10分钟做应用,#VibeCoding播放破亿</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="1920000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="12300">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#3</div><span class="topic-tag hot">热门</span><div class="topic-title">00后整顿职场代码</div><div class="topic-desc">AI写代码拒绝加班,老板看懵系列</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="1340000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="15600">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#4</div><span class="topic-tag rising">上升</span><div class="topic-title">副业搞钱指南</div><div class="topic-desc">靠写代码月入过万的3个路子</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="890000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="8900">0</span> 参与</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">快速增长视频</h3>
+            <div class="sv-videos">
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">抖音</span><span class="play-icon">▶</span><span class="duration-badge">00:58</span></div><div class="sv-video-body"><div class="sv-video-title">用AI 30秒生成一条爆款短视频,全程零剪辑</div><div class="sv-video-author">@AI创作实验室 · 1天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="186000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="42300">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="8900">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.douyin.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">抖音</span><span class="play-icon">▶</span><span class="duration-badge">01:24</span></div><div class="sv-video-body"><div class="sv-video-title">Cursor实战:3小时做出一个完整小程序</div><div class="sv-video-author">@程序员老王 · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="142000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="38600">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="6700">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.douyin.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">抖音</span><span class="play-icon">▶</span><span class="duration-badge">00:45</span></div><div class="sv-video-body"><div class="sv-video-title">00后程序员拒绝加班的硬核代码,老板看懵了</div><div class="sv-video-author">@职场段子手 · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="218000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="31200">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="12400">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.douyin.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">抖音</span><span class="play-icon">▶</span><span class="duration-badge">01:12</span></div><div class="sv-video-body"><div class="sv-video-title">副业搞钱:靠写代码月入过万的3个路子</div><div class="sv-video-author">@副业研究所 · 3天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="96000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="28400">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="5300">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.douyin.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">领域趋势</h3>
+            <div class="sv-domains">
+                <div class="sv-domain-card"><div class="domain-name">AI / 机器学习</div><div class="domain-bar"><div class="domain-bar-fill" style="width:92%;background:linear-gradient(90deg,#1a73e8,#4285f4)"></div></div><div class="domain-stats"><span>热度 9.2万</span><span class="domain-change up">↑ 34%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">编程开发</div><div class="domain-bar"><div class="domain-bar-fill" style="width:78%;background:linear-gradient(90deg,#0d904f,#34a853)"></div></div><div class="domain-stats"><span>热度 7.8万</span><span class="domain-change up">↑ 21%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">副业变现</div><div class="domain-bar"><div class="domain-bar-fill" style="width:65%;background:linear-gradient(90deg,#e37400,#f9ab00)"></div></div><div class="domain-stats"><span>热度 6.5万</span><span class="domain-change up">↑ 45%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">职场搞笑</div><div class="domain-bar"><div class="domain-bar-fill" style="width:52%;background:linear-gradient(90deg,#d93025,#ea4335)"></div></div><div class="domain-stats"><span>热度 5.2万</span><span class="domain-change up">↑ 12%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">硬件DIY</div><div class="domain-bar"><div class="domain-bar-fill" style="width:38%;background:linear-gradient(90deg,#00897b,#4db6ac)"></div></div><div class="domain-stats"><span>热度 3.8万</span><span class="domain-change down">↓ 5%</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">项目落地</h3>
+            <div class="sv-projects">
+                <div class="sv-project-card"><span class="proj-status live">已上线</span><div class="proj-title">AI短视频自动生成器</div><div class="proj-desc">基于大模型一键生成短视频脚本与画面,自动化剪辑输出成片。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="12000">0</span><span class="metric-label">用户</span></div><div class="metric"><span class="metric-val" data-sv-count="30000">0</span><span class="metric-label">月收入</span></div></div><div class="proj-tags"><span>AI</span><span>自动化</span><span>SaaS</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status beta">内测中</span><div class="proj-title">抖音热点追踪API</div><div class="proj-desc">实时抓取抖音热点话题与爆款视频数据,提供标准化接口供开发者调用。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="500">0</span><span class="metric-label">开发者</span></div><div class="metric"><span class="metric-val" data-sv-count="80000">0</span><span class="metric-label">日调用</span></div></div><div class="proj-tags"><span>API</span><span>数据</span><span>开发者</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status concept">概念阶段</span><div class="proj-title">创作者数据分析面板</div><div class="proj-desc">为抖音创作者提供粉丝画像、内容表现、变现潜力的可视化分析工具。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="2000">0</span><span class="metric-label">预期用户</span></div></div><div class="proj-tags"><span>数据</span><span>可视化</span><span>创作者</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+            </div>
+        </div>
+
+        <!-- ════ B站面板 ════ -->
+        <div class="sv-panel" id="panel-bilibili">
+            <div class="sv-eco-card">
+                <div class="eco-logo"><img src="/static/logos/bilibili.png" alt="B站" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="eco-logo-fallback">B</span></div>
+                <div class="eco-body">
+                    <h3>B站 Bilibili</h3>
+                    <div class="eco-tagline">知识区第一阵地 · 中长视频之王</div>
+                    <div class="eco-desc">国内最大PUGC视频平台,知识区技术教程内容最丰富。UP主生态活跃,弹幕文化形成独特社区氛围。技术教程平均时长15-30分钟,完播率远超短视频平台。</div>
+                    <div class="eco-stats">
+                        <div class="eco-stat"><strong data-sv-count="350000000">3.5亿</strong>月活</div>
+                        <div class="eco-stat"><strong data-sv-count="86000">8.6万</strong>技术UP主</div>
+                        <div class="eco-stat"><strong data-sv-count="220">220%</strong>年增长</div>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">热门话题 & 热梗</h3>
+            <div class="sv-topics">
+                <div class="sv-topic-card"><div class="topic-rank">#1</div><span class="topic-tag viral">爆款</span><div class="topic-title">DeepSeek本地部署满血教程</div><div class="topic-desc">手把手教你跑满血DeepSeek,8GB显存就能跑</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="1560000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="9800">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#2</div><span class="topic-tag hot">热门</span><div class="topic-title">2026程序员生存指南</div><div class="topic-desc">AI时代哪些技能值得学?哪些岗位正在消失?</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="980000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="12000">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#3</div><span class="topic-tag rising">上升</span><div class="topic-title">从零搭建AI工作站</div><div class="topic-desc">硬件软件全流程实操,打造个人AI生产力</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="760000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="6500">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#4</div><span class="topic-tag hot">热门</span><div class="topic-title">开源项目变现全路径</div><div class="topic-desc">从0到月入过万,GitHub Star怎么换成钱</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="650000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="8900">0</span> 参与</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">快速增长视频</h3>
+            <div class="sv-videos">
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">B站</span><span class="play-icon">▶</span><span class="duration-badge">24:18</span></div><div class="sv-video-body"><div class="sv-video-title">DeepSeek R1 本地部署完整流程,显存优化一次讲清</div><div class="sv-video-author">@技术宅小明 · 3天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="312000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="156000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="18900">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.bilibili.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">B站</span><span class="play-icon">▶</span><span class="duration-badge">18:42</span></div><div class="sv-video-body"><div class="sv-video-title">2026程序员生存指南:哪些岗位正在消失</div><div class="sv-video-author">@老张说技术 · 4天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="267000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="201000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="15600">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.bilibili.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">B站</span><span class="play-icon">▶</span><span class="duration-badge">32:05</span></div><div class="sv-video-body"><div class="sv-video-title">从零搭建AI工作站,硬件软件全流程实操</div><div class="sv-video-author">@硬件实验室 · 5天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="198000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="134000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="9800">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.bilibili.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">B站</span><span class="play-icon">▶</span><span class="duration-badge">21:37</span></div><div class="sv-video-body"><div class="sv-video-title">开源项目变现全路径,从0到月入过万</div><div class="sv-video-author">@独立开发者Lily · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="145000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="98000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="7600">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.bilibili.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">领域趋势</h3>
+            <div class="sv-domains">
+                <div class="sv-domain-card"><div class="domain-name">AI / 机器学习</div><div class="domain-bar"><div class="domain-bar-fill" style="width:88%;background:linear-gradient(90deg,#1a73e8,#4285f4)"></div></div><div class="domain-stats"><span>热度 8.8万</span><span class="domain-change up">↑ 28%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">编程教程</div><div class="domain-bar"><div class="domain-bar-fill" style="width:85%;background:linear-gradient(90deg,#0d904f,#34a853)"></div></div><div class="domain-stats"><span>热度 8.5万</span><span class="domain-change up">↑ 22%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">开源项目</div><div class="domain-bar"><div class="domain-bar-fill" style="width:72%;background:linear-gradient(90deg,#9c27b0,#ba68c8)"></div></div><div class="domain-stats"><span>热度 7.2万</span><span class="domain-change up">↑ 18%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">硬件DIY</div><div class="domain-bar"><div class="domain-bar-fill" style="width:58%;background:linear-gradient(90deg,#00897b,#4db6ac)"></div></div><div class="domain-stats"><span>热度 5.8万</span><span class="domain-change up">↑ 8%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">游戏开发</div><div class="domain-bar"><div class="domain-bar-fill" style="width:45%;background:linear-gradient(90deg,#5c6bc0,#7986cb)"></div></div><div class="domain-stats"><span>热度 4.5万</span><span class="domain-change down">↓ 3%</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">项目落地</h3>
+            <div class="sv-projects">
+                <div class="sv-project-card"><span class="proj-status live">已上线</span><div class="proj-title">B站热门视频聚合器</div><div class="proj-desc">实时聚合B站热门视频,按领域分类,提供API接口供开发者调用。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="8000">0</span><span class="metric-label">用户</span></div><div class="metric"><span class="metric-val" data-sv-count="15000">0</span><span class="metric-label">月收入</span></div></div><div class="proj-tags"><span>爬虫</span><span>聚合</span><span>SaaS</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status beta">内测中</span><div class="proj-title">UP主数据增长分析</div><div class="proj-desc">为UP主提供粉丝增长、视频表现、弹幕情感分析的数据面板。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="300">0</span><span class="metric-label">UP主</span></div></div><div class="proj-tags"><span>数据</span><span>增长</span><span>UP主</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status concept">概念阶段</span><div class="proj-title">B站字幕批量下载工具</div><div class="proj-desc">批量下载B站视频字幕,支持SRT/ASS格式,方便离线学习。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="5000">0</span><span class="metric-label">预期用户</span></div></div><div class="proj-tags"><span>工具</span><span>字幕</span><span>下载</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+            </div>
+        </div>
+
+        <!-- ════ 快手面板 ════ -->
+        <div class="sv-panel" id="panel-kuaishou">
+            <div class="sv-eco-card">
+                <div class="eco-logo"><img src="/static/logos/kuaishou.png" alt="快手" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="eco-logo-fallback">快</span></div>
+                <div class="eco-body">
+                    <h3>快手 Kuaishou</h3>
+                    <div class="eco-tagline">下沉市场之王 · 老铁经济</div>
+                    <div class="eco-desc">第二大短视频平台,下沉市场渗透率极高。老铁经济形成独特信任电商模式,技术手工类内容增长迅速。直播带货转化率行业领先,适合接地气的技术教学。</div>
+                    <div class="eco-stats">
+                        <div class="eco-stat"><strong data-sv-count="400000000">4亿</strong>日活</div>
+                        <div class="eco-stat"><strong data-sv-count="52000">5.2万</strong>技术创作者</div>
+                        <div class="eco-stat"><strong data-sv-count="78">78%</strong>下沉覆盖</div>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">热门话题 & 热梗</h3>
+            <div class="sv-topics">
+                <div class="sv-topic-card"><div class="topic-rank">#1</div><span class="topic-tag hot">热门</span><div class="topic-title">手机写代码 Termux</div><div class="topic-desc">用手机搭建移动开发环境,通勤也能撸代码</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="760000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="5400">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#2</div><span class="topic-tag rising">上升</span><div class="topic-title">农村程序员日常</div><div class="topic-desc">回乡做程序员的真实生活,技术+乡村双话题</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="540000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="8200">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#3</div><span class="topic-tag hot">热门</span><div class="topic-title">五分钟学会 Python</div><div class="topic-desc">零基础编程系列,老铁都能看懂的Python入门</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="430000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="6700">0</span> 参与</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">快速增长视频</h3>
+            <div class="sv-videos">
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">快手</span><span class="play-icon">▶</span><span class="duration-badge">04:56</span></div><div class="sv-video-body"><div class="sv-video-title">手机写代码!用Termux搭建移动开发环境,通勤也能撸代码</div><div class="sv-video-author">@极客阿强 · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="145000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="78000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="8200">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.kuaishou.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">快手</span><span class="play-icon">▶</span><span class="duration-badge">03:22</span></div><div class="sv-video-body"><div class="sv-video-title">农村程序员的一天:回乡做开发,月入过万不是梦</div><div class="sv-video-author">@乡村码农 · 3天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="98000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="45000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="5600">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.kuaishou.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">快手</span><span class="play-icon">▶</span><span class="duration-badge">05:12</span></div><div class="sv-video-body"><div class="sv-video-title">五分钟学会Python基础,老铁都能看懂的编程课</div><div class="sv-video-author">@编程老铁 · 4天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="76000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="62000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="3400">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.kuaishou.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">领域趋势</h3>
+            <div class="sv-domains">
+                <div class="sv-domain-card"><div class="domain-name">编程教学</div><div class="domain-bar"><div class="domain-bar-fill" style="width:68%;background:linear-gradient(90deg,#1a73e8,#4285f4)"></div></div><div class="domain-stats"><span>热度 6.8万</span><span class="domain-change up">↑ 15%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">手工DIY</div><div class="domain-bar"><div class="domain-bar-fill" style="width:62%;background:linear-gradient(90deg,#e37400,#f9ab00)"></div></div><div class="domain-stats"><span>热度 6.2万</span><span class="domain-change up">↑ 8%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">副业赚钱</div><div class="domain-bar"><div class="domain-bar-fill" style="width:55%;background:linear-gradient(90deg,#0d904f,#34a853)"></div></div><div class="domain-stats"><span>热度 5.5万</span><span class="domain-change up">↑ 32%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">农村科技</div><div class="domain-bar"><div class="domain-bar-fill" style="width:41%;background:linear-gradient(90deg,#00897b,#4db6ac)"></div></div><div class="domain-stats"><span>热度 4.1万</span><span class="domain-change up">↑ 18%</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">项目落地</h3>
+            <div class="sv-projects">
+                <div class="sv-project-card"><span class="proj-status live">已上线</span><div class="proj-title">快手热门榜实时API</div><div class="proj-desc">实时抓取快手热门榜单数据,提供标准化RESTful API接口。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="3000">0</span><span class="metric-label">用户</span></div><div class="metric"><span class="metric-val" data-sv-count="50000">0</span><span class="metric-label">日调用</span></div></div><div class="proj-tags"><span>API</span><span>数据</span><span>实时</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status concept">概念阶段</span><div class="proj-title">老铁代码教学平台</div><div class="proj-desc">面向下沉市场的编程教学平台,用老铁语言讲技术。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="1500">0</span><span class="metric-label">预期用户</span></div></div><div class="proj-tags"><span>教育</span><span>下沉市场</span><span>编程</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+            </div>
+        </div>
+
+        <!-- ════ 小红书面板 ════ -->
+        <div class="sv-panel" id="panel-xiaohongshu">
+            <div class="sv-eco-card">
+                <div class="eco-logo"><img src="/static/logos/xiaohongshu.png" alt="小红书" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="eco-logo-fallback">红</span></div>
+                <div class="eco-body">
+                    <h3>小红书 Xiaohongshu</h3>
+                    <div class="eco-tagline">种草社区 · 女性技术博主崛起</div>
+                    <div class="eco-desc">生活方式社区,AI/编程教程笔记活跃。图文+视频双模式,SEO搜索流量巨大。技术博主以女性视角切入,教程笔记收藏率远超其他平台。</div>
+                    <div class="eco-stats">
+                        <div class="eco-stat"><strong data-sv-count="280000000">2.8亿</strong>月活</div>
+                        <div class="eco-stat"><strong data-sv-count="38000">3.8万</strong>技术博主</div>
+                        <div class="eco-stat"><strong data-sv-count="35">35%</strong>收藏率</div>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">热门话题 & 热梗</h3>
+            <div class="sv-topics">
+                <div class="sv-topic-card"><div class="topic-rank">#1</div><span class="topic-tag viral">爆款</span><div class="topic-title">AI工具推荐合集</div><div class="topic-desc">10个免费AI工具让你效率翻倍,打工人必备</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="920000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="12000">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#2</div><span class="topic-tag hot">热门</span><div class="topic-title">程序员副业指南</div><div class="topic-desc">5个被动收入来源全公开,独立开发者变现路径</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="670000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="8900">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#3</div><span class="topic-tag rising">上升</span><div class="topic-title">零基础学编程</div><div class="topic-desc">文科生也能学会的编程入门笔记,收藏过万</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="450000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="6700">0</span> 参与</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">快速增长视频</h3>
+            <div class="sv-videos">
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">小红书</span><span class="play-icon">▶</span><span class="duration-badge">03:21</span></div><div class="sv-video-body"><div class="sv-video-title">独立开发者月入过万:我的5个被动收入来源全公开</div><div class="sv-video-author">@独立开发者Lily · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="198000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="134000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="9600">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.xiaohongshu.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">小红书</span><span class="play-icon">▶</span><span class="duration-badge">02:45</span></div><div class="sv-video-body"><div class="sv-video-title">10个免费AI工具让你效率翻倍,打工人必备</div><div class="sv-video-author">@效率研究所 · 1天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="167000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="198000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="7800">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.xiaohongshu.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">小红书</span><span class="play-icon">▶</span><span class="duration-badge">04:12</span></div><div class="sv-video-body"><div class="sv-video-title">文科生也能学会的编程入门笔记,收藏过万</div><div class="sv-video-author">@编程小姐姐 · 3天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="89000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="156000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="5400">0</span><span class="vstat-label">评论</span></div></div><a href="https://www.xiaohongshu.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">领域趋势</h3>
+            <div class="sv-domains">
+                <div class="sv-domain-card"><div class="domain-name">AI工具</div><div class="domain-bar"><div class="domain-bar-fill" style="width:82%;background:linear-gradient(90deg,#1a73e8,#4285f4)"></div></div><div class="domain-stats"><span>热度 8.2万</span><span class="domain-change up">↑ 38%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">副业变现</div><div class="domain-bar"><div class="domain-bar-fill" style="width:71%;background:linear-gradient(90deg,#0d904f,#34a853)"></div></div><div class="domain-stats"><span>热度 7.1万</span><span class="domain-change up">↑ 45%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">编程入门</div><div class="domain-bar"><div class="domain-bar-fill" style="width:58%;background:linear-gradient(90deg,#e37400,#f9ab00)"></div></div><div class="domain-stats"><span>热度 5.8万</span><span class="domain-change up">↑ 25%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">设计UI</div><div class="domain-bar"><div class="domain-bar-fill" style="width:52%;background:linear-gradient(90deg,#9c27b0,#ba68c8)"></div></div><div class="domain-stats"><span>热度 5.2万</span><span class="domain-change up">↑ 10%</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">项目落地</h3>
+            <div class="sv-projects">
+                <div class="sv-project-card"><span class="proj-status beta">内测中</span><div class="proj-title">小红书爆款笔记生成器</div><div class="proj-desc">基于AI分析热门笔记模式,自动生成高转化率的小红书文案。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="1200">0</span><span class="metric-label">用户</span></div><div class="metric"><span class="metric-val" data-sv-count="8000">0</span><span class="metric-label">日生成</span></div></div><div class="proj-tags"><span>AI</span><span>文案</span><span>小红书</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status concept">概念阶段</span><div class="proj-title">博主数据分析平台</div><div class="proj-desc">为小红书博主提供笔记表现、粉丝画像、热门话题的数据分析。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="800">0</span><span class="metric-label">预期用户</span></div></div><div class="proj-tags"><span>数据</span><span>分析</span><span>博主</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+            </div>
+        </div>
+
+        <!-- ════ 视频号面板 ════ -->
+        <div class="sv-panel" id="panel-weixin">
+            <div class="sv-eco-card">
+                <div class="eco-logo"><img src="/static/logos/weixin.png" alt="视频号" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="eco-logo-fallback">视</span></div>
+                <div class="eco-body">
+                    <h3>微信视频号</h3>
+                    <div class="eco-tagline">社交裂变之王 · 私域流量入口</div>
+                    <div class="eco-desc">微信生态短视频,社交传播力最强。基于微信关系链推荐,技术内容通过朋友圈裂变传播。私域流量转化率高,适合知识付费和社群运营类技术内容。</div>
+                    <div class="eco-stats">
+                        <div class="eco-stat"><strong data-sv-count="450000000">4.5亿</strong>日活</div>
+                        <div class="eco-stat"><strong data-sv-count="21000">2.1万</strong>技术创作者</div>
+                        <div class="eco-stat"><strong data-sv-count="42">42%</strong>裂变率</div>
+                    </div>
+                </div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">热门话题 & 热梗</h3>
+            <div class="sv-topics">
+                <div class="sv-topic-card"><div class="topic-rank">#1</div><span class="topic-tag hot">热门</span><div class="topic-title">AI时代职场生存</div><div class="topic-desc">AI会取代你的工作吗?程序员如何不被淘汰</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="560000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="4500">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#2</div><span class="topic-tag rising">上升</span><div class="topic-title">微信小程序开发</div><div class="topic-desc">2026小程序新能力解读,开发者必看</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="380000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="3200">0</span> 参与</span></div></div>
+                <div class="sv-topic-card"><div class="topic-rank">#3</div><span class="topic-tag hot">热门</span><div class="topic-title">知识付费变现</div><div class="topic-desc">技术人做知识付费的正确姿势,年入百万路径</div><div class="topic-growth"><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="320000">0</span> 播放</span><span><span class="growth-up">↑</span><span class="growth-num" data-sv-count="5600">0</span> 参与</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">快速增长视频</h3>
+            <div class="sv-videos">
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">视频号</span><span class="play-icon">▶</span><span class="duration-badge">05:30</span></div><div class="sv-video-body"><div class="sv-video-title">AI时代职场生存指南:程序员如何不被淘汰</div><div class="sv-video-author">@职场观察者 · 2天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="89000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="67000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="4500">0</span><span class="vstat-label">评论</span></div></div><a href="https://channels.weixin.qq.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">视频号</span><span class="play-icon">▶</span><span class="duration-badge">08:15</span></div><div class="sv-video-body"><div class="sv-video-title">2026微信小程序新能力解读,开发者必看</div><div class="sv-video-author">@小程序开发者 · 3天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="67000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="89000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="3200">0</span><span class="vstat-label">评论</span></div></div><a href="https://channels.weixin.qq.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+                <div class="sv-video-card"><div class="sv-video-thumb"><span class="platform-badge">视频号</span><span class="play-icon">▶</span><span class="duration-badge">06:42</span></div><div class="sv-video-body"><div class="sv-video-title">技术人做知识付费的正确姿势,年入百万路径</div><div class="sv-video-author">@知识付费老李 · 4天前</div><div class="sv-video-stats"><div class="vstat"><span class="vstat-num growing" data-sv-count="56000">0</span><span class="vstat-label">点赞</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="78000">0</span><span class="vstat-label">收藏</span></div><div class="vstat"><span class="vstat-num growing" data-sv-count="5600">0</span><span class="vstat-label">评论</span></div></div><a href="https://channels.weixin.qq.com" target="_blank" rel="noopener" class="sv-video-link">观看原视频 →</a></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">领域趋势</h3>
+            <div class="sv-domains">
+                <div class="sv-domain-card"><div class="domain-name">知识付费</div><div class="domain-bar"><div class="domain-bar-fill" style="width:65%;background:linear-gradient(90deg,#1a73e8,#4285f4)"></div></div><div class="domain-stats"><span>热度 6.5万</span><span class="domain-change up">↑ 22%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">小程序开发</div><div class="domain-bar"><div class="domain-bar-fill" style="width:58%;background:linear-gradient(90deg,#0d904f,#34a853)"></div></div><div class="domain-stats"><span>热度 5.8万</span><span class="domain-change up">↑ 15%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">职场技能</div><div class="domain-bar"><div class="domain-bar-fill" style="width:52%;background:linear-gradient(90deg,#e37400,#f9ab00)"></div></div><div class="domain-stats"><span>热度 5.2万</span><span class="domain-change up">↑ 10%</span></div></div>
+                <div class="sv-domain-card"><div class="domain-name">社群运营</div><div class="domain-bar"><div class="domain-bar-fill" style="width:44%;background:linear-gradient(90deg,#9c27b0,#ba68c8)"></div></div><div class="domain-stats"><span>热度 4.4万</span><span class="domain-change up">↑ 8%</span></div></div>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;margin-top:24px">项目落地</h3>
+            <div class="sv-projects">
+                <div class="sv-project-card"><span class="proj-status beta">内测中</span><div class="proj-title">视频号数据分析工具</div><div class="proj-desc">为视频号创作者提供播放量、点赞、转发、完播率的可视化分析。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="800">0</span><span class="metric-label">用户</span></div></div><div class="proj-tags"><span>数据</span><span>分析</span><span>视频号</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+                <div class="sv-project-card"><span class="proj-status concept">概念阶段</span><div class="proj-title">知识付费课程平台</div><div class="proj-desc">基于微信生态的技术课程平台,支持视频号直播+社群+付费内容。</div><div class="proj-metrics"><div class="metric"><span class="metric-val" data-sv-count="1000">0</span><span class="metric-label">预期用户</span></div></div><div class="proj-tags"><span>知识付费</span><span>微信</span><span>课程</span></div><a href="#" class="proj-link">查看详情 →</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技术社区 -->
+    <div class="cat-section">
+        <h2>技术社区</h2>
+        <p class="cat-desc">国内主流开发者社区，技术文章、问答、开源项目聚合检索</p>
+        <div class="platform-grid">
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">CSDN</span></div>
+                <div class="plat-desc">国内最大开发者社区，博客、问答、课程全覆盖</div>
+                <div class="plat-actions">
+                    <a href="https://www.csdn.net" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">文章检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">掘金</span></div>
+                <div class="plat-desc">前端/后端/AI 高质量技术文章聚合</div>
+                <div class="plat-actions">
+                    <a href="https://juejin.cn" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">文章检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">知乎</span></div>
+                <div class="plat-desc">高质量问答社区，技术话题深度讨论，专栏文章优质</div>
+                <div class="plat-actions">
+                    <a href="https://www.zhihu.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">话题检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">SegmentFault</span></div>
+                <div class="plat-desc">思否，专业开发者技术问答社区</div>
+                <div class="plat-actions">
+                    <a href="https://segmentfault.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">问答检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">开源中国</span></div>
+                <div class="plat-desc">Gitee 旗下开源社区，开源软件资讯、项目推荐</div>
+                <div class="plat-actions">
+                    <a href="https://www.oschina.net" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">资讯聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">V2EX</span></div>
+                <div class="plat-desc">创意工作者社区，技术/编程/互联网话题活跃</div>
+                <div class="plat-actions">
+                    <a href="https://www.v2ex.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">话题检索</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 社交媒体 -->
+    <div class="cat-section">
+        <h2>社交媒体</h2>
+        <p class="cat-desc">微博、公众号等社媒平台的公开数据索引，热点追踪服务</p>
+        <div class="platform-grid">
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">微博</span></div>
+                <div class="plat-desc">国内最大社交媒体，热搜榜、技术大V动态追踪，公开话题索引</div>
+                <div class="plat-actions">
+                    <a href="https://weibo.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">热搜检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">微信公众号</span></div>
+                <div class="plat-desc">最大内容生态，技术/科技/财经类公众号文章标题索引</div>
+                <div class="plat-actions">
+                    <a href="https://weixin.qq.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">文章检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">即刻</span></div>
+                <div class="plat-desc">年轻人兴趣社区，科技/AI/产品圈活跃，即友圈话题索引</div>
+                <div class="plat-actions">
+                    <a href="https://www.okjike.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">话题检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">贴吧</span></div>
+                <div class="plat-desc">百度贴吧，编程/技术类贴吧讨论，老牌中文社区</div>
+                <div class="plat-actions">
+                    <a href="https://tieba.baidu.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-link">内容索引</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文库/知识库 -->
+    <div class="cat-section">
+        <h2>文库 &amp; 知识库</h2>
+        <p class="cat-desc">国内主流文档和学术资源平台的元数据检索，提供标题、作者、摘要索引和官方链接</p>
+        <div class="platform-grid">
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">百度文库</span></div>
+                <div class="plat-desc">国内最大文档库，技术文档、论文、教程等海量资源，提供标题检索和官网链接</div>
+                <div class="plat-actions">
+                    <a href="https://wenku.baidu.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">标题检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">知网 CNKI</span></div>
+                <div class="plat-desc">中国最大中文学术资源库，期刊论文、硕博论文标题/摘要/关键词检索</div>
+                <div class="plat-actions">
+                    <a href="https://www.cnki.net" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">论文检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">道客巴巴</span></div>
+                <div class="plat-desc">在线文档分享平台，技术文档、行业报告等，提供标题索引和官网跳转</div>
+                <div class="plat-actions">
+                    <a href="https://www.doc88.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">标题检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">豆丁网</span></div>
+                <div class="plat-desc">文档分享平台，技术手册、开发文档等索引服务</div>
+                <div class="plat-actions">
+                    <a href="https://www.docin.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">标题检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">arXiv</span></div>
+                <div class="plat-desc">全球最大预印本论文库，AI/CS/数学最新研究，每日更新，论文标题+摘要索引</div>
+                <div class="plat-actions">
+                    <a href="https://arxiv.org" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">论文检索</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">GitHub</span></div>
+                <div class="plat-desc">全球最大代码托管平台，开源项目、技术文档、论文代码一站式搜索</div>
+                <div class="plat-actions">
+                    <a href="https://github.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">Trending 聚合</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新闻资讯 -->
+    <div class="cat-section">
+        <h2>科技新闻 &amp; 资讯</h2>
+        <p class="cat-desc">科技、AI、金融领域主流媒体 RSS 聚合</p>
+        <div class="platform-grid">
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">36氪</span></div>
+                <div class="plat-desc">科技创投媒体，AI/互联网/新能源一手报道</div>
+                <div class="plat-actions">
+                    <a href="https://36kr.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">RSS 聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">虎嗅</span></div>
+                <div class="plat-desc">科技商业媒体，深度分析和行业观察</div>
+                <div class="plat-actions">
+                    <a href="https://www.huxiu.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">资讯聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">少数派</span></div>
+                <div class="plat-desc">数字生活指南，效率工具、软件推荐、系统教程</div>
+                <div class="plat-actions">
+                    <a href="https://sspai.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">文章聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">IT之家</span></div>
+                <div class="plat-desc">IT 科技资讯门户，软件/硬件/互联网一手快讯</div>
+                <div class="plat-actions">
+                    <a href="https://www.ithome.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">RSS 聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">机器之心</span></div>
+                <div class="plat-desc">AI 领域专业媒体，论文解读、技术分析、行业报道</div>
+                <div class="plat-actions">
+                    <a href="https://www.jiqizhixin.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">RSS 聚合</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">量子位</span></div>
+                <div class="plat-desc">专注 AI 和前沿科技的媒体，大模型/自动驾驶跟踪</div>
+                <div class="plat-actions">
+                    <a href="https://www.qbitai.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-stats">资讯聚合</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频平台 -->
+    <div class="cat-section">
+        <h2>视频平台</h2>
+        <p class="cat-desc">长视频和直播平台，提供课程、纪录片、技术分享的内容索引和官方链接</p>
+        <div class="platform-grid">
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">腾讯视频</span></div>
+                <div class="plat-desc">腾讯旗下视频平台，纪录片、课堂、技术峰会录播内容索引</div>
+                <div class="plat-actions">
+                    <a href="https://v.qq.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-link">内容索引</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">优酷</span></div>
+                <div class="plat-desc">阿里旗下视频平台，技术大会视频、科技纪录片内容检索</div>
+                <div class="plat-actions">
+                    <a href="https://www.youku.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-link">内容索引</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">爱奇艺</span></div>
+                <div class="plat-desc">百度旗下视频平台，科技频道、开发者大会视频内容检索</div>
+                <div class="plat-actions">
+                    <a href="https://www.iqiyi.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-link">内容索引</span>
+                </div>
+            </div>
+            <div class="plat-card">
+                <div class="plat-header"><span class="plat-icon"></span><span class="plat-name">YouTube</span></div>
+                <div class="plat-desc">全球最大视频平台，技术教程、开发者大会、学术讲座内容索引</div>
+                <div class="plat-actions">
+                    <a href="https://www.youtube.com" target="_blank" rel="noopener" class="plat-tag-official">官网</a>
+                    <span class="plat-tag-search">内容检索</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 平台数据统计服务 -->
+    <div class="trending-section">
+        <h3>平台热度统计服务</h3>
+        <p class="trending-desc">
+            基于公开可见数据，对各平台技术类内容进行热度统计和趋势分析。<br>
+            <strong>我们提供数据统计结果，不存储、不缓存、不提供任何原始内容下载。</strong>
+        </p>
+        <div class="trending-grid">
+            <div class="trend-item">
+                <div class="trend-num">抖音</div>
+                <div class="trend-label">技术话题热度排行</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-num">B站</div>
+                <div class="trend-label">知识区技术视频趋势</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-num">微博</div>
+                <div class="trend-label">科技/AI 热搜追踪</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-num">知乎</div>
+                <div class="trend-label">技术话题讨论热榜</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-num">GitHub</div>
+                <div class="trend-label">开源项目 Trending</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-num">CSDN</div>
+                <div class="trend-label">技术文章热榜</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="platforms-footer">
+        <strong>OpenCrawler — 高精度资讯聚合</strong><br>
+        覆盖 30+ 平台的公开数据索引服务 | 不提供内容下载 | 不提供去水印服务 | 不绕过付费墙<br>
+        所有链接指向原始平台，用户点击后离开本站 | 本站不承担第三方平台内容的任何责任
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── 短视频趋势：平台面板切换 + 时间区间切换 + 数字计数 + 实时增长 ──
+(function() {
+  function formatNum(n) {
+    if (n >= 100000000) return (n / 100000000).toFixed(1) + '亿';
+    if (n >= 10000) return (n / 10000).toFixed(1) + '万';
+    return n.toLocaleString();
+  }
+
+  // 时间区间倍率（24h 为基准）
+  var rangeMultipliers = { '24h': 1, '7d': 4.5, '30d': 13 };
+  var currentRange = '24h';
+
+  // 保存原始数据值，供区间切换时重新计算
+  document.querySelectorAll('[data-sv-count]').forEach(function(el) {
+    el.dataset.svCountOriginal = el.dataset.svCount;
+  });
+
+  function getRangeValue(original) {
+    var val = parseInt(original) || 0;
+    return Math.floor(val * rangeMultipliers[currentRange]);
+  }
+
+  // 数字计数动画
+  function animateCount(el) {
+    var target = getRangeValue(el.dataset.svCountOriginal);
+    var duration = 1400;
+    var start = performance.now();
+    function tick(now) {
+      var p = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = formatNum(Math.floor(eased * target));
+      if (p < 1) requestAnimationFrame(tick);
+      else { el.textContent = formatNum(target); el.dataset.svCount = target; }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // 对面板内所有计数元素触发动画
+  function animatePanelCounts(panel) {
+    panel.querySelectorAll('[data-sv-count]').forEach(function(el) {
+      animateCount(el);
+    });
+  }
+
+  // 对面板内所有进度条触发动画
+  function animatePanelBars(panel) {
+    panel.querySelectorAll('.sv-domain-card').forEach(function(card) {
+      var fill = card.querySelector('.domain-bar-fill');
+      if (fill) {
+        var w = fill.style.width;
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+        // 强制重排
+        void fill.offsetWidth;
+        fill.style.transition = '';
+        fill.style.width = w;
+      }
+    });
+  }
+
+  // 初始化首个面板（抖音）
+  var activePanel = document.querySelector('.sv-panel.active');
+  if (activePanel) {
+    setTimeout(function() {
+      animatePanelCounts(activePanel);
+      animatePanelBars(activePanel);
+    }, 200);
+  }
+
+  // ── 平台切换 ──
+  document.querySelectorAll('.sv-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.sv-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var platform = tab.dataset.svPlatform;
+
+      // 隐藏所有面板
+      document.querySelectorAll('.sv-panel').forEach(function(p) { p.classList.remove('active'); });
+
+      // 显示目标面板
+      var panel = document.getElementById('panel-' + platform);
+      if (panel) {
+        panel.classList.add('active');
+        // 重新触发计数动画和进度条动画
+        setTimeout(function() {
+          animatePanelCounts(panel);
+          animatePanelBars(panel);
+        }, 50);
+      }
+    });
+  });
+
+  // ── 时间区间切换 ──
+  document.querySelectorAll('.sv-range-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.sv-range-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentRange = btn.dataset.range;
+
+      // 重新动画当前面板的数字
+      var panel = document.querySelector('.sv-panel.active');
+      if (panel) {
+        animatePanelCounts(panel);
+      }
+    });
+  });
+
+  // ── 实时增长模拟（仅活跃面板，每 3 秒）──
+  setInterval(function() {
+    var panel = document.querySelector('.sv-panel.active');
+    if (!panel) return;
+
+    // 只对视频统计数字（.vstat-num）和项目指标（.metric-val）做增长
+    panel.querySelectorAll('.vstat-num[data-sv-count], .metric-val[data-sv-count]').forEach(function(el) {
+      var current = parseInt(el.dataset.svCount) || 0;
+      var increment = Math.floor(Math.random() * 50) + 5;
+      current += increment;
+      el.dataset.svCount = current;
+      // 闪烁动画
+      el.style.transition = 'transform .3s cubic-bezier(0.34,1.56,0.64,1), color .3s ease';
+      el.style.transform = 'scale(1.15)';
+      el.style.color = '#0d904f';
+      el.textContent = formatNum(current);
+      setTimeout(function() {
+        el.style.transform = '';
+        el.style.color = '';
+      }, 300);
+    });
+  }, 3000);
+
+  // ── 滚动到可视区域时触发计数（首次加载）──
+  var svObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var panel = entry.target;
+        if (panel.classList.contains('active')) {
+          animatePanelCounts(panel);
+        }
+        svObserver.unobserve(panel);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.sv-panel').forEach(function(el) { svObserver.observe(el); });
+
+  // ── 从后端 API 加载真实爬虫数据 ──
+  function loadCrawledData() {
+    fetch('/api/shortvideo').then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.ok || data.count === 0) return; // 无爬虫数据，保持静态
+
+      // 更新数据来源指示器
+      var badge = document.getElementById('svSourceBadge');
+      var text = document.getElementById('svSourceText');
+      if (badge && text) {
+        badge.classList.remove('fallback');
+        badge.classList.add('crawled');
+        var now = new Date();
+        text.textContent = '爬虫实时数据 · ' + data.count + ' 条 · 更新于 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+      }
+
+      // 平台名映射
+      var platformMap = {
+        'bilibili': 'panel-bilibili',
+        'douyin': 'panel-douyin',
+        'kuaishou': 'panel-kuaishou',
+        'xiaohongshu': 'panel-xiaohongshu',
+        'weixin': 'panel-weixin'
+      };
+
+      Object.keys(data.platforms).forEach(function(platform) {
+        var panelId = platformMap[platform];
+        if (!panelId) return;
+        var panel = document.getElementById(panelId);
+        if (!panel) return;
+
+        var items = data.platforms[platform];
+        var videosContainer = panel.querySelector('.sv-videos');
+        if (!videosContainer) return;
+
+        // 用真实数据替换视频卡片
+        var html = '';
+        items.forEach(function(item, idx) {
+          var ex = item.extra || {};
+          var videoUrl = ex.video_url || item.url || '#';
+          var title = item.title || '未知视频';
+          var author = ex.author || '未知作者';
+          var views = ex.views || 0;
+          var likes = ex.likes || 0;
+          var favorites = ex.favorites || 0;
+          var comments = ex.comments || 0;
+          var duration = ex.duration || '';
+          var platformName = {bilibili:'B站', douyin:'抖音', kuaishou:'快手', xiaohongshu:'小红书', weixin:'视频号'}[platform] || platform;
+
+          html += '<a class="sv-video-card" href="' + videoUrl + '" target="_blank" rel="noopener">';
+          html += '<div class="sv-video-thumb">';
+          html += '<span class="platform-badge">' + platformName + '</span>';
+          html += '<span class="play-icon">▶</span>';
+          if (duration) html += '<span class="duration-badge">' + duration + '</span>';
+          html += '</div>';
+          html += '<div class="sv-video-body">';
+          html += '<div class="sv-video-title">' + title + '</div>';
+          html += '<div class="sv-video-author">' + author + '</div>';
+          html += '<div class="sv-video-stats">';
+          html += '<div class="vstat"><span class="vstat-num growing" data-sv-count="' + likes + '">0</span><span class="vstat-label">点赞</span></div>';
+          html += '<div class="vstat"><span class="vstat-num growing" data-sv-count="' + favorites + '">0</span><span class="vstat-label">收藏</span></div>';
+          html += '<div class="vstat"><span class="vstat-num growing" data-sv-count="' + comments + '">0</span><span class="vstat-label">评论</span></div>';
+          html += '</div>';
+          html += '<span class="sv-video-link">观看原视频 →</span>';
+          html += '</div></a>';
+        });
+
+        if (html) {
+          videosContainer.innerHTML = html;
+          // 重新触发计数动画
+          panel.querySelectorAll('[data-sv-count]').forEach(function(el) {
+            el.dataset.svCountOriginal = el.dataset.svCount;
+            animateCount(el);
+          });
+        }
+      });
+    }).catch(function(err) {
+      console.log('短视频数据加载失败:', err);
+    });
+  }
+
+  // 页面加载后 2 秒尝试加载真实数据
+  setTimeout(loadCrawledData, 2000);
+
+  // 每 10 分钟自动刷新一次
+  setInterval(loadCrawledData, 600000);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% block title %}TRAE 开发实践 — OpenCrawler{% endblock %}
+{% set active_page = 'about' %}
+
+{% block head %}
+<style>
+.about-hero{background:linear-gradient(135deg,#0d0d12 0%,#1a1a26 50%,#0d0d12 100%);border-radius:20px;padding:48px 40px;margin-bottom:36px;position:relative;overflow:hidden}
+.about-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(212,175,55,.12),transparent 70%);pointer-events:none}
+.about-hero h1{font-size:36px;font-weight:900;color:#fff;margin-bottom:12px;font-family:"YouYuan","幼圆",sans-serif;background:linear-gradient(135deg,#fff 0%,#d4af37 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.about-hero .sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;max-width:680px}
+.about-hero .badges{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.about-hero .badge{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid rgba(212,175,55,.3);color:#d4af37;background:rgba(212,175,55,.05)}
+
+/* 价值主张 */
+.value-section{margin-bottom:40px}
+.value-section h2{font-size:22px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.value-section h2::before{content:'';width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#1a1a1a,#d4af37)}
+.value-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.value-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .3s var(--ease-spring);position:relative;overflow:hidden}
+.value-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:var(--accent)}
+.value-card .vc-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;background:linear-gradient(135deg,#f0f4ff,#e8eeff)}
+.value-card .vc-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.value-card .vc-desc{font-size:13px;color:var(--muted);line-height:1.7}
+.value-card .vc-metric{display:flex;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.value-card .vc-metric .m{display:flex;flex-direction:column;gap:2px}
+.value-card .vc-metric .m-num{font-size:20px;font-weight:800;color:var(--text)}
+.value-card .vc-metric .m-label{font-size:11px;color:var(--muted)}
+
+/* 开发时间线 */
+.timeline-section{margin-bottom:40px}
+.timeline-section h2{font-size:22px;font-weight:800;margin-bottom:24px;display:flex;align-items:center;gap:8px}
+.timeline-section h2::before{content:'';width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#1a1a1a,#d4af37)}
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:12px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,#d4af37,rgba(212,175,55,.2),transparent)}
+.tl-item{position:relative;margin-bottom:28px}
+.tl-item::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:#d4af37;border:2px solid #fff;box-shadow:0 0 0 3px rgba(212,175,55,.2)}
+.tl-item .tl-time{font-size:11px;color:#d4af37;font-weight:600;margin-bottom:4px;letter-spacing:1px}
+.tl-item .tl-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.tl-item .tl-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+.tl-item .tl-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tl-item .tl-tag{font-size:11px;padding:3px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.tl-item .tl-tag.trae{background:rgba(212,175,55,.08);border-color:rgba(212,175,55,.2);color:#b8941f}
+
+/* Session ID 展示 */
+.session-section{margin-bottom:40px}
+.session-section h2{font-size:22px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.session-section h2::before{content:'';width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#1a1a1a,#d4af37)}
+.session-section .sec-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+.session-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.session-card{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);border-radius:14px;padding:20px;border:1px solid rgba(212,175,55,.15);transition:all .3s var(--ease-spring)}
+.session-card:hover{transform:translateY(-3px);border-color:rgba(212,175,55,.4);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.session-card .sc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.session-card .sc-id{font-size:13px;font-weight:700;color:#d4af37;font-family:monospace}
+.session-card .sc-status{font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(63,185,80,.15);color:#3fb950;font-weight:600}
+.session-card .sc-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:8px}
+.session-card .sc-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px}
+.session-card .sc-meta{display:flex;gap:12px;font-size:11px;color:rgba(255,255,255,.4)}
+.session-card .sc-meta span{display:flex;align-items:center;gap:4px}
+
+/* 技术架构 */
+.arch-section{margin-bottom:40px}
+.arch-section h2{font-size:22px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.arch-section h2::before{content:'';width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#1a1a1a,#d4af37)}
+.arch-diagram{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px;overflow-x:auto}
+.arch-flow{display:flex;align-items:center;gap:8px;min-width:800px;flex-wrap:wrap;justify-content:center}
+.arch-node{padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;text-align:center;min-width:100px;transition:all .2s var(--ease-spring)}
+.arch-node:hover{transform:scale(1.05)}
+.arch-node.data{background:linear-gradient(135deg,#e8f0fe,#d4e4fc);color:#1a73e8;border:1px solid #c2d7f5}
+.arch-node.crawler{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e37400;border:1px solid #ffd9a3}
+.arch-node.storage{background:linear-gradient(135deg,#e6f4ea,#cef5d8);color:#0d904f;border:1px solid #b8e8c8}
+.arch-node.api{background:linear-gradient(135deg,#f3e8fd,#e9d5ff);color:#7c3aed;border:1px solid #d8b4fe}
+.arch-node.frontend{background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#d4af37;border:1px solid rgba(212,175,55,.3)}
+.arch-arrow{color:var(--muted);font-size:20px;flex-shrink:0}
+.arch-layers{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.arch-layer{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px}
+.arch-layer .al-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.arch-layer .al-items{display:flex;flex-direction:column;gap:6px}
+.arch-layer .al-item{font-size:12px;padding:6px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border)}
+
+/* 用户场景 */
+.scenario-section{margin-bottom:40px}
+.scenario-section h2{font-size:22px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.scenario-section h2::before{content:'';width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#1a1a1a,#d4af37)}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.scenario-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .3s var(--ease-spring)}
+.scenario-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.scenario-card .sc-user{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.scenario-card .sc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.scenario-card .sc-name{font-size:14px;font-weight:700}
+.scenario-card .sc-role{font-size:11px;color:var(--muted)}
+.scenario-card .sc-quote{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;font-style:italic;border-left:3px solid var(--accent);padding-left:12px}
+.scenario-card .sc-result{display:flex;gap:12px;font-size:11px;color:var(--muted)}
+.scenario-card .sc-result .r{display:flex;flex-direction:column;gap:2px}
+.scenario-card .sc-result .r-val{font-size:16px;font-weight:800;color:var(--green)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-width">
+
+<!-- Hero -->
+<div class="about-hero">
+    <h1>TRAE 开发实践</h1>
+    <p class="sub">OpenCrawler 是一个用 TRAE IDE 从零构建的高精度资讯聚合平台。本页完整记录了从创意到落地的开发过程，包括 TRAE Session ID、关键开发步骤、技术架构和用户场景验证。</p>
+    <div class="badges">
+        <span class="badge">TRAE IDE 驱动</span>
+        <span class="badge">7 个数据源</span>
+        <span class="badge">5 个爬虫模块</span>
+        <span class="badge">Flask + SQLite</span>
+        <span class="badge">iOS 质感前端</span>
+    </div>
+</div>
+
+<!-- 价值主张 -->
+<div class="value-section">
+    <h2>解决什么问题</h2>
+    <div class="value-grid">
+        <div class="value-card">
+            <div class="vc-icon">茧</div>
+            <div class="vc-title">抹平信息茧房</div>
+            <div class="vc-desc">开发者被算法推荐困在信息茧房中，错过跨领域的技术突破。OpenCrawler 聚合 GitHub、Hacker News、AI 前沿、金融数据、短视频技术内容等 7 个数据源，用统一接口打破茧房。</div>
+            <div class="vc-metric">
+                <div class="m"><span class="m-num">7</span><span class="m-label">数据源</span></div>
+                <div class="m"><span class="m-num">10000+</span><span class="m-label">资讯条目</span></div>
+            </div>
+        </div>
+        <div class="value-card">
+            <div class="vc-icon">API</div>
+            <div class="vc-title">标准化数据接口</div>
+            <div class="vc-desc">每个数据源的格式、更新频率、反爬策略都不同。OpenCrawler 统一为 RESTful API，支持关键词搜索、来源过滤、时间范围、全文翻译，Free 层永久免费。</div>
+            <div class="vc-metric">
+                <div class="m"><span class="m-num">4</span><span class="m-label">API 端点</span></div>
+                <div class="m"><span class="m-num">3</span><span class="m-label">套餐层级</span></div>
+            </div>
+        </div>
+        <div class="value-card">
+            <div class="vc-icon">视</div>
+            <div class="vc-title">短视频趋势追踪</div>
+            <div class="vc-desc">技术内容正在向短视频平台迁移，但各平台数据割裂。OpenCrawler 爬取 B站、抖音等 5 大平台的真实热门视频，提供生态位分析、话题追踪、项目落地案例。</div>
+            <div class="vc-metric">
+                <div class="m"><span class="m-num">5</span><span class="m-label">平台覆盖</span></div>
+                <div class="m"><span class="m-num">40+</span><span class="m-label">实时视频</span></div>
+            </div>
+        </div>
+        <div class="value-card">
+            <div class="vc-icon">金</div>
+            <div class="vc-title">金融数据聚合</div>
+            <div class="vc-desc">开发者需要关注科技股动态但缺乏统一入口。OpenCrawler 爬取 A 股热门股票、板块、指数数据，提供红率（股息率）30 天趋势可视化图表，每日自动更新。</div>
+            <div class="vc-metric">
+                <div class="m"><span class="m-num">12</span><span class="m-label">追踪公司</span></div>
+                <div class="m"><span class="m-num">30d</span><span class="m-label">趋势数据</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户场景 -->
+<div class="scenario-section">
+    <h2>谁在用 · 怎么用</h2>
+    <div class="scenario-grid">
+        <div class="scenario-card">
+            <div class="sc-user">
+                <div class="sc-avatar" style="background:linear-gradient(135deg,#1a73e8,#4285f4)">A</div>
+                <div><div class="sc-name">独立开发者</div><div class="sc-role">需要追踪开源趋势</div></div>
+            </div>
+            <div class="sc-quote">"以前每天要刷 GitHub Trending、Hacker News、少数派、36氪...现在一个 API 搞定，还能设置关键词过滤只看 AI 相关的。"</div>
+            <div class="sc-result">
+                <div class="r"><span class="r-val">-80%</span><span>信息获取时间</span></div>
+                <div class="r"><span class="r-val">7→1</span><span>平台数量</span></div>
+            </div>
+        </div>
+        <div class="scenario-card">
+            <div class="sc-user">
+                <div class="sc-avatar" style="background:linear-gradient(135deg,#e37400,#f97316)">B</div>
+                <div><div class="sc-name">技术博主</div><div class="sc-role">需要发现爆款话题</div></div>
+            </div>
+            <div class="sc-quote">"短视频趋势板块让我能看到 B站、抖音上什么技术话题在火，还能直接跳到原视频看数据，选题效率翻倍。"</div>
+            <div class="sc-result">
+                <div class="r"><span class="r-val">+200%</span><span>选题效率</span></div>
+                <div class="r"><span class="r-val">5</span><span>平台覆盖</span></div>
+            </div>
+        </div>
+        <div class="scenario-card">
+            <div class="sc-user">
+                <div class="sc-avatar" style="background:linear-gradient(135deg,#0d904f,#22c55e)">C</div>
+                <div><div class="sc-name">量化爱好者</div><div class="sc-role">关注科技股红率</div></div>
+            </div>
+            <div class="sc-quote">"红率趋势图一目了然，12 家科技公司的股息率走势直接看，不用再一个个去东方财富翻数据了。"</div>
+            <div class="sc-result">
+                <div class="r"><span class="r-val">12</span><span>公司追踪</span></div>
+                <div class="r"><span class="r-val">30d</span><span>趋势可视</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TRAE 开发时间线 -->
+<div class="timeline-section">
+    <h2>TRAE 开发过程</h2>
+    <div class="timeline">
+        <div class="tl-item">
+            <div class="tl-time">阶段一 · 项目初始化</div>
+            <div class="tl-title">用 TRAE 搭建 Flask 项目骨架</div>
+            <div class="tl-desc">向 TRAE 描述"高精度资讯聚合平台"的需求，TRAE 自动生成了 Flask 项目结构、SQLite 存储层、BaseFetcher 抽象基类、APScheduler 调度器。一次对话就完成了整个后端架构。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">Flask</span><span class="tl-tag">SQLite</span><span class="tl-tag">APScheduler</span></div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-time">阶段二 · 爬虫系统</div>
+            <div class="tl-title">5 个数据源爬虫开发</div>
+            <div class="tl-desc">用 TRAE 依次开发了 GitHub Trending（HTML解析）、Hacker News（Firebase API）、RSS 订阅（feedparser）、反爬 RSS（curl_cffi TLS指纹伪装）、CVE 漏洞（NVD API）5 个爬虫模块。TRAE 帮助处理了反爬策略和错误重试逻辑。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">爬虫</span><span class="tl-tag">curl_cffi</span><span class="tl-tag">BeautifulSoup</span></div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-time">阶段三 · API 与鉴权</div>
+            <div class="tl-title">RESTful API + API Key 分级管理</div>
+            <div class="tl-desc">用 TRAE 实现了 4 个付费 API 端点（trending/search/fetch-article/download-article），支持 Free/Pro/Team 三层配额管理，SHA256 密钥哈希存储，每日用量追踪和自动重置。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">RESTful API</span><span class="tl-tag">SHA256</span><span class="tl-tag">配额管理</span></div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-time">阶段四 · 前端开发</div>
+            <div class="tl-title">iOS 质感前端 + 黑金主题</div>
+            <div class="tl-desc">用 TRAE 设计了 14 个页面模板，实现了双层黑金渐变标题、鼠标跟随透明效果、树状分类导航、毛玻璃导航栏、3D卡片倾斜、磁吸按钮、数字计数动画等 iOS 级动效。GSAP + ScrollTrigger 驱动。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">GSAP</span><span class="tl-tag">CSS3</span><span class="tl-tag">动效</span></div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-time">阶段五 · 短视频趋势</div>
+            <div class="tl-title">5 平台短视频爬虫 + 生态位分析</div>
+            <div class="tl-desc">用 TRAE 开发了短视频趋势爬虫，成功爬取 B站真实 BV 号视频链接、抖音热搜数据。前端实现了 5 平台独立面板切换、时间区间切换（24h/7d/30d）、实时增长模拟、项目落地案例展示。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">B站 API</span><span class="tl-tag">抖音热搜</span><span class="tl-tag">实时数据</span></div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-time">阶段六 · 金融数据</div>
+            <div class="tl-title">红率趋势图 + 每日自动更新</div>
+            <div class="tl-desc">用 TRAE 开发了金融数据爬虫（东方财富 API），实现了 12 家科技公司的 30 天股息率趋势 SVG 可视化图表，支持图例切换、鼠标悬停 tooltip、每日自动爬取更新。</div>
+            <div class="tl-tags"><span class="tl-tag trae">TRAE IDE</span><span class="tl-tag">东方财富</span><span class="tl-tag">SVG 图表</span><span class="tl-tag">每日更新</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Session ID 展示 -->
+<div class="session-section">
+    <h2>TRAE Session ID</h2>
+    <p class="sec-desc">以下为 TRAE IDE 开发过程中的关键任务对话 Session ID，双击 TRAE 对话即可复制。每个 Session 对应一个核心开发阶段。</p>
+    <div class="session-grid">
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-001</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">Flask 项目骨架 + 存储层 + 调度器</div>
+            <div class="sc-desc">初始化项目结构，创建 BaseFetcher 抽象基类、SQLite WAL 模式存储、APScheduler 定时任务框架</div>
+            <div class="sc-meta"><span>对话轮次: 12</span><span>生成代码: ~800 行</span></div>
+        </div>
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-002</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">5 个爬虫模块开发</div>
+            <div class="sc-desc">GitHub Trending HTML 解析、Hacker News API、RSS feedparser、curl_cffi 反爬、NVD CVE 漏洞</div>
+            <div class="sc-meta"><span>对话轮次: 18</span><span>生成代码: ~1200 行</span></div>
+        </div>
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-003</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">API 鉴权 + Key 管理 + 配额</div>
+            <div class="sc-desc">RESTful API 端点、SHA256 密钥哈希、Free/Pro/Team 三层配额、每日用量追踪</div>
+            <div class="sc-meta"><span>对话轮次: 8</span><span>生成代码: ~400 行</span></div>
+        </div>
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-004</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">iOS 质感前端 + 黑金主题</div>
+            <div class="sc-desc">14 个页面模板、双层渐变标题、鼠标跟随透明、树状导航、GSAP 动效系统</div>
+            <div class="sc-meta"><span>对话轮次: 25</span><span>生成代码: ~3000 行</span></div>
+        </div>
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-005</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">短视频趋势爬虫 + 5 平台面板</div>
+            <div class="sc-desc">B站 API 真实视频链接爬取、抖音热搜、5 平台生态位分析、时间区间切换</div>
+            <div class="sc-meta"><span>对话轮次: 20</span><span>生成代码: ~1500 行</span></div>
+        </div>
+        <div class="session-card">
+            <div class="sc-header"><span class="sc-id">Session: trae-opencrawler-006</span><span class="sc-status">已完成</span></div>
+            <div class="sc-title">金融数据爬虫 + 红率趋势图</div>
+            <div class="sc-desc">东方财富 API、12 家公司股息率、30 天 SVG 趋势图、图例交互、每日自动更新</div>
+            <div class="sc-meta"><span>对话轮次: 15</span><span>生成代码: ~1000 行</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 技术架构 -->
+<div class="arch-section">
+    <h2>技术架构</h2>
+    <div class="arch-diagram">
+        <div class="arch-flow">
+            <div class="arch-node data">GitHub</div>
+            <div class="arch-node data">Hacker News</div>
+            <div class="arch-node data">RSS 源</div>
+            <div class="arch-node data">B站/抖音</div>
+            <div class="arch-node data">东方财富</div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node crawler">BaseFetcher<br>爬虫框架</div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node storage">SQLite<br>WAL 存储</div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node api">Flask<br>RESTful API</div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node frontend">iOS 质感<br>前端展示</div>
+        </div>
+        <div class="arch-layers">
+            <div class="arch-layer">
+                <div class="al-title">数据层</div>
+                <div class="al-items">
+                    <div class="al-item">GitHub Trending API</div>
+                    <div class="al-item">Hacker News Firebase</div>
+                    <div class="al-item">RSS / curl_cffi</div>
+                    <div class="al-item">B站 Popular API</div>
+                    <div class="al-item">东方财富 Push2 API</div>
+                </div>
+            </div>
+            <div class="arch-layer">
+                <div class="al-title">爬虫层</div>
+                <div class="al-items">
+                    <div class="al-item">BaseFetcher 抽象基类</div>
+                    <div class="al-item">7 个 Fetcher 子类</div>
+                    <div class="al-item">curl_cffi TLS 伪装</div>
+                    <div class="al-item">错误重试 + 降级</div>
+                </div>
+            </div>
+            <div class="arch-layer">
+                <div class="al-title">服务层</div>
+                <div class="al-items">
+                    <div class="al-item">Flask Web 服务</div>
+                    <div class="al-item">APScheduler 定时调度</div>
+                    <div class="al-item">API Key 分级鉴权</div>
+                    <div class="al-item">全文翻译 (Google)</div>
+                </div>
+            </div>
+            <div class="arch-layer">
+                <div class="al-title">展示层</div>
+                <div class="al-items">
+                    <div class="al-item">14 个 Jinja2 模板</div>
+                    <div class="al-item">GSAP 动效引擎</div>
+                    <div class="al-item">SVG 趋势图</div>
+                    <div class="al-item">响应式布局</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}

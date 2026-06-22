@@ -1,0 +1,559 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevNav - 开发者资源导航</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#fff;--card:#f5f5f7;--border:#d2d2d7;--text:#1d1d1f;--muted:#86868b;
+            --hover:#e8e8ed;--active:#0071e3;--shadow:rgba(0,0,0,.04);
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+        /* 入场遮罩 */
+        .loader{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .6s cubic-bezier(.4,0,.2,1),visibility .6s}
+        .loader.hidden{opacity:0;visibility:hidden}
+        .loader-grid{display:grid;grid-template-columns:repeat(8,60px);gap:8px}
+        .loader-cell{width:60px;height:60px;background:var(--card);border-radius:12px;transform:translateY(-100vh);animation:slideDown .8s cubic-bezier(.4,0,.2,1) forwards}
+        .loader-cell:nth-child(1){animation-delay:0s}.loader-cell:nth-child(2){animation-delay:.05s}.loader-cell:nth-child(3){animation-delay:.1s}.loader-cell:nth-child(4){animation-delay:.15s}
+        .loader-cell:nth-child(5){animation-delay:.2s}.loader-cell:nth-child(6){animation-delay:.25s}.loader-cell:nth-child(7){animation-delay:.3s}.loader-cell:nth-child(8){animation-delay:.35s}
+        .loader-cell:nth-child(9){animation-delay:.02s}.loader-cell:nth-child(10){animation-delay:.07s}.loader-cell:nth-child(11){animation-delay:.12s}.loader-cell:nth-child(12){animation-delay:.17s}
+        .loader-cell:nth-child(13){animation-delay:.22s}.loader-cell:nth-child(14){animation-delay:.27s}.loader-cell:nth-child(15){animation-delay:.32s}.loader-cell:nth-child(16){animation-delay:.37s}
+        .loader-cell:nth-child(17){animation-delay:.04s}.loader-cell:nth-child(18){animation-delay:.09s}.loader-cell:nth-child(19){animation-delay:.14s}.loader-cell:nth-child(20){animation-delay:.19s}
+        .loader-cell:nth-child(21){animation-delay:.24s}.loader-cell:nth-child(22){animation-delay:.29s}.loader-cell:nth-child(23){animation-delay:.34s}.loader-cell:nth-child(24){animation-delay:.39s}
+        @keyframes slideDown{to{transform:translateY(0)}}
+
+        /* 导航 */
+        .navbar{padding:16px 32px;background:var(--bg);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border)}
+        .navbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+        .logo{font-size:21px;font-weight:600;letter-spacing:-.5px;color:var(--text)}
+        .nav-links{display:flex;gap:32px}
+        .nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .3s cubic-bezier(.4,0,.2,1);position:relative}
+        .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--active);transform:scaleX(0);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+        .nav-links a:hover{color:var(--text)}
+        .nav-links a:hover::after{transform:scaleX(1)}
+
+        /* Hero */
+        .hero{padding:100px 32px 60px;text-align:center;max-width:800px;margin:0 auto}
+        .hero h1{font-size:56px;font-weight:700;letter-spacing:-2px;margin-bottom:16px;opacity:0;animation:fadeIn .8s cubic-bezier(.4,0,.2,1) .5s forwards}
+        .hero p{font-size:21px;color:var(--muted);line-height:1.5;opacity:0;animation:fadeIn .8s cubic-bezier(.4,0,.2,1) .6s forwards}
+        @keyframes fadeIn{to{opacity:1}}
+
+        /* 搜索 */
+        .search{max-width:500px;margin:0 auto 60px;padding:0 32px;opacity:0;animation:fadeIn .8s cubic-bezier(.4,0,.2,1) .7s forwards}
+        .search-box{position:relative}
+        .search input{width:100%;padding:16px 24px 16px 48px;border:none;border-radius:24px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:16px;transition:all .4s cubic-bezier(.4,0,.2,1)}
+        .search input:focus{outline:none;border-color:var(--active);box-shadow:0 0 0 4px rgba(0,113,227,.1),0 8px 32px var(--shadow)}
+        .search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--muted)}
+
+        /* 分类标签 */
+        .tabs{max-width:1200px;margin:0 auto 40px;padding:0 32px;display:flex;gap:8px;flex-wrap:wrap;opacity:0;animation:fadeIn .8s cubic-bezier(.4,0,.2,1) .8s forwards}
+        .tab{padding:10px 20px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:14px;color:var(--muted);cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);user-select:none}
+        .tab:hover{background:var(--hover);color:var(--text)}
+        .tab.active{background:var(--active);color:#fff;border-color:var(--active)}
+
+        /* 容器 */
+        .container{max-width:1200px;margin:0 auto;padding:0 32px 100px;position:relative}
+
+        /* 滑块网格框架动效 */
+        .slider-grid{position:relative;padding:24px;background:transparent;border-radius:24px;transition:all .5s cubic-bezier(.4,0,.2,1)}
+        .slider-grid::before{content:'';position:absolute;inset:0;border-radius:24px;border:1px solid transparent;transition:all .5s cubic-bezier(.4,0,.2,1)}
+        .slider-grid.switching{padding:28px 24px;background:rgba(0,113,227,.02)}
+        .slider-grid.switching::before{border-color:rgba(0,113,227,.08);box-shadow:0 0 60px rgba(0,113,227,.04)}
+        .grid-indicator{position:absolute;top:12px;left:24px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);opacity:0;transform:translateX(-10px);transition:all .4s cubic-bezier(.4,0,.2,1)}
+        .slider-grid.switching .grid-indicator{opacity:1;transform:translateX(0)}
+        .grid-dot{width:6px;height:6px;border-radius:50%;background:var(--active);animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+        /* 滑块网格 */
+        .slider-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;position:relative}
+        .slider{position:relative;height:200px;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);transform-origin:center}
+        .slider-track{position:absolute;top:0;left:0;right:0;height:100%;background:linear-gradient(180deg,var(--hover) 0%,var(--card) 100%);transform:translateY(-100%);transition:transform .6s cubic-bezier(.4,0,.2,1)}
+        .slider:hover .slider-track{transform:translateY(0)}
+        .slider-content{position:absolute;top:0;left:0;right:0;padding:20px;height:100%;display:flex;flex-direction:column;justify-content:space-between;z-index:1}
+        .slider-header{display:flex;align-items:center;gap:12px}
+        .slider-icon{width:44px;height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--active);transition:all .4s cubic-bezier(.4,0,.2,1)}
+        .slider:hover .slider-icon{background:var(--active);color:#fff;transform:scale(1.1)}
+        .slider-title{font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+        .slider-desc{font-size:13px;color:var(--muted);line-height:1.4;flex:1;overflow:hidden}
+        .slider-link{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2}
+        .slider-tags{display:flex;gap:6px;flex-wrap:wrap}
+        .slider-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,113,227,.1);color:var(--active);transition:all .3s}
+        .slider:hover .slider-tag{background:var(--active);color:#fff}
+        .slider-badges{display:flex;gap:4px;margin-top:4px}
+        .slider-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:500}
+        .badge-popular{background:#fef3c7;color:#92400e}.badge-new{background:#dbeafe;color:#1e40af}.badge-hot{background:#fee2e2;color:#991b1b}
+
+        /* 滑块动画 */
+        .slider{opacity:0;transform:translateY(30px) scale(0.95)}
+        .slider.show{animation:sliderIn .5s cubic-bezier(.4,0,.2,1) forwards}
+        .slider.hide{animation:sliderOut .3s cubic-bezier(.4,0,.2,1) forwards}
+        @keyframes sliderIn{to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes sliderOut{to{opacity:0;transform:translateY(-20px) scale(0.95)}}
+
+        /* 分类计数 */
+        .cat-count{font-size:12px;color:var(--muted);margin-left:8px;font-weight:400}
+
+        /* Tooltip */
+        .tooltip{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:0;max-width:380px;box-shadow:0 25px 80px rgba(0,0,0,.15);z-index:1000;opacity:0;transform:scale(.85) translateY(15px);pointer-events:none;transition:all .4s cubic-bezier(.4,0,.2,1);overflow:hidden}
+        .tooltip.visible{opacity:1;transform:scale(1) translateY(0)}
+        .tooltip-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+        .tooltip-icon{width:48px;height:48px;border-radius:14px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--active)}
+        .tooltip-title{font-size:17px;font-weight:600;color:var(--text)}
+        .tooltip-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+        .tooltip-tag{font-size:11px;padding:4px 10px;border-radius:8px;background:var(--card);color:var(--muted)}
+        .tooltip-body{padding:16px 20px}
+        .tooltip-desc{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:14px}
+        .tooltip-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .tooltip-meta-item{background:var(--card);padding:10px 12px;border-radius:10px}
+        .tooltip-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+        .tooltip-meta-value{font-size:13px;color:var(--text);font-weight:500}
+        .tooltip-related{padding:12px 20px;border-top:1px solid var(--border)}
+        .tooltip-related-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+        .tooltip-related-items{display:flex;gap:6px;flex-wrap:wrap}
+        .tooltip-related-item{font-size:12px;padding:5px 10px;border-radius:8px;background:var(--card);color:var(--text);transition:all .2s;cursor:pointer}
+        .tooltip-related-item:hover{background:var(--active);color:#fff}
+        .tooltip-similar{background:rgba(0,113,227,.03)}
+        .tooltip-uses{padding:10px 20px;border-top:1px solid var(--border);background:rgba(0,0,0,.02)}
+        .tooltip-uses-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+        .tooltip-uses-list{display:flex;gap:6px;flex-wrap:wrap}
+        .tooltip-use-tag{font-size:11px;padding:4px 8px;border-radius:6px;background:var(--hover);color:var(--text)}
+        .tooltip-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .tooltip-links{display:flex;gap:12px}
+        .tooltip-link{font-size:12px;color:var(--active);text-decoration:none;display:flex;align-items:center;gap:4px}
+        .tooltip-link:hover{text-decoration:underline}
+
+        /* Footer */
+        .footer{text-align:center;padding:60px 32px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+        .footer a{color:var(--active);text-decoration:none}
+
+        /* 响应式 */
+        @media(max-width:768px){
+            .hero h1{font-size:36px}.hero p{font-size:17px}
+            .slider-grid{grid-template-columns:1fr}
+            .nav-links{display:none}
+            .loader-grid{grid-template-columns:repeat(4,50px)}
+            .loader-cell{width:50px;height:50px}
+            .tooltip{max-width:calc(100vw - 32px);right:16px!important;left:16px!important}
+            .tooltip-meta{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+
+<!-- 入场动画 -->
+<div class="loader" id="loader">
+    <div class="loader-grid">
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+        <div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div><div class="loader-cell"></div>
+    </div>
+</div>
+
+<nav class="navbar">
+    <div class="navbar-inner">
+        <div class="logo">DevNav</div>
+        <div class="nav-links">
+            <a href="#" data-tab="all">全部</a>
+            <a href="#" data-tab="ai">AI</a>
+            <a href="#" data-tab="crawler">爬虫</a>
+            <a href="#" data-tab="frontend">前端</a>
+            <a href="#" data-tab="backend">后端</a>
+            <a href="#" data-tab="devops">运维</a>
+            <a href="#" data-tab="security">安全</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <h1>开发者资源导航</h1>
+    <p>面向任意领域的开发者资源需求技术导航，按领域分类检索工具、文档、API 和市场资源</p>
+</section>
+
+<div class="search">
+    <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="搜索资源..." oninput="filter(this.value)">
+    </div>
+</div>
+
+<div class="tabs" id="tabs">
+    <div class="tab active" data-tab="all">全部<span class="cat-count"></span></div>
+    <div class="tab" data-tab="ai">AI / LLM<span class="cat-count"></span></div>
+    <div class="tab" data-tab="crawler">爬虫<span class="cat-count"></span></div>
+    <div class="tab" data-tab="frontend">前端<span class="cat-count"></span></div>
+    <div class="tab" data-tab="backend">后端<span class="cat-count"></span></div>
+    <div class="tab" data-tab="devops">运维<span class="cat-count"></span></div>
+    <div class="tab" data-tab="security">安全<span class="cat-count"></span></div>
+    <div class="tab" data-tab="tools">工具<span class="cat-count"></span></div>
+    <div class="tab" data-tab="docs">文档<span class="cat-count"></span></div>
+    <div class="tab" data-tab="design">设计<span class="cat-count"></span></div>
+    <div class="tab" data-tab="data">数据<span class="cat-count"></span></div>
+    <div class="tab" data-tab="mobile">移动端<span class="cat-count"></span></div>
+</div>
+
+<div class="container">
+    <div class="slider-grid" id="grid"><div class="grid-indicator"><span class="grid-dot"></span><span class="grid-text">加载中...</span></div></div>
+</div>
+
+<footer class="footer">
+    DevNav — 开发者资源导航 | <a href="https://github.com" target="_blank">GitHub</a>
+</footer>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// 资源数据
+const resources = [
+    // DevNav 介绍卡
+    {cat:'all',icon:'D',title:'DevNav 开发者导航',desc:'面向任意领域的开发者资源需求技术导航，按领域分类检索工具、文档、API 和市场资源，支持一键跳转和关联推荐',tags:['导航','资源聚合','全领域'],badge:'',lang:'HTML/CSS/JS',license:'MIT',related:['GitHub','MDN','Stack Overflow'],docs:'#',github:'',similar:['工具导航','资源聚合','知识库'],uses:['快速查找开发工具','按领域探索资源','关联资源推荐','资源使用场景'],stars:'',homepage:'#',isIntro:true},
+
+    // AI / LLM
+    {cat:'ai',icon:'O',title:'OpenAI API',desc:'GPT-4、GPT-4o、DALL-E、Whisper 官方 API 文档',tags:['官方','API','多模态'],badge:'popular',lang:'Python/JS',license:'商用付费',related:['Claude API','Gemini API','DeepSeek API'],docs:'https://platform.openai.com/docs',github:'',similar:['Anthropic','Google AI'],uses:['LLM应用开发','AI集成','文本生成','图像生成'],stars:'12.5k',homepage:'https://openai.com'},
+    {cat:'ai',icon:'C',title:'Claude API',desc:'Claude 3.5 Sonnet 官方文档，长文本处理能力强',tags:['官方','API','长文本'],badge:'popular',lang:'Python/JS',license:'商用付费',related:['OpenAI API','Gemini API','LangChain'],docs:'https://docs.anthropic.com',github:'',similar:['OpenAI','Anthropic'],uses:['长文本处理','代码生成','数据分析','AI助手'],stars:'8.2k',homepage:'https://anthropic.com'},
+    {cat:'ai',icon:'DS',title:'DeepSeek API',desc:'国产大模型 DeepSeek V3/R1 API，性价比极高',tags:['国产','API','高性价比'],badge:'hot',lang:'Python/JS',license:'免费额度',related:['OpenAI API','Ollama','Hugging Face'],docs:'https://platform.deepseek.com/api-docs',github:'',similar:['国产模型','开源模型'],uses:['国产LLM','成本优化','API集成','本地部署'],stars:'28k',homepage:'https://deepseek.com'},
+    {cat:'ai',icon:'H',title:'Hugging Face',desc:'开源模型库，LLM、图像、音频模型下载与部署',tags:['开源','模型库','社区'],badge:'popular',lang:'Python',license:'Apache 2.0',related:['Ollama','LangChain','PyTorch'],docs:'https://huggingface.co/docs',github:'https://github.com/huggingface',similar:['模型市场','预训练模型'],uses:['模型下载','模型部署','预训练模型','AI应用'],stars:'67k',homepage:'https://huggingface.co'},
+    {cat:'ai',icon:'L',title:'Ollama',desc:'本地运行 Llama、Mistral、DeepSeek 等开源模型',tags:['本地','开源','简单'],badge:'popular',lang:'Go',license:'MIT',related:['Hugging Face','DeepSeek API','llama.cpp'],docs:'https://github.com/ollama/ollama',github:'https://github.com/ollama/ollama',similar:['本地部署','模型运行'],uses:['本地LLM','模型测试','隐私敏感','开发调试'],stars:'78k',homepage:'https://ollama.com'},
+    {cat:'ai',icon:'DF',title:'Dify',desc:'可视化构建 AI 应用，支持工作流编排、知识库',tags:['开源','可视化','工作流'],badge:'new',lang:'Python/TypeScript',license:'Apache 2.0',related:['LangChain','FastAPI','PostgreSQL'],docs:'https://docs.dify.ai',github:'https://github.com/langgenius/dify',similar:['AI应用平台','工作流引擎'],uses:['AI应用构建','知识库搭建','工作流编排','企业AI'],stars:'58k',homepage:'https://dify.ai'},
+    {cat:'ai',icon:'LC',title:'LangChain',desc:'构建 LLM 应用的框架，支持链式调用、记忆',tags:['开源','框架','RAG'],badge:'popular',lang:'Python/JS',license:'MIT',related:['Hugging Face','OpenAI API','Pinecone'],docs:'https://python.langchain.com',github:'https://github.com/langchain/langchain',similar:['LLM框架','向量数据库'],uses:['RAG应用','聊天机器人','文档理解','AI代理'],stars:'91k',homepage:'https://langchain.com'},
+    {cat:'ai',icon:'G',title:'Gemini API',desc:'Google 多模态大模型 API，支持文本、图像、视频',tags:['官方','API','多模态'],badge:'',lang:'Python/JS',license:'商用付费',related:['OpenAI API','Claude API','Vertex AI'],docs:'https://ai.google.dev',github:'',similar:['Google AI','多模态'],uses:['多模态AI','视频理解','图像分析','Google生态'],stars:'',homepage:'https://ai.google.dev'},
+    {cat:'ai',icon:'PC',title:'PyTorch',desc:'深度学习框架，LLM 训练和推理首选',tags:['开源','深度学习','训练'],badge:'popular',lang:'Python/C++',license:'BSD',related:['Hugging Face','TensorFlow','JAX'],docs:'https://pytorch.org/docs',github:'https://github.com/pytorch/pytorch',similar:['深度学习','模型训练'],uses:['深度学习','模型训练','LLM研发','科学研究'],stars:'82k',homepage:'https://pytorch.org'},
+    {cat:'ai',icon:'PN',title:'Pinecone',desc:'向量数据库，用于 RAG 和语义搜索',tags:['云服务','向量库','RAG'],badge:'',lang:'Python/JS',license:'商用付费',related:['LangChain','Weaviate','Milvus'],docs:'https://docs.pinecone.io',github:'',similar:['向量检索','相似度搜索'],uses:['RAG系统','语义搜索','推荐系统','知识库'],stars:'',homepage:'https://pinecone.io'},
+    {cat:'ai',icon:'Gr',title:'Groq',desc:'超快 LLM 推理引擎，毫秒级响应',tags:['硬件加速','推理','低延迟'],badge:'new',lang:'Python/JS',license:'商用付费',related:['OpenAI API','Claude API','vLLM'],docs:'https://console.groq.com/docs',github:'',similar:['LLM推理','AI加速'],uses:['实时AI','低延迟应用','生产部署','Edge AI'],stars:'',homepage:'https://groq.com'},
+    {cat:'ai',icon:'vL',title:'vLLM',desc:'高吞吐量 LLM 推理服务，PagedAttention',tags:['开源','推理','高效'],badge:'',lang:'Python',license:'Apache 2.0',related:['Ollama','TGI','PyTorch'],docs:'https://docs.vllm.ai',github:'https://github.com/vllm-project/vllm',similar:['LLM服务','推理优化'],uses:['大模型推理','高吞吐服务','生产部署','模型服务化'],stars:'36k',homepage:'https://vllm.ai'},
+
+    // 爬虫
+    {cat:'crawler',icon:'S',title:'Scrapy',desc:'Python 爬虫框架，高性能分布式采集',tags:['开源','框架','分布式'],badge:'popular',lang:'Python',license:'BSD',related:['Playwright','BeautifulSoup','Selenium'],docs:'https://scrapy.org',github:'https://github.com/scrapy/scrapy',similar:['爬虫框架','数据采集'],uses:['大规模数据采集','网站内容抓取','API数据获取','竞品分析'],stars:'54k',homepage:'https://scrapy.org'},
+    {cat:'crawler',icon:'P',title:'Playwright',desc:'微软浏览器自动化工具，支持 Chromium、Firefox、WebKit',tags:['开源','自动化','跨浏览器'],badge:'popular',lang:'Python/JS',license:'Apache 2.0',related:['Puppeteer','Selenium','DrissionPage'],docs:'https://playwright.dev',github:'https://github.com/microsoft/playwright',similar:['浏览器自动化','无头浏览'],uses:['Web测试','网页截图','表单自动填写','爬虫抓取'],stars:'65k',homepage:'https://playwright.dev'},
+    {cat:'crawler',icon:'P',title:'Puppeteer',desc:'Google Chrome 官方 Node.js 自动化库',tags:['开源','Chrome','官方'],badge:'',lang:'Node.js/TypeScript',license:'Apache 2.0',related:['Playwright','Selenium','Chromium'],docs:'https://pptr.dev',github:'https://github.com/puppeteer/puppeteer',similar:['Node.js','浏览器控制'],uses:['Chrome自动化','PDF生成','网页抓取','性能监控'],stars:'85k',homepage:'https://pptr.dev'},
+    {cat:'crawler',icon:'C',title:'curl-cffi',desc:'模拟浏览器 TLS 指纹，绕过 Cloudflare 反爬',tags:['开源','反爬','TLS'],badge:'hot',lang:'Python',license:'MIT',related:['Scrapy','Requests','Cloudscraper'],docs:'https://curl-cffi.readthedocs.io',github:'https://github.com/yifeikong/curl_cffi',similar:['TLS指纹','反反爬'],uses:['反爬绕过','Cloudflare绕过','TLS指纹模拟','匿名访问'],stars:'5k',homepage:'https://curl-cffi.readthedocs.io'},
+    {cat:'crawler',icon:'R',title:'Requests',desc:'Python HTTP 库，简单优雅的请求处理',tags:['开源','库','基础'],badge:'popular',lang:'Python',license:'Apache 2.0',related:['Aiohttp','httpx','Scrapy'],docs:'https://requests.readthedocs.io',github:'https://github.com/psf/requests',similar:['HTTP客户端','网络请求'],uses:['API调用','文件下载','表单提交','cookie处理'],stars:'50k',homepage:'https://requests.readthedocs.io'},
+    {cat:'crawler',icon:'B',title:'BeautifulSoup',desc:'HTML/XML 解析库，配合 Requests 使用',tags:['开源','解析','HTML'],badge:'popular',lang:'Python',license:'MIT',related:['Requests','lxml','Scrapy'],docs:'https://www.crummy.com/software/BeautifulSoup',github:'https://github.com/wention/BeautifulSoup4',similar:['HTML解析','数据提取'],uses:['网页解析','数据提取','DOM操作','XML解析'],stars:'12k',homepage:'https://www.crummy.com/software/BeautifulSoup'},
+    {cat:'crawler',icon:'Se',title:'Selenium',desc:'浏览器自动化老牌工具，支持多语言',tags:['开源','自动化','经典'],badge:'',lang:'Python/Java/JS',license:'Apache 2.0',related:['Playwright','Puppeteer','DrissionPage'],docs:'https://www.selenium.dev/documentation',github:'https://github.com/SeleniumHQ/selenium',similar:['WebDriver','UI自动化'],uses:['Web测试','功能自动化','屏幕截图','数据抓取'],stars:'28k',homepage:'https://www.selenium.dev'},
+    {cat:'crawler',icon:'DP',title:'DrissionPage',desc:'Python 浏览器自动化库，结合 Requests 和 Selenium',tags:['开源','国产','高效'],badge:'new',lang:'Python',license:'MIT',related:['Selenium','Playwright','Requests'],docs:'https://drissionpage.cn',github:'https://github.com/-CN-///DrissionPage',similar:['国产工具','混合模式'],uses:['浏览器自动化','轻量级爬虫','网页交互','文件上传'],stars:'3k',homepage:'https://drissionpage.cn'},
+
+    // 前端
+    {cat:'frontend',icon:'R',title:'React',desc:'Meta 前端框架，组件化开发，虚拟 DOM',tags:['开源','框架','组件化'],badge:'popular',lang:'JavaScript/TypeScript',license:'MIT',related:['Vue.js','Next.js','Svelte'],docs:'https://react.dev',github:'https://github.com/facebook/react',similar:['UI框架','单页应用'],uses:['单页应用','移动应用','后台管理','交互式UI'],stars:'225k',homepage:'https://react.dev'},
+    {cat:'frontend',icon:'V',title:'Vue.js',desc:'渐进式前端框架，中文社区活跃',tags:['开源','框架','中文'],badge:'popular',lang:'JavaScript/TypeScript',license:'MIT',related:['React','Nuxt.js','Svelte'],docs:'https://vuejs.org',github:'https://github.com/vuejs/core',similar:['响应式','渐进增强'],uses:['后台管理','企业官网','移动端H5','组件库开发'],stars:'210k',homepage:'https://vuejs.org'},
+    {cat:'frontend',icon:'T',title:'Tailwind CSS',desc:'原子化 CSS 框架，快速构建 UI',tags:['开源','CSS','原子化'],badge:'popular',lang:'CSS/JavaScript',license:'MIT',related:['Bootstrap','UnoCSS','CSS Modules'],docs:'https://tailwindcss.com',github:'https://github.com/tailwindlabs/tailwindcss',similar:['CSS框架','工具类'],uses:['快速原型','定制设计','响应式布局','UI组件'],stars:'80k',homepage:'https://tailwindcss.com'},
+    {cat:'frontend',icon:'V',title:'Vite',desc:'下一代前端构建工具，极速开发体验',tags:['开源','构建','极速'],badge:'popular',lang:'JavaScript/TypeScript',license:'MIT',related:['Webpack','esbuild','Rollup'],docs:'https://vitejs.dev',github:'https://github.com/vitejs/vite',similar:['开发服务器','构建工具'],uses:['开发启动','热更新','生产构建','库开发'],stars:'65k',homepage:'https://vitejs.dev'},
+    {cat:'frontend',icon:'N',title:'Next.js',desc:'React 全栈框架，支持 SSR、SSG、ISR',tags:['开源','全栈','SSR'],badge:'popular',lang:'TypeScript',license:'MIT',related:['React','Nuxt.js','Remix'],docs:'https://nextjs.org',github:'https://github.com/vercel/next.js',similar:['React框架','服务端渲染'],uses:['SSR应用','静态网站','API路由','全栈开发'],stars:'125k',homepage:'https://nextjs.org'},
+    {cat:'frontend',icon:'GS',title:'GSAP',desc:'专业 JavaScript 动画库，性能极致',tags:['免费','动画','高性能'],badge:'',lang:'JavaScript',license:'Standard',related:['Framer Motion','Anime.js','Motion One'],docs:'https://greensock.com/docs',github:'https://github.com/greensock/GSAP',similar:['网页动画','时间轴'],uses:['网页动画','交互动效','数字营销','游戏开发'],stars:'14k',homepage:'https://greensock.com'},
+    {cat:'frontend',icon:'3',title:'Three.js',desc:'WebGL 3D 渲染库，创建 3D 网页体验',tags:['开源','3D','WebGL'],badge:'',lang:'JavaScript',license:'MIT',related:['Babylon.js','A-Frame','PlayCanvas'],docs:'https://threejs.org/docs',github:'https://github.com/mrdoob/three.js',similar:['3D渲染','WebGL'],uses:['3D可视化','产品展示','游戏开发','VR/AR'],stars:'105k',homepage:'https://threejs.org'},
+    {cat:'frontend',icon:'FM',title:'Framer Motion',desc:'React 动画库，声明式 API，支持手势',tags:['开源','React','动画'],badge:'new',lang:'TypeScript',license:'MIT',related:['React','GSAP','Motion One'],docs:'https://motion.dev',github:'https://github.com/motiondivision/motion',similar:['React动画','交互'],uses:['React动画','页面转场','手势交互','列表动画'],stars:'18k',homepage:'https://motion.dev'},
+
+    // 后端
+    {cat:'backend',icon:'F',title:'FastAPI',desc:'现代 Python API 框架，自动文档生成',tags:['开源','框架','异步'],badge:'popular',lang:'Python',license:'MIT',related:['Django','Flask','Starlette'],docs:'https://fastapi.tiangolo.com',github:'https://github.com/tiangolo/fastapi',similar:['API框架','异步编程'],uses:['REST API','微服务','实时应用','数据处理'],stars:'72k',homepage:'https://fastapi.tiangolo.com'},
+    {cat:'backend',icon:'Go',title:'Go',desc:'Google 开发语言，高并发后端首选',tags:['开源','语言','高并发'],badge:'popular',lang:'Go',license:'BSD',related:['Gin','Echo','Fiber'],docs:'https://go.dev/doc',github:'https://github.com/golang/go',similar:['编译型语言','微服务'],uses:['微服务','云原生','网络编程','容器编排'],stars:'115k',homepage:'https://go.dev'},
+    {cat:'backend',icon:'E',title:'Express.js',desc:'Node.js Web 框架，极简 API 开发',tags:['开源','框架','Node.js'],badge:'popular',lang:'JavaScript/TypeScript',license:'MIT',related:['Koa','NestJS','Fastify'],docs:'https://expressjs.com',github:'https://github.com/expressjs/express',similar:['Node框架','中间件'],uses:['Web服务','API开发','SSR','中间件'],stars:'63k',homepage:'https://expressjs.com'},
+    {cat:'backend',icon:'PG',title:'PostgreSQL',desc:'开源关系数据库，功能强大',tags:['开源','数据库','SQL'],badge:'popular',lang:'SQL',license:'PostgreSQL',related:['MySQL','Redis','MongoDB'],docs:'https://www.postgresql.org/docs',github:'https://github.com/postgres/postgres',similar:['关系型','事务'],uses:['业务数据存储','数据分析','GIS应用','金融系统'],stars:'15k',homepage:'https://www.postgresql.org'},
+    {cat:'backend',icon:'R',title:'Redis',desc:'内存数据库，缓存/队列首选',tags:['开源','缓存','内存'],badge:'popular',lang:'C',license:'BSD',related:['PostgreSQL','Memcached','MongoDB'],docs:'https://redis.io/docs',github:'https://github.com/redis/redis',similar:['NoSQL','数据结构'],uses:['缓存系统','会话存储','消息队列','实时应用'],stars:'65k',homepage:'https://redis.io'},
+    {cat:'backend',icon:'Rs',title:'Rust',desc:'安全高性能语言，系统级开发首选',tags:['开源','语言','安全'],badge:'popular',lang:'Rust',license:'MIT/Apache',related:['Go','C++','WebAssembly'],docs:'https://doc.rust-lang.org',github:'https://github.com/rust-lang/rust',similar:['内存安全','系统编程'],uses:['系统编程','WebAssembly','嵌入式开发','性能优化'],stars:'105k',homepage:'https://rust-lang.org'},
+    {cat:'backend',icon:'Dj',title:'Django',desc:'Python 全栈框架，ORM、Admin、Auth 内置',tags:['开源','全栈','ORM'],badge:'',lang:'Python',license:'BSD',related:['FastAPI','Flask','FastAPI'],docs:'https://docs.djangoproject.com',github:'https://github.com/django/django',similar:['Web框架','后台管理'],uses:['后台管理','内容管理系统','电商平台','社交网络'],stars:'80k',homepage:'https://www.djangoproject.com'},
+    {cat:'backend',icon:'M',title:'MongoDB',desc:'文档数据库，灵活 schema',tags:['开源','NoSQL','文档'],badge:'',lang:'JavaScript',license:'SSPL',related:['PostgreSQL','Redis','Elasticsearch'],docs:'https://www.mongodb.com/docs',github:'https://github.com/mongodb/mongo',similar:['JSON存储','灵活结构'],uses:['内容管理','实时分析','物联网数据','日志存储'],stars:'24k',homepage:'https://www.mongodb.com'},
+
+    // 运维
+    {cat:'devops',icon:'D',title:'Docker',desc:'容器化标准，应用部署必备',tags:['免费','容器','标准'],badge:'popular',lang:'Go',license:'Apache 2.0',related:['Kubernetes','Podman','Docker Compose'],docs:'https://docs.docker.com',github:'https://github.com/moby/moby',similar:['容器技术','镜像'],uses:['应用容器化','开发环境搭建','微服务部署','CI/CD'],stars:'115k',homepage:'https://docker.com'},
+    {cat:'devops',icon:'K',title:'Kubernetes',desc:'容器编排平台，大规模部署管理',tags:['开源','编排','云原生'],badge:'popular',lang:'Go',license:'Apache 2.0',related:['Docker','Helm','Kustomize'],docs:'https://kubernetes.io/docs',github:'https://github.com/kubernetes/kubernetes',similar:['容器编排','微服务'],uses:['容器编排','弹性伸缩','服务网格','多环境管理'],stars:'109k',homepage:'https://kubernetes.io'},
+    {cat:'devops',icon:'N',title:'Nginx',desc:'高性能反向代理/负载均衡',tags:['开源','服务器','代理'],badge:'popular',lang:'C',license:'BSD',related:['Traefik','HAProxy','Apache'],docs:'https://nginx.org/en/docs',github:'https://github.com/nginx/nginx',similar:['Web服务器','负载均衡'],uses:['反向代理','负载均衡','静态托管','API网关'],stars:'12k',homepage:'https://nginx.org'},
+    {cat:'devops',icon:'GA',title:'GitHub Actions',desc:'CI/CD 自动化，免费额度充足',tags:['免费','CI/CD','自动化'],badge:'popular',lang:'YAML',license:'MIT',related:['GitLab CI','Jenkins','Travis CI'],docs:'https://docs.github.com/actions',github:'',similar:['流水线','持续集成'],uses:['持续集成','持续部署','自动化测试','Release管理'],stars:'',homepage:'https://github.com/features/actions'},
+    {cat:'devops',icon:'T',title:'Terraform',desc:'基础设施代码化，多云管理',tags:['开源','IaC','多云'],badge:'',lang:'Go',license:'BSL',related:['Ansible','Pulumi','AWS CDK'],docs:'https://developer.hashicorp.com/terraform',github:'https://github.com/hashicorp/terraform',similar:['云管理','基础设施'],uses:['云资源编排','环境一致性','基础设施自动化','多云部署'],stars:'38k',homepage:'https://terraform.io'},
+    {cat:'devops',icon:'P',title:'Prometheus',desc:'监控系统，时序数据库',tags:['开源','监控','时序'],badge:'',lang:'Go',license:'Apache 2.0',related:['Grafana','Alertmanager','Thano'],docs:'https://prometheus.io/docs',github:'https://github.com/prometheus/prometheus',similar:['指标监控','告警'],uses:['指标收集','性能监控','告警系统','趋势分析'],stars:'48k',homepage:'https://prometheus.io'},
+    {cat:'devops',icon:'A',title:'Ansible',desc:'自动化配置管理，无代理架构',tags:['开源','自动化','配置'],badge:'',lang:'Python',license:'GPLv3',related:['Terraform','Chef','Puppet'],docs:'https://docs.ansible.com',github:'https://github.com/ansible/ansible',similar:['批量管理','配置管理'],uses:['配置管理','应用部署','批量自动化',' orchestration'],stars:'60k',homepage:'https://ansible.com'},
+    {cat:'devops',icon:'Gf',title:'Grafana',desc:'可视化监控面板，支持多数据源',tags:['开源','可视化','仪表盘'],badge:'',lang:'Go/TypeScript',license:'AGPL',related:['Prometheus','Kibana','Datadog'],docs:'https://grafana.com/docs',github:'https://github.com/grafana/grafana',similar:['数据可视化','仪表板'],uses:['监控仪表盘','日志分析','业务数据可视化','IoT监控'],stars:'60k',homepage:'https://grafana.com'},
+
+    // 安全
+    {cat:'security',icon:'O',title:'OWASP',desc:'Web 安全标准，漏洞指南',tags:['免费','标准','指南'],badge:'',lang:'',license:'CC-BY-NC-SA',related:['NVD CVE','Burp Suite','SQLMap'],docs:'https://owasp.org',github:'',similar:['安全标准','Top10'],uses:['安全审计','漏洞防范','安全培训','合规检查'],stars:'',homepage:'https://owasp.org'},
+    {cat:'security',icon:'NVD',title:'NVD CVE',desc:'官方漏洞数据库，CVE 查询',tags:['免费','数据库','官方'],badge:'',lang:'',license:'Public Domain',related:['OWASP','ExploitDB','Vulners'],docs:'https://nvd.nist.gov',github:'',similar:['CVE','漏洞库'],uses:['漏洞查询','CVE搜索','风险评估','安全研究'],stars:'',homepage:'https://nvd.nist.gov'},
+    {cat:'security',icon:'S',title:'SQLMap',desc:'SQL 注入自动化检测工具',tags:['开源','渗透','SQL注入'],badge:'',lang:'Python',license:'GPLv2',related:['Burp Suite','Xray','Nmap'],docs:'https://sqlmap.org',github:'https://github.com/sqlmapproject/sqlmap',similar:['注入检测','数据库安全'],uses:['SQL注入检测','数据库渗透','漏洞评估','安全测试'],stars:'32k',homepage:'https://sqlmap.org'},
+    {cat:'security',icon:'B',title:'Burp Suite',desc:'Web 渗透测试工具，社区版免费',tags:['免费版','渗透','代理'],badge:'popular',lang:'Java',license:'Proprietary',related:['OWASP ZAP','Xray','Fiddler'],docs:'https://portswigger.net/burp/documentation',github:'',similar:['Web测试','抓包工具'],uses:['Web渗透测试','漏洞挖掘','抓包分析','API安全测试'],stars:'',homepage:'https://portswigger.net/burp'},
+    {cat:'security',icon:'X',title:'Xray',desc:'长亭安全扫描工具，被动/主动扫描',tags:['免费','扫描','国产'],badge:'hot',lang:'Go',license:'MIT',related:['Burp Suite','AWVS','Nessus'],docs:'https://docs.xray.cool',github:'https://github.com/chaitin/xray',similar:['漏洞扫描','Web安全'],uses:['漏洞扫描','被动扫描','Web渗透','上线前检测'],stars:'8k',homepage:'https://xray.cool'},
+    {cat:'security',icon:'CRT',title:'crt.sh',desc:'SSL 证书透明度日志查询，子域名发现',tags:['免费','侦察','SSL'],badge:'',lang:'SQL/Perl',license:'GPLv2',related:['Shodan','Censys','VirusTotal'],docs:'https://crt.sh',github:'',similar:['证书查询','子域名'],uses:['子域名发现','证书透明度','侦察收集','资产发现'],stars:'',homepage:'https://crt.sh'},
+    {cat:'security',icon:'M',title:'Metasploit',desc:'渗透测试框架，漏洞利用模块丰富',tags:['开源','渗透','框架'],badge:'popular',lang:'Ruby',license:'BSD',related:['Burp Suite','Nmap','SQLMap'],docs:'https://docs.metasploit.com',github:'https://github.com/rapid7/metasploit-framework',similar:['漏洞利用','渗透框架'],uses:['漏洞利用','渗透测试','后渗透','安全评估'],stars:'33k',homepage:'https://metasploit.com'},
+    {cat:'security',icon:'Nm',title:'Nmap',desc:'网络扫描工具，端口发现和服务识别',tags:['开源','扫描','网络'],badge:'popular',lang:'C/C++',license:'GPLv2',related:['Masscan','ZMap','Shodan'],docs:'https://nmap.org/docs',github:'https://github.com/nmap/nmap',similar:['端口扫描','网络发现'],uses:['端口扫描','服务探测','网络资产发现','安全审计'],stars:'28k',homepage:'https://nmap.org'},
+
+    // 工具
+    {cat:'tools',icon:'VS',title:'VS Code',desc:'微软免费编辑器，插件生态丰富',tags:['免费','编辑器','插件'],badge:'popular',lang:'TypeScript',license:'MIT',related:['Cursor','Vim','JetBrains'],docs:'https://code.visualstudio.com/docs',github:'https://github.com/microsoft/vscode',similar:['代码编辑器','IDE'],uses:['代码编辑','插件开发','远程开发','调试'],stars:'165k',homepage:'https://code.visualstudio.com'},
+    {cat:'tools',icon:'C',title:'Cursor',desc:'AI 编辑器，基于 VS Code，深度集成 AI',tags:['免费','AI','编辑器'],badge:'hot',lang:'TypeScript',license:'Proprietary',related:['VS Code','Trae','Windsurf'],docs:'https://cursor.com/docs',github:'',similar:['AI编程','代码补全'],uses:['AI编程','代码生成','代码重构','代码解释'],stars:'25k',homepage:'https://cursor.com'},
+    {cat:'tools',icon:'T',title:'Trae',desc:'字节跳动 AI IDE，国内免费使用',tags:['免费','AI','国产'],badge:'new',lang:'TypeScript',license:'Proprietary',related:['VS Code','Cursor','JetBrains'],docs:'https://trae.ai',github:'',similar:['国产IDE','AI辅助'],uses:['国内AI编程','中文交互','代码补全','团队协作'],stars:'',homepage:'https://trae.ai'},
+    {cat:'tools',icon:'P',title:'Postman',desc:'API 测试工具，可视化请求调试',tags:['免费','API','测试'],badge:'popular',lang:'TypeScript',license:'Proprietary',related:['Insomnia','Apifox','Hoppscotch'],docs:'https://learning.postman.com',github:'',similar:['API调试','接口测试'],uses:['API测试','接口调试','自动化测试','Mock服务'],stars:'',homepage:'https://postman.com'},
+    {cat:'tools',icon:'GH',title:'GitHub',desc:'开源代码托管平台，协作开发',tags:['免费','托管','协作'],badge:'popular',lang:'',license:'',related:['GitLab','Gitea','Bitbucket'],docs:'https://docs.github.com',github:'',similar:['代码托管','Git'],uses:['代码托管','团队协作','CI/CD','项目管理'],stars:'105k',homepage:'https://github.com'},
+    {cat:'tools',icon:'G',title:'Git',desc:'版本控制标准，开发者必备',tags:['免费','必备','版本控制'],badge:'popular',lang:'C',license:'GPLv2',related:['GitHub','GitLab','TortoiseGit'],docs:'https://git-scm.com/doc',github:'https://github.com/git/git',similar:['代码管理','分支'],uses:['版本控制','代码合并','分支管理','代码回滚'],stars:'215k',homepage:'https://git-scm.com'},
+    {cat:'tools',icon:'R',title:'Raycast',desc:'Mac 效率工具，快捷键启动',tags:['免费','Mac','效率'],badge:'popular',lang:'TypeScript',license:'Proprietary',related:['Alfred','Spotlight','Warp'],docs:'https://raycast.com/docs',github:'',similar:['效率工具','启动器'],uses:['快速启动','窗口管理','代码片段','工作流自动化'],stars:'25k',homepage:'https://raycast.com'},
+    {cat:'tools',icon:'T',title:'Warp',desc:'现代终端，支持 AI 命令补全',tags:['免费','终端','AI'],badge:'new',lang:'Rust',license:'Proprietary',related:['iTerm2','Terminal','Hyper'],docs:'https://docs.warp.dev',github:'',similar:['命令行','终端'],uses:['终端复用','命令补全','AI助手','工作流'],stars:'18k',homepage:'https://warp.dev'},
+
+    // 文档
+    {cat:'docs',icon:'MDN',title:'MDN Web Docs',desc:'Mozilla Web 技术文档，前端必备',tags:['免费','文档','前端'],badge:'popular',lang:'',license:'CC-BY-SA',related:['Can I Use','Web.dev','DevDocs'],docs:'https://developer.mozilla.org',github:'',similar:['Web标准','前端参考'],uses:['Web开发参考','API查询','前端学习','标准规范'],stars:'',homepage:'https://developer.mozilla.org'},
+    {cat:'docs',icon:'SO',title:'Stack Overflow',desc:'开发者问答社区，问题搜索首选',tags:['免费','问答','社区'],badge:'popular',lang:'',license:'CC-BY-SA',related:['Reddit','V2EX','SegmentFault'],docs:'https://stackoverflow.com',github:'',similar:['问答社区','技术讨论'],uses:['问题搜索','技术问答','错误解决','经验分享'],stars:'',homepage:'https://stackoverflow.com'},
+    {cat:'docs',icon:'DD',title:'DevDocs',desc:'多语言 API 文档聚合，离线可用',tags:['免费','聚合','离线'],badge:'',lang:'Ruby',license:'MIT',related:['MDN','Dash','Zeal'],docs:'https://devdocs.io',github:'https://github.com/freeCodeCamp/devdocs',similar:['文档聚合','离线阅读'],uses:['离线文档','API查询','多语言文档','开发参考'],stars:'35k',homepage:'https://devdocs.io'},
+    {cat:'docs',icon:'LC',title:'LeetCode',desc:'算法刷题平台，面试必备',tags:['免费','算法','面试'],badge:'popular',lang:'',license:'Proprietary',related:['剑指 Offer','Codeforces','AtCoder'],docs:'https://leetcode.cn',github:'',similar:['算法题','面试题'],uses:['算法训练','面试准备','代码练习','竞赛刷题'],stars:'',homepage:'https://leetcode.cn'},
+    {cat:'docs',icon:'菜',title:'菜鸟教程',desc:'中文编程入门教程，多语言覆盖',tags:['免费','中文','入门'],badge:'',lang:'',license:'CC-BY-NC-SA',related:['W3School','MDN','MDN'],docs:'https://runoob.com',github:'',similar:['中文教程','编程入门'],uses:['编程入门','中文学习','快速参考','基础教程'],stars:'',homepage:'https://runoob.com'},
+    {cat:'docs',icon:'NN',title:'NN Zero to Hero',desc:'Karpathy 神经网络入门课程',tags:['免费','课程','神经网络'],badge:'popular',lang:'Python',license:'',related:['fast.ai','Coursera','deeplearning.ai'],docs:'https://karpathy.ai/zero-to-hero.html',github:'https://github.com/karpathy/nn-zero-to-hero',similar:['深度学习','教程'],uses:['深度学习入门','神经网络理解','RNN/LSTM','GPT实现'],stars:'18k',homepage:'https://karpathy.ai'},
+    {cat:'docs',icon:'fC',title:'freeCodeCamp',desc:'免费编程学习平台，项目驱动',tags:['免费','学习','项目'],badge:'popular',lang:'',license:'BSD-3-Clause',related:['The Odin Project','Codecademy','MDN'],docs:'https://freecodecamp.org',github:'https://github.com/freeCodeCamp',similar:['自学编程','全栈'],uses:['全栈学习','前端开发','后端开发','认证获取'],stars:'390k',homepage:'https://freecodecamp.org'},
+    {cat:'docs',icon:'Co',title:'Coursera',desc:'在线课程平台，大学课程',tags:['免费试听','课程','证书'],badge:'',lang:'',license:'Proprietary',related:['edX','Udemy','B站'],docs:'https://coursera.org',github:'',similar:['在线学习','MOOC'],uses:['系统学习','专业课程','技能提升','学位获取'],stars:'',homepage:'https://coursera.org'},
+
+    // 设计
+    {cat:'design',icon:'F',title:'Figma',desc:'在线设计工具，协作设计',tags:['免费','设计','协作'],badge:'popular',lang:'TypeScript',license:'Proprietary',related:['Sketch','Adobe XD','Framer'],docs:'https://help.figma.com',github:'',similar:['UI设计','原型'],uses:['UI设计','原型设计','团队协作','设计系统'],stars:'',homepage:'https://figma.com'},
+    {cat:'design',icon:'Dr',title:'Dribbble',desc:'设计师作品展示平台，灵感来源',tags:['免费','灵感','展示'],badge:'',lang:'',license:'Proprietary',related:['Behance','Pinterest','Awwwards'],docs:'https://dribbble.com',github:'',similar:['设计灵感','作品集'],uses:['设计灵感','作品展示','趋势分析','设计师社交'],stars:'',homepage:'https://dribbble.com'},
+    {cat:'design',icon:'U',title:'Unsplash',desc:'免费高质量图片库，无版权限制',tags:['免费','图片','素材'],badge:'popular',lang:'',license:'Unsplash License',related:['Pexels','Pixabay','Lorem Picsum'],docs:'https://unsplash.com',github:'',similar:['免费图片','素材'],uses:['产品配图','网站图片','营销素材','设计背景'],stars:'',homepage:'https://unsplash.com'},
+    {cat:'design',icon:'I',title:'Iconify',desc:'图标聚合库，100+ 图标集',tags:['免费','图标','SVG'],badge:'popular',lang:'TypeScript',license:'Apache 2.0',related:['Font Awesome','Heroicons','Phosphor'],docs:'https://icon-sets.iconify.design',github:'https://github.com/iconify',similar:['图标库','矢量图标'],uses:['图标使用','SVG图标','跨框架图标','设计系统'],stars:'8k',homepage:'https://icon-sets.iconify.design'},
+
+    // 数据
+    {cat:'data',icon:'Pd',title:'Pandas',desc:'Python 数据分析库，DataFrame 操作',tags:['开源','数据分析','Python'],badge:'popular',lang:'Python',license:'BSD',related:['NumPy','Matplotlib','Polars'],docs:'https://pandas.pydata.org/docs',github:'https://github.com/pandas-dev/pandas',similar:['数据处理','表格'],uses:['数据清洗','数据分析','报表生成','Excel处理'],stars:'42k',homepage:'https://pandas.pydata.org'},
+    {cat:'data',icon:'Nu',title:'NumPy',desc:'Python 科学计算库，数组操作',tags:['开源','科学计算','Python'],badge:'popular',lang:'Python/C',license:'BSD',related:['Pandas','SciPy','JAX'],docs:'https://numpy.org/doc',github:'https://github.com/numpy/numpy',similar:['数值计算','数组'],uses:['数值计算','矩阵运算','图像处理','机器学习'],stars:'27k',homepage:'https://numpy.org'},
+    {cat:'data',icon:'Pl',title:'Plotly',desc:'交互式数据可视化，支持 Python/JS',tags:['开源','可视化','图表'],badge:'',lang:'Python/JS',license:'MIT',related:['Matplotlib','ECharts','D3.js'],docs:'https://plotly.com/python',github:'https://github.com/plotly/plotly.py',similar:['图表','数据可视化'],uses:['交互图表','仪表板','数据分析可视化','Web可视化'],stars:'13k',homepage:'https://plotly.com'},
+    {cat:'data',icon:'JN',title:'Jupyter',desc:'交互式笔记本，支持 Python/R',tags:['开源','笔记本','交互'],badge:'popular',lang:'Python/JS',license:'BSD',related:['VS Code','Colab','Kaggle'],docs:'https://docs.jupyter.org',github:'https://github.com/jupyter/jupyter',similar:['数据分析','Notebook'],uses:['数据分析','机器学习','实验记录','教学演示'],stars:'14k',homepage:'https://jupyter.org'},
+
+    // 移动端
+    {cat:'mobile',icon:'RN',title:'React Native',desc:'跨平台移动开发，基于 React',tags:['开源','跨平台','React'],badge:'popular',lang:'JavaScript/TypeScript',license:'MIT',related:['Flutter','Expo','Ionic'],docs:'https://reactnative.dev/docs',github:'https://github.com/facebook/react-native',similar:['移动开发','跨平台'],uses:['iOS应用','Android应用','跨平台开发','React生态'],stars:'125k',homepage:'https://reactnative.dev'},
+    {cat:'mobile',icon:'Fl',title:'Flutter',desc:'Google 跨平台 UI 框架',tags:['开源','跨平台','UI'],badge:'popular',lang:'Dart',license:'BSD-3-Clause',related:['React Native','Dart','Riverpod'],docs:'https://docs.flutter.dev',github:'https://github.com/flutter/flutter',similar:['移动开发','UI框架'],uses:['跨平台UI','自定义设计','游戏开发','嵌入式UI'],stars:'165k',homepage:'https://flutter.dev'},
+    {cat:'mobile',icon:'E',title:'Expo',desc:'React Native 快速开发工具',tags:['免费','快速','React Native'],badge:'popular',lang:'TypeScript',license:'MIT',related:['React Native','EAS','React Navigation'],docs:'https://docs.expo.dev',github:'https://github.com/expo/expo',similar:['RN开发','简化'],uses:['快速原型','简化配置','云构建','热更新'],stars:'25k',homepage:'https://expo.dev'},
+    {cat:'mobile',icon:'C',title:'Capacitor',desc:'跨平台原生运行时，支持 Ionic',tags:['开源','跨平台','原生'],badge:'',lang:'TypeScript',license:'MIT',related:['React Native','Flutter','Cordova'],docs:'https://capacitorjs.com/docs',github:'https://github.com/ionic-team/capacitor',similar:['Web转App','混合开发'],uses:['Web转App','混合开发','原生功能','快速上线'],stars:'15k',homepage:'https://capacitorjs.com'},
+];
+
+// 更新分类计数
+function updateCounts(){
+    const counts = {};
+    resources.forEach(r => counts[r.cat] = (counts[r.cat]||0) + 1);
+    document.querySelectorAll('.tab').forEach(tab => {
+        const cat = tab.dataset.tab;
+        const count = tab.querySelector('.cat-count');
+        count.textContent = cat === 'all' ? `(${resources.length})` : `(${counts[cat]||0})`;
+    });
+}
+
+// 渲染滑块
+function renderSliders(filterCat='all',search=''){
+    const grid = document.getElementById('grid');
+    const oldSliders = grid.querySelectorAll('.slider');
+    
+    // 底层框架切换动效
+    grid.classList.add('switching');
+    const indicator = grid.querySelector('.grid-indicator');
+    const gridText = grid.querySelector('.grid-text');
+    if(gridText) gridText.textContent = filterCat === 'all' ? '全部资源' : getCatName(filterCat) + ' 中...';
+    
+    // 淡出旧滑块
+    oldSliders.forEach(s => s.classList.add('hide'));
+    
+    setTimeout(() => {
+        grid.innerHTML = '<div class="grid-indicator"><span class="grid-dot"></span><span class="grid-text">加载中...</span></div>';
+        
+        let delay = 0;
+        let count = 0;
+        resources.forEach(r => {
+            if(filterCat !== 'all' && r.cat !== filterCat) return;
+            if(search && !r.title.toLowerCase().includes(search) && !r.desc.toLowerCase().includes(search)) return;
+            
+            count++;
+            const el = document.createElement('div');
+            el.className = 'slider';
+            el.dataset.cat = r.cat;
+            el.dataset.title = r.title;
+            el.dataset.desc = r.desc;
+            el.dataset.detail = r.docs;
+            el.dataset.tags = r.tags.join(',');
+            el.dataset.lang = r.lang;
+            el.dataset.license = r.license;
+            el.dataset.related = r.related.join(',');
+            el.dataset.similar = r.similar ? r.similar.join(',') : '';
+            el.dataset.uses = r.uses ? r.uses.join(',') : '';
+            el.dataset.stars = r.stars || '';
+            el.dataset.homepage = r.homepage || '';
+            
+            let badges = '';
+            if(r.badge === 'popular') badges += '<span class="slider-badge badge-popular">热门</span>';
+            else if(r.badge === 'new') badges += '<span class="slider-badge badge-new">新</span>';
+            else if(r.badge === 'hot') badges += '<span class="slider-badge badge-hot">热</span>';
+            
+            el.innerHTML = `
+                <div class="slider-track"></div>
+                <div class="slider-content">
+                    <div>
+                        <div class="slider-header">
+                            <div class="slider-icon">${r.icon}</div>
+                            <div class="slider-title">${r.title}</div>
+                        </div>
+                        ${badges ? `<div class="slider-badges">${badges}</div>` : ''}
+                        <div class="slider-desc">${r.desc}</div>
+                    </div>
+                    <div class="slider-tags">${r.tags.map(t=>`<span class="slider-tag">${t}</span>`).join('')}</div>
+                </div>
+                <a href="${r.docs}" target="_blank" class="slider-link"></a>
+            `;
+            
+            grid.appendChild(el);
+            
+            // 交错动画
+            setTimeout(() => el.classList.add('show'), delay);
+            delay += 60;
+        });
+        
+        // 更新框架动效状态
+        setTimeout(() => {
+            grid.classList.remove('switching');
+            const ind = grid.querySelector('.grid-indicator');
+            if(ind) ind.remove();
+        }, 300);
+        
+        initTooltip();
+    }, oldSliders.length ? 300 : 0);
+}
+
+function getCatName(cat){
+    const names = {ai:'AI / LLM',crawler:'爬虫',frontend:'前端',backend:'后端',devops:'运维',security:'安全',tools:'工具',docs:'文档',design:'设计',data:'数据',mobile:'移动端'};
+    return names[cat] || cat;
+}
+
+// 搜索过滤
+function filter(kw){
+    const activeTab = document.querySelector('.tab.active');
+    const cat = activeTab ? activeTab.dataset.tab : 'all';
+    renderSliders(cat, kw.toLowerCase());
+}
+
+// 分类切换
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function(){
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        renderSliders(this.dataset.tab);
+    });
+});
+
+// 导航链接
+document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', function(e){
+        e.preventDefault();
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        renderSliders(tab);
+    });
+});
+
+// Tooltip
+let activeSlider = null;
+const tooltip = document.getElementById('tooltip');
+
+function initTooltip(){
+    document.querySelectorAll('.slider').forEach(slider => {
+        slider.addEventListener('click', function(e){
+            if(e.target.classList.contains('slider-link')) return;
+            e.preventDefault();
+            activeSlider = activeSlider === this ? null : this;
+            if(activeSlider === this){
+                this.style.borderColor = 'var(--active)';
+                this.style.boxShadow = '0 12px 40px rgba(0,113,227,.15)';
+            } else {
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+            }
+        });
+        
+        slider.addEventListener('mouseenter', function(e){
+            if(activeSlider !== this) return;
+            showTooltip(this, e);
+        });
+        
+        slider.addEventListener('mousemove', function(e){
+            if(activeSlider === this) updateTooltipPos(e);
+        });
+        
+        slider.addEventListener('mouseleave', function(){
+            tooltip.classList.remove('visible');
+        });
+    });
+}
+
+function showTooltip(slider, e){
+    const r = resources.find(x => x.title === slider.dataset.title) || {};
+    const relatedHtml = r.related ? r.related.map(t => `<span class="tooltip-related-item" data-action="related">${t}</span>`).join('') : '';
+    const similarHtml = r.similar ? r.similar.map(t => `<span class="tooltip-related-item" data-action="similar">${t}</span>`).join('') : '';
+    const usesHtml = r.uses ? r.uses.map(t => `<span class="tooltip-use-tag">${t}</span>`).join('') : '';
+    
+    tooltip.innerHTML = `
+        <div class="tooltip-header">
+            <div class="tooltip-icon">${r.icon || ''}</div>
+            <div>
+                <div class="tooltip-title">${slider.dataset.title}</div>
+                <div class="tooltip-tags">${r.tags ? r.tags.map(t=>`<span class="tooltip-tag">${t}</span>`).join('') : ''}</div>
+            </div>
+        </div>
+        <div class="tooltip-body">
+            <div class="tooltip-desc">${r.desc || slider.dataset.desc}</div>
+            ${usesHtml ? `<div class="tooltip-uses"><div class="tooltip-uses-title">使用场景</div><div class="tooltip-uses-list">${usesHtml}</div></div>` : ''}
+            <div class="tooltip-meta">
+                <div class="tooltip-meta-item">
+                    <div class="tooltip-meta-label">语言</div>
+                    <div class="tooltip-meta-value">${r.lang || '-'}</div>
+                </div>
+                <div class="tooltip-meta-item">
+                    <div class="tooltip-meta-label">协议</div>
+                    <div class="tooltip-meta-value">${r.license || '-'}</div>
+                </div>
+                ${r.stars ? `<div class="tooltip-meta-item">
+                    <div class="tooltip-meta-label">GitHub</div>
+                    <div class="tooltip-meta-value">${r.stars}</div>
+                </div>` : ''}
+            </div>
+        </div>
+        ${relatedHtml ? `
+        <div class="tooltip-related">
+            <div class="tooltip-related-title">关联资源</div>
+            <div class="tooltip-related-items">${relatedHtml}</div>
+        </div>` : ''}
+        ${similarHtml ? `
+        <div class="tooltip-related tooltip-similar">
+            <div class="tooltip-related-title">替代方案</div>
+            <div class="tooltip-related-items">${similarHtml}</div>
+        </div>` : ''}
+        <div class="tooltip-footer">
+            <div class="tooltip-links">
+                ${r.docs ? `<a href="${r.docs}" target="_blank" class="tooltip-link">[文档]</a>` : ''}
+                ${r.github ? `<a href="${r.github}" target="_blank" class="tooltip-link">[GitHub]</a>` : ''}
+                ${r.homepage ? `<a href="${r.homepage}" target="_blank" class="tooltip-link">[官网]</a>` : ''}
+            </div>
+        </div>
+    `;
+    
+    tooltip.classList.add('visible');
+    updateTooltipPos(e);
+    
+    // 点击相关资源跳转
+    tooltip.querySelectorAll('.tooltip-related-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const keyword = item.textContent;
+            activeSlider = null;
+            document.querySelectorAll('.slider').forEach(s => {
+                s.style.borderColor = '';
+                s.style.boxShadow = '';
+            });
+            // 搜索包含该关键词的资源
+            filter(keyword);
+        });
+    });
+}
+
+function updateTooltipPos(e){
+    const x = e.clientX + 16;
+    const y = e.clientY + 16;
+    const maxX = window.innerWidth - tooltip.offsetWidth - 16;
+    const maxY = window.innerHeight - tooltip.offsetHeight - 16;
+    tooltip.style.left = Math.min(x, maxX) + 'px';
+    tooltip.style.top = Math.min(y, maxY) + 'px';
+}
+
+// 入场动画
+setTimeout(() => document.getElementById('loader').classList.add('hidden'), 1200);
+
+// 初始化
+updateCounts();
+renderSliders();
+</script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+{% block title %}Agent 部署教程 — OpenCrawler{% endblock %}
+{% set active_page = 'agent_deploy' %}
+
+{% block head %}
+<style>
+.deploy-layout{max-width:1100px;margin:0 auto;padding:20px 24px 64px}
+
+/* Gold theme */
+:root{--gold:#d2991d;--gold-dim:rgba(210,153,29,.10);--gold-border:rgba(210,153,29,.25)}
+
+.deploy-hero{text-align:center;padding:44px 20px;background:linear-gradient(135deg,rgba(210,153,29,.08),rgba(210,153,29,.02));border:1px solid var(--gold-border);border-radius:14px;margin-bottom:32px}
+.deploy-hero .badge-gold{display:inline-block;padding:4px 14px;background:var(--gold);color:#000;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px}
+.deploy-hero h1{font-size:30px;font-weight:800;margin-bottom:6px}
+.deploy-hero h1 .gold{color:var(--gold)}
+.deploy-hero p{color:var(--muted);font-size:14px;max-width:600px;margin:0 auto}
+
+/* Gate */
+.gate-overlay{position:relative}
+.gate-lock{text-align:center;padding:60px 20px}
+.gate-lock .lock-icon{font-size:64px;display:block;margin-bottom:16px}
+.gate-lock h3{font-size:20px;color:var(--gold);margin-bottom:8px}
+.gate-lock p{color:var(--muted);font-size:14px;margin-bottom:20px}
+.gate-lock .btn-gold{padding:12px 32px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.gate-lock .btn-gold:hover{opacity:.85}
+
+/* Sidebar */
+.deploy-body{display:grid;grid-template-columns:240px 1fr;gap:24px}
+@media(max-width:768px){.deploy-body{grid-template-columns:1fr}}
+.deploy-sidebar{position:sticky;top:20px;align-self:start}
+.deploy-nav{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.deploy-nav .nav-title{font-size:12px;color:var(--muted);padding:14px 16px 6px;text-transform:uppercase;letter-spacing:1px}
+.deploy-nav a{display:block;padding:9px 16px;font-size:13px;color:var(--text);text-decoration:none;border-left:3px solid transparent;transition:all .15s}
+.deploy-nav a:hover,.deploy-nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-dim)}
+
+/* Content sections */
+.deploy-content{}
+.deploy-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px 30px;margin-bottom:20px}
+.deploy-section h2{font-size:20px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.deploy-section h2 .gold{color:var(--gold)}
+.deploy-section .sec-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+/* Steps */
+.step-list{counter-reset:step;list-style:none;padding:0}
+.step-list li{counter-increment:step;padding:16px 0 16px 48px;position:relative;border-bottom:1px solid var(--bg)}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(step);position:absolute;left:0;top:16px;width:32px;height:32px;background:var(--gold);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.step-list li h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.step-list li p{font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+
+/* Code block */
+.code-block{background:#0d1117;border-radius:8px;padding:16px 20px;margin:10px 0;overflow-x:auto;position:relative}
+.code-block pre{margin:0;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:12px;line-height:1.6;color:#c9d1d9}
+.code-block .lang-tag{position:absolute;top:8px;right:12px;font-size:10px;color:#8b949e;text-transform:uppercase}
+.code-block .copy-btn{position:absolute;top:6px;right:12px;font-size:10px;padding:3px 10px;background:var(--gold);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:600;opacity:0;transition:opacity .2s}
+.code-block:hover .copy-btn{opacity:1}
+
+/* Info box */
+.info-box{padding:14px 18px;border-radius:8px;margin:14px 0;font-size:13px;line-height:1.6}
+.info-box.tip{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);color:#58a6ff}
+.info-box.warn{background:rgba(210,153,29,.08);border:1px solid rgba(210,153,29,.2);color:#d2991d}
+.info-box.danger{background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);color:#f85149}
+
+/* Prereq grid */
+.prereq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.prereq-item{background:var(--bg);border-radius:8px;padding:14px;text-align:center}
+.prereq-item .pr-icon{font-size:24px;margin-bottom:4px;display:block}
+.prereq-item .pr-name{font-size:13px;font-weight:600}
+.prereq-item .pr-ver{font-size:11px;color:var(--muted)}
+
+/* Diagram */
+.flow-diagram{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:20px;background:var(--bg);border-radius:10px;margin:14px 0;font-size:12px;justify-content:center}
+.flow-node{padding:10px 16px;border-radius:8px;font-weight:600;text-align:center}
+.flow-node.src{background:#e8f0fe;color:#1a73e8}
+.flow-node.proc{background:var(--gold-dim);color:var(--gold)}
+.flow-node.dst{background:rgba(63,185,80,.1);color:#3fb950}
+.flow-arrow{font-size:18px;color:var(--muted)}
+
+/* Config table */
+.cfg-table{width:100%;font-size:13px;border-collapse:collapse;margin:10px 0}
+.cfg-table th{padding:8px 12px;text-align:left;background:var(--bg);color:var(--muted);font-size:11px;font-weight:500;border-bottom:2px solid var(--border)}
+.cfg-table td{padding:10px 12px;border-bottom:1px solid var(--bg);font-family:monospace;font-size:12px}
+.cfg-table td:first-child{color:#1a73e8}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if not has_access %}
+<!-- === GATED: 未购买 === -->
+<div class="deploy-layout">
+<div class="gate-lock">
+  <span class="lock-icon">🔒</span>
+  <h3>购买教程后解锁</h3>
+  <p>Agent 部署完全指南包含 OpenClaw / Hermes / OpenHuman<br>从零到一的完整部署流程，仅需 29.9 元永久买断</p>
+  <a href="/pay?tier=tutorial" class="btn-gold">29.9 元 · 立即购买</a>
+</div>
+</div>
+{% else %}
+<!-- === UNLOCKED: 已购买 === -->
+<div class="deploy-layout">
+<div class="deploy-hero">
+  <div class="badge-gold">PREMIUM</div>
+  <h1><span class="gold">Agent 部署完全指南</span></h1>
+  <p>从环境准备到生产运行，覆盖 OpenClaw / Hermes / OpenHuman 三大通用 Agent 的完整部署流程。国内网络友好，每一步都有详细说明。</p>
+</div>
+
+<div class="deploy-body">
+  <aside class="deploy-sidebar">
+    <nav class="deploy-nav">
+      <div class="nav-title">教程导航</div>
+      <a href="#prereq" class="active">前置环境</a>
+      <a href="#openclaw">OpenClaw 部署</a>
+      <a href="#hermes">Hermes 部署</a>
+      <a href="#openhuman">OpenHuman 部署</a>
+      <a href="#multi-agent">多Agent协同</a>
+      <a href="#network">国内网络优化</a>
+      <a href="#troubleshoot">常见问题排错</a>
+    </nav>
+  </aside>
+
+  <div class="deploy-content">
+
+    <!-- ===== 前置环境 ===== -->
+    <section class="deploy-section" id="prereq">
+      <h2><span class="gold">前置环境准备</span></h2>
+      <p class="sec-sub">在部署任何 Agent 之前，确保你的环境满足以下最低要求</p>
+
+      <div class="prereq-grid">
+        <div class="prereq-item">
+          <span class="pr-icon">🐍</span>
+          <div class="pr-name">Python</div>
+          <div class="pr-ver">≥ 3.10</div>
+        </div>
+        <div class="prereq-item">
+          <span class="pr-icon">🐳</span>
+          <div class="pr-name">Docker</div>
+          <div class="pr-ver">≥ 24.0</div>
+        </div>
+        <div class="prereq-item">
+          <span class="pr-icon">🔑</span>
+          <div class="pr-name">LLM API Key</div>
+          <div class="pr-ver">DeepSeek / Qwen / OpenAI</div>
+        </div>
+        <div class="prereq-item">
+          <span class="pr-icon">💻</span>
+          <div class="pr-name">内存</div>
+          <div class="pr-ver">≥ 16GB（推荐32GB）</div>
+        </div>
+        <div class="prereq-item">
+          <span class="pr-icon">🖥️</span>
+          <div class="pr-name">操作系统</div>
+          <div class="pr-ver">Ubuntu 22.04 / macOS / WSL2</div>
+        </div>
+        <div class="prereq-item">
+          <span class="pr-icon">🌐</span>
+          <div class="pr-name">网络</div>
+          <div class="pr-ver">能访问 GitHub + PyPI</div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:20px;font-size:15px;">1. 安装 Docker（推荐方式）</h4>
+      <div class="code-block">
+        <span class="lang-tag">bash</span>
+        <pre># Ubuntu 一键安装
+curl -fsSL https://get.docker.com | bash
+sudo usermod -aG docker $USER
+# 重新登录后生效</pre>
+      </div>
+
+      <h4 style="margin-top:16px;font-size:15px;">2. 配置 Python 虚拟环境</h4>
+      <div class="code-block">
+        <span class="lang-tag">bash</span>
+        <pre>python3 -m venv agent-env
+source agent-env/bin/activate  # Windows: agent-env\Scripts\activate
+pip install --upgrade pip setuptools wheel</pre>
+      </div>
+
+      <div class="info-box tip">
+        <strong>建议：</strong>为每个 Agent 创建独立的虚拟环境，避免依赖冲突。如果你有 Docker，强烈建议使用 Docker 部署，环境隔离更彻底。
+      </div>
+    </section>
+
+    <!-- ===== OpenClaw ===== -->
+    <section class="deploy-section" id="openclaw">
+      <h2><span class="gold">OpenClaw 部署全流程</span></h2>
+      <p class="sec-sub">开源通用 AI Agent，支持浏览器操控、文件管理、命令行执行，可对接 DeepSeek / Qwen / Claude 等多种 LLM</p>
+
+      <div class="flow-diagram">
+        <div class="flow-node src">环境检查</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">克隆仓库</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">安装依赖</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">配置 API</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">启动服务</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node dst">运行任务</div>
+      </div>
+
+      <h4 style="font-size:15px;">前置环节：理解 OpenClaw 架构</h4>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;">
+        OpenClaw 采用 <strong>Agent → Tool → LLM</strong> 三层架构。Agent 负责任务规划和决策，Tool 层提供浏览器/文件/命令行等工具，LLM 层对接大模型API。理解这个架构有助于你后续排错和自定义扩展。
+      </p>
+
+      <ol class="step-list">
+        <li>
+          <h4>克隆仓库并进入目录</h4>
+          <p>OpenClaw 托管在 GitHub，直接克隆即可。如果国内网络慢，可以使用 GitHub 镜像加速。</p>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre>git clone https://github.com/browser-use/openclaw.git
+cd openclaw</pre>
+          </div>
+          <div class="info-box tip">
+            <strong>国内网络加速：</strong>将 github.com 替换为 hub.fastgit.xyz 或使用 ghproxy.com 代理。<br>
+            <code>git clone https://ghproxy.com/https://github.com/browser-use/openclaw.git</code>
+          </div>
+        </li>
+        <li>
+          <h4>安装 Python 依赖</h4>
+          <p>OpenClaw 使用 Poetry 管理依赖。如果没有 Poetry，先安装它。</p>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre>pip install poetry
+poetry install
+# 或使用 pip（如果项目有 requirements.txt）
+pip install -r requirements.txt</pre>
+          </div>
+        </li>
+        <li>
+          <h4>配置 LLM API Key</h4>
+          <p>创建 .env 文件，填入你的大模型 API 密钥。支持多种模型同时配置，Agent 可根据任务自动选择。</p>
+          <div class="code-block">
+            <span class="lang-tag">.env</span>
+            <pre># DeepSeek（推荐，性价比高）
+DEEPSEEK_API_KEY=sk-your-deepseek-key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+
+# 通义千问（国内首选，延迟低）
+QWEN_API_KEY=sk-your-qwen-key
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# Claude（能力最强）
+ANTHROPIC_API_KEY=sk-ant-your-claude-key
+
+# 默认使用的模型
+DEFAULT_LLM_MODEL=deepseek-chat
+DEFAULT_LLM_BASE_URL=https://api.deepseek.com</pre>
+          </div>
+          <div class="info-box warn">
+            <strong>注意：</strong>.env 文件包含敏感信息，不要提交到 Git。确保 .gitignore 中已包含 .env。
+          </div>
+        </li>
+        <li>
+          <h4>安装 Playwright 浏览器</h4>
+          <p>OpenClaw 使用 Playwright 驱动浏览器。需要安装 Chromium 内核。</p>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre>playwright install chromium
+# 如果下载慢，设置镜像
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright playwright install chromium</pre>
+          </div>
+        </li>
+        <li>
+          <h4>启动 OpenClaw 并测试</h4>
+          <p>启动 Agent 服务，运行第一个任务来验证部署。</p>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre># 启动 Agent 服务（CLI 模式）
+python main.py
+
+# 或者用 Docker 启动
+docker compose up -d
+
+# 测试：让 Agent 搜索 GitHub trending
+python main.py --task "搜索 GitHub 上今天最热门的 Python 项目"</pre>
+          </div>
+        </li>
+        <li>
+          <h4>配置开机自启（可选）</h4>
+          <p>生产环境下使用 systemd 确保 Agent 服务始终运行。</p>
+          <div class="code-block">
+            <span class="lang-tag">ini</span>
+            <pre>[Unit]
+Description=OpenClaw Agent Service
+After=network.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/openclaw
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</pre>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ===== Hermes ===== -->
+    <section class="deploy-section" id="hermes">
+      <h2><span class="gold">Hermes (browser-use) 部署</span></h2>
+      <p class="sec-sub">专注浏览器自动化的 Agent，让 AI 像人类一样操作网页。支持视觉理解、多步复杂任务、验证码处理。</p>
+
+      <div class="flow-diagram">
+        <div class="flow-node src">Python 3.11+</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">pip install</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">配置 LLM</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">安装浏览器</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node dst">编写任务脚本</div>
+      </div>
+
+      <h4 style="font-size:15px;">前置环节：Hermes 与 OpenClaw 的区别</h4>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;">
+        Hermes (browser-use) 是一个<strong>纯粹的浏览器Agent框架</strong>，专注于网页操作。与 OpenClaw 不同，它不包含文件管理和命令行工具，但浏览器操控能力更强——支持视觉定位、拖拽、验证码识别。如果你的场景主要是网页数据采集、表单填写、网页监控，Hermes 更适合。
+      </p>
+
+      <ol class="step-list">
+        <li>
+          <h4>安装 browser-use</h4>
+          <p>Hermes 的核心是 browser-use 库。直接通过 pip 安装即可。</p>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre>pip install browser-use
+# 安装 Playwright 浏览器
+playwright install chromium</pre>
+          </div>
+        </li>
+        <li>
+          <h4>创建第一个 Agent 任务</h4>
+          <p>编写 Python 脚本，让 Agent 自动完成网页操作。</p>
+          <div class="code-block">
+            <span class="lang-tag">python</span>
+            <pre>import asyncio
+from browser_use import Agent
+from langchain_openai import ChatOpenAI
+
+async def main():
+    # 使用 DeepSeek 作为 LLM（国内推荐）
+    llm = ChatOpenAI(
+        model="deepseek-chat",
+        api_key="sk-your-key",
+        base_url="https://api.deepseek.com",
+    )
+
+    agent = Agent(
+        task="打开 GitHub Trending 页面，列出前10个最热门的仓库名称",
+        llm=llm,
+    )
+    result = await agent.run()
+    print(result)
+
+asyncio.run(main())</pre>
+          </div>
+          <div class="info-box tip">
+            <strong>模型选择建议：</strong>浏览器Agent需要较强的视觉理解能力。推荐使用 Claude 3.5 Sonnet 或 Qwen-VL-Max 以获得更好的页面理解效果。DeepSeek 在文本理解上很强，但视觉能力较弱。
+          </div>
+        </li>
+        <li>
+          <h4>配置持久化浏览器上下文</h4>
+          <p>让 Agent 记住登录状态、Cookie等信息，避免每次重新登录。</p>
+          <div class="code-block">
+            <span class="lang-tag">python</span>
+            <pre>from browser_use import Agent, Browser, BrowserConfig
+
+# 使用持久化用户目录
+browser = Browser(
+    config=BrowserConfig(
+        chrome_instance_path="/usr/bin/google-chrome",
+        user_data_dir="./browser_data",  # 保存登录状态
+    )
+)
+
+agent = Agent(task="...", llm=llm, browser=browser)</pre>
+          </div>
+        </li>
+        <li>
+          <h4>部署为 API 服务</h4>
+          <p>将 Agent 封装为 REST API，方便其他服务调用。</p>
+          <div class="code-block">
+            <span class="lang-tag">python</span>
+            <pre>from fastapi import FastAPI
+from pydantic import BaseModel
+from browser_use import Agent
+
+app = FastAPI()
+
+class TaskRequest(BaseModel):
+    task: str
+
+@app.post("/agent/run")
+async def run_agent(req: TaskRequest):
+    agent = Agent(task=req.task, llm=llm)
+    result = await agent.run()
+    return {"result": str(result)}
+
+# uvicorn server:app --host 0.0.0.0 --port 8000</pre>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ===== OpenHuman ===== -->
+    <section class="deploy-section" id="openhuman">
+      <h2><span class="gold">OpenHuman 部署</span></h2>
+      <p class="sec-sub">多模态 Agent 框架，支持桌面操作、图像分析、视频理解。适合需要 GUI 自动化和视觉任务的场景。</p>
+
+      <h4 style="font-size:15px;">前置环节：OpenHuman 的能力边界</h4>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;">
+        OpenHuman 的独特之处在于<strong>桌面GUI操作 + 多模态理解</strong>。它能看到屏幕截图、理解窗口布局、模拟鼠标键盘操作。适合自动化测试、RPA（机器人流程自动化）、辅助办公等场景。但它对系统权限要求较高，建议在虚拟机或容器中运行。
+      </p>
+
+      <ol class="step-list">
+        <li>
+          <h4>安装 OpenHuman</h4>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre>git clone https://github.com/openhuman/openhuman.git
+cd openhuman
+pip install -e .
+# 安装系统依赖
+sudo apt-get install -y xvfb xdotool scrot python3-tk</pre>
+          </div>
+          <div class="info-box warn">
+            <strong>注意：</strong>OpenHuman 需要图形环境。在无头服务器上运行需要 Xvfb（虚拟显示）。macOS 用户需要额外的权限设置。
+          </div>
+        </li>
+        <li>
+          <h4>配置虚拟显示（服务器用）</h4>
+          <div class="code-block">
+            <span class="lang-tag">bash</span>
+            <pre># 启动虚拟显示
+Xvfb :99 -screen 0 1920x1080x24 &
+export DISPLAY=:99
+
+# 验证
+xdpyinfo -display :99 | grep dimensions
+# 输出: dimensions: 1920x1080 pixels</pre>
+          </div>
+        </li>
+        <li>
+          <h4>Docker 部署（推荐）</h4>
+          <p>使用 Docker 可以避免系统环境差异，一键启动完整的 OpenHuman 环境。</p>
+          <div class="code-block">
+            <span class="lang-tag">dockerfile</span>
+            <pre>FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y \
+    xvfb xdotool scrot python3-tk \
+    wget curl git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . .
+RUN pip install -e .
+
+COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
+ENV DISPLAY=:99
+CMD ["/entrypoint.sh"]</pre>
+          </div>
+          <div class="code-block">
+            <span class="lang-tag">bash (entrypoint.sh)</span>
+            <pre>#!/bin/bash
+Xvfb :99 -screen 0 1920x1080x24 &
+sleep 2
+exec python -m openhuman "$@"</pre>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ===== 多Agent协同 ===== -->
+    <section class="deploy-section" id="multi-agent">
+      <h2><span class="gold">多 Agent 协同架构</span></h2>
+      <p class="sec-sub">将多个 Agent 串联成流水线，实现复杂任务的自动化分工</p>
+
+      <div class="flow-diagram">
+        <div class="flow-node src">Hermes<br>信息采集</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">OpenClaw<br>数据分析</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node proc">OpenHuman<br>报告生成</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node dst">通知推送<br>微信/QQ</div>
+      </div>
+
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:14px;">
+        <strong>典型场景：</strong>每天自动监控竞品网站 → Hermes 采集页面变化 → OpenClaw 分析变化内容并生成摘要 → OpenHuman 打开 WPS 生成日报 → 推送到企业微信群。<br><br>
+        <strong>实现方式：</strong>使用 n8n / Dify 工作流串联，或自己编写 Python 调度脚本。每个 Agent 独立部署在不同的容器中，通过 HTTP API 或消息队列（Redis/RabbitMQ）通信。
+      </p>
+    </section>
+
+    <!-- ===== 国内网络优化 ===== -->
+    <section class="deploy-section" id="network">
+      <h2><span class="gold">国内网络优化方案</span></h2>
+      <p class="sec-sub">解决 GitHub 访问慢、PyPI 下载失败、HuggingFace 无法连接等问题</p>
+
+      <table class="cfg-table">
+        <tr><th>问题</th><th>解决方案</th><th>配置方式</th></tr>
+        <tr>
+          <td>GitHub 克隆慢</td>
+          <td>使用 ghproxy.com 镜像</td>
+          <td>git clone https://ghproxy.com/https://github.com/xxx/xxx.git</td>
+        </tr>
+        <tr>
+          <td>PyPI 下载慢</td>
+          <td>清华/阿里云镜像</td>
+          <td>pip install -i https://mirrors.aliyun.com/pypi/simple/ xxx</td>
+        </tr>
+        <tr>
+          <td>Docker Hub 拉取慢</td>
+          <td>配置 Docker 镜像加速</td>
+          <td>/etc/docker/daemon.json: {"registry-mirrors":["https://xxx.mirror.aliyuncs.com"]}</td>
+        </tr>
+        <tr>
+          <td>HuggingFace 无法访问</td>
+          <td>hf-mirror.com 镜像</td>
+          <td>export HF_ENDPOINT=https://hf-mirror.com</td>
+        </tr>
+        <tr>
+          <td>Playwright 浏览器下载慢</td>
+          <td>npmmirror 镜像</td>
+          <td>PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright</td>
+        </tr>
+        <tr>
+          <td>npm 安装慢</td>
+          <td>npmmirror 镜像</td>
+          <td>npm config set registry https://registry.npmmirror.com</td>
+        </tr>
+        <tr>
+          <td>全局代理</td>
+          <td>HTTP/HTTPS 代理</td>
+          <td>export HTTP_PROXY=http://127.0.0.1:7890 HTTPS_PROXY=http://127.0.0.1:7890</td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- ===== 排错 ===== -->
+    <section class="deploy-section" id="troubleshoot">
+      <h2><span class="gold">常见问题排错</span></h2>
+      <p class="sec-sub">部署过程中最常见的问题和解决方案</p>
+
+      <div class="info-box danger">
+        <strong>Q: playwright 安装报错 "Browser closed unexpectedly"</strong><br>
+        A: 通常是缺少系统依赖。运行 <code>playwright install-deps chromium</code> 安装系统库。Docker 中需要以 root 运行或使用 --no-sandbox。
+      </div>
+      <div class="info-box danger">
+        <strong>Q: Agent 执行任务时卡住不动</strong><br>
+        A: 检查 LLM API 是否可达（curl 测试），检查 API Key 是否有效，检查配额是否用完。国内访问 OpenAI 需要代理。
+      </div>
+      <div class="info-box danger">
+        <strong>Q: Docker 容器内无法启动浏览器</strong><br>
+        A: 需要在 docker run 时添加 <code>--cap-add=SYS_ADMIN</code> 或使用 <code>--security-opt seccomp=chrome.json</code>。
+      </div>
+      <div class="info-box danger">
+        <strong>Q: 中文网页乱码</strong><br>
+        A: 确保系统安装了中文字体：<code>apt-get install fonts-noto-cjk</code>，并设置 <code>LANG=zh_CN.UTF-8</code>。
+      </div>
+    </section>
+
+  </div><!-- /deploy-content -->
+</div><!-- /deploy-body -->
+</div><!-- /deploy-layout -->
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Sidebar nav active state on scroll
+(function(){
+  var links = document.querySelectorAll('.deploy-nav a');
+  var sections = [];
+  links.forEach(function(a){
+    var id = a.getAttribute('href').replace('#','');
+    var el = document.getElementById(id);
+    if(el) sections.push({el:el, link:a});
+  });
+  window.addEventListener('scroll', function(){
+    var top = window.scrollY + 120;
+    sections.forEach(function(s){
+      if(s.el.offsetTop <= top && s.el.offsetTop + s.el.offsetHeight > top){
+        links.forEach(function(l){l.classList.remove('active');});
+        s.link.classList.add('active');
+      }
+    });
+  });
+
+  // Copy code button
+  document.querySelectorAll('.code-block pre').forEach(function(pre){
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    btn.onclick = function(){
+      navigator.clipboard.writeText(pre.textContent).then(function(){
+        btn.textContent = '已复制!';
+        setTimeout(function(){btn.textContent = '复制';}, 2000);
+      });
+    };
+    pre.parentElement.appendChild(btn);
+  });
+})();
+</script>
+{% endblock %}

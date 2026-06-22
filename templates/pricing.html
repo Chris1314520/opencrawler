@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}定价 — OpenCrawler{% endblock %}
+{% set active_page = 'pricing' %}
+
+{% block content %}
+<section class="section" style="padding-top: 32px;">
+    <h2 class="section-title">选择适合你的方案</h2>
+    <p class="section-subtitle">从免费开始试用，随时升级。所有方案含 7 天无理由退款。</p>
+
+    <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card">
+            <h3>Free</h3>
+            <div class="pricing-amount">0 元</div>
+            <div class="pricing-period">永久免费</div>
+            <ul class="pricing-features">
+                <li>20 次 API 调用 / 天</li>
+                <li>5 个数据源全部可用</li>
+                <li>关键词搜索</li>
+                <li class="na">实时数据（6小时延迟）</li>
+                <li class="na">QQ 群推送</li>
+                <li class="na">自定义数据源</li>
+                <li>社区邮件支持</li>
+            </ul>
+            <a href="/demo" class="btn btn-outline">免费试用</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured">
+            <h3>Pro</h3>
+            <div class="pricing-amount">99 元</div>
+            <div class="pricing-period">/ 月</div>
+            <ul class="pricing-features">
+                <li>500 次 API 调用 / 天</li>
+                <li>5 个数据源全部可用</li>
+                <li>关键词筛选</li>
+                <li>实时数据（零延迟）</li>
+                <li>QQ 群推送（每日 3 次）</li>
+                <li class="na">自定义数据源</li>
+                <li>邮件支持（24h 回复）</li>
+            </ul>
+            <a href="/console" class="btn btn-primary">开始使用</a>
+        </div>
+
+        <!-- Team -->
+        <div class="pricing-card">
+            <h3>Team</h3>
+            <div class="pricing-amount">499 元</div>
+            <div class="pricing-period">/ 月</div>
+            <ul class="pricing-features">
+                <li>API 调用不限量</li>
+                <li>5 个数据源全部可用</li>
+                <li>关键词筛选 + 批量导出</li>
+                <li>实时数据（零延迟）</li>
+                <li>QQ 群实时推送</li>
+                <li>自定义数据源（按需添加）</li>
+                <li>微信 / QQ 专属支持</li>
+            </ul>
+            <a href="/console" class="btn btn-outline">开始使用</a>
+        </div>
+    </div>
+</section>
+
+<!-- Source & Tutorial -->
+<section class="section" style="padding-top: 0;">
+    <h2 class="section-title">更多服务</h2>
+    <p class="section-subtitle">源码授权 · 部署教程 · 企业定制</p>
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <h3>Agent 部署教程</h3>
+            <div class="pricing-amount">29.9 元</div>
+            <div class="pricing-period">一次性买断</div>
+            <ul class="pricing-features">
+                <li>通用 Agent 部署指南</li>
+                <li>Claude Code / Codex CLI 配置</li>
+                <li>Dify / FastGPT 搭建</li>
+                <li>ComfyUI / Flux 生图</li>
+                <li>国内模型适配说明</li>
+                <li class="na">一对一技术支持</li>
+                <li>文档持续更新</li>
+            </ul>
+            <a href="/pricing" class="btn btn-outline" onclick="alert('联系微信: OpenCrawler\n\n备注: 部署教程')">联系购买</a>
+        </div>
+        <div class="pricing-card featured">
+            <h3>生产级采集方案 + 源码</h3>
+            <div class="pricing-amount">1299 元</div>
+            <div class="pricing-period">一次性买断 · 商用授权</div>
+            <ul class="pricing-features">
+                <li>完整后端源码（爬虫 + API + 调度）</li>
+                <li>25+ 数据源已验证，开箱即用</li>
+                <li>国内站点反爬适配（TLS 指纹绕过）</li>
+                <li>生产环境已在运行，非 AI 生成玩具</li>
+                <li>数据库设计 + 部署文档 + 架构说明</li>
+                <li>二次开发 & 白标商用授权</li>
+                <li>微信 / QQ 技术对接支持</li>
+            </ul>
+            <a href="/pricing" class="btn btn-primary" onclick="alert('联系微信: OpenCrawler\n\n备注: 采集方案咨询')">联系购买</a>
+        </div>
+        <div class="pricing-card">
+            <h3>企业定制</h3>
+            <div class="pricing-amount">议价</div>
+            <div class="pricing-period">按需报价</div>
+            <ul class="pricing-features">
+                <li>自定义数据源接入</li>
+                <li>私有化部署</li>
+                <li>品牌定制（Logo/域名）</li>
+                <li>SLA 服务保障</li>
+                <li>专属技术支持</li>
+                <li>数据格式定制</li>
+                <li>批量采购优惠</li>
+            </ul>
+            <a href="/agents" class="btn btn-outline">联系咨询</a>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="apply" style="padding-top: 0;">
+    <h2 class="section-title">如何开通</h2>
+    <p class="section-subtitle">自助购买 + 即时开通，无需人工等待</p>
+    <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">1</div>
+            <h3>选择套餐</h3>
+            <p>选择合适的方案，点击购买进入支付页</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">2</div>
+            <h3>扫码付款</h3>
+            <p>支付宝 / 微信扫码支付，上传截图自动审核</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">3</div>
+            <h3>即时开通</h3>
+            <p>API Key 自动激活，立即开始使用</p>
+        </div>
+    </div>
+    <div style="text-align:center; margin-top: 32px; padding: 24px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);">
+        <p style="font-size: 15px; margin-bottom: 8px;">商务联系</p>
+        <p style="font-size: 14px; color: var(--muted);">微信: OpenCrawler &nbsp;|&nbsp; QQ: 123456789 &nbsp;|&nbsp; 微博: @OpenCrawler</p>
+    </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+    <h2 class="section-title">常见问题</h2>
+    <div class="faq-item">
+        <h4>怎么付款？支持发票吗？</h4>
+        <p>目前支持支付宝和微信转账。个人开发者暂不支持发票，如需发票可协商（加 5% 手续费）。</p>
+    </div>
+    <div class="faq-item">
+        <h4>数据更新频率是多少？</h4>
+        <p>Pro 和 Team 套餐：GitHub Trending 每小时更新，CVE 每 30 分钟，RSS 每 15 分钟。Free 套餐有 6 小时延迟。</p>
+    </div>
+    <div class="faq-item">
+        <h4>支持什么数据源？可以加新的吗？</h4>
+        <p>目前 5 个数据源：GitHub Trending、Hacker News、技术 RSS、反爬 RSS（量子位等）、NVD CVE。Team 套餐支持按需添加自定义数据源。</p>
+    </div>
+    <div class="faq-item">
+        <h4>API Key 可以共享给团队成员吗？</h4>
+        <p>Pro Key 是个人使用的。Team Key 支持多人共享同一个配额池。如果需要独立配额，请购买多个 Key。</p>
+    </div>
+    <div class="faq-item">
+        <h4>可以退款吗？</h4>
+        <p>7 天内无理由退款。如果是因为数据质量不满意，可以随时取消订阅（当月费用不退，下月不再扣款）。</p>
+    </div>
+</section>
+{% endblock %}

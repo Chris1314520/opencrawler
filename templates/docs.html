@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}API 文档 — OpenCrawler{% endblock %}
+{% set active_page = 'docs' %}
+
+{% block content %}
+<section class="section" style="padding-top: 32px;">
+    <div class="docs-layout">
+        <div class="docs-sidebar">
+            <a href="#auth">认证方式</a>
+            <a href="#trending">GET /api/v1/trending</a>
+            <a href="#search">GET /api/v1/search</a>
+            <a href="#limits">限流说明</a>
+            <a href="#errors">错误码</a>
+        </div>
+
+        <div class="docs-content">
+            <h2 id="auth">认证方式</h2>
+            <p>所有 API 请求需要携带 <code>X-API-Key</code> header，或在 URL 中传 <code>?api_key=</code> 参数。</p>
+
+            <div class="code-block">
+                <span class="lang">curl</span>
+<code><span class="cmt"># Header 方式（推荐）</span>
+curl -H <span class="str">"X-API-Key: sk-pro_YOUR_KEY"</span> \
+     <span class="str">"http://your-server:5889/api/v1/trending?limit=10"</span>
+
+<span class="cmt"># URL 参数方式（方便浏览器测试）</span>
+curl <span class="str">"http://your-server:5889/api/v1/trending?api_key=sk-pro_YOUR_KEY&limit=10"</span></code>
+            </div>
+            <p>没有 Key 或 Key 无效会返回 <strong>401</strong>。超配额返回 <strong>429</strong>。</p>
+
+            <hr style="border-color: var(--border); margin: 32px 0;">
+
+            <h2 id="trending">GET /api/v1/trending</h2>
+            <p>获取聚合情报数据。支持按数据源、时间范围、关键词筛选。</p>
+
+            <h3>参数</h3>
+            <table>
+                <tr><th>参数</th><th>类型</th><th>默认</th><th>说明</th></tr>
+                <tr><td><code>source</code></td><td>string</td><td>all</td><td>数据源: <code>github_trending</code>, <code>hackernews</code>, <code>rss</code>, <code>nvd_cve</code></td></tr>
+                <tr><td><code>limit</code></td><td>int</td><td>10</td><td>返回条数（最大 50）</td></tr>
+                <tr><td><code>keyword</code></td><td>string</td><td>-</td><td>关键词筛选（标题+描述）</td></tr>
+                <tr><td><code>hours</code></td><td>int</td><td>-</td><td>最近 N 小时的数据</td></tr>
+            </table>
+
+            <h3>示例请求</h3>
+            <div class="code-block"><span class="lang">curl</span>
+<code>curl -H <span class="str">"X-API-Key: sk-pro_xxx"</span> \
+  <span class="str">"http://localhost:5889/api/v1/trending?source=nvd_cve&limit=5"</span></code>
+            </div>
+
+            <h3>示例响应</h3>
+            <div class="code-block"><span class="lang">JSON</span>
+<code>{
+  <span class="str">"items"</span>: [
+    {
+      <span class="str">"title"</span>: <span class="str">"CVE-2026-6419: WordPress plugin privilege escalation"</span>,
+      <span class="str">"url"</span>: <span class="str">"https://nvd.nist.gov/vuln/detail/CVE-2026-6419"</span>,
+      <span class="str">"description"</span>: <span class="str">"...vulnerability details..."</span>,
+      <span class="str">"source_label"</span>: <span class="str">"CVE 漏洞"</span>,
+      <span class="str">"tags"</span>: <span class="str">"安全,CVE,高危"</span>,
+      <span class="str">"extra"</span>: { <span class="str">"cvss"</span>: <span class="str">"8.8 (HIGH)"</span>, <span class="str">"cve_id"</span>: <span class="str">"CVE-2026-6419"</span> },
+      <span class="str">"fetched_at"</span>: 1780146731
+    }
+  ],
+  <span class="str">"total"</span>: 5,
+  <span class="str">"tier"</span>: <span class="str">"pro"</span>,
+  <span class="str">"quota"</span>: { <span class="str">"used_today"</span>: 3, <span class="str">"daily_limit"</span>: 500 }
+}</code>
+            </div>
+
+            <h3>Python 示例</h3>
+            <div class="code-block"><span class="lang">Python</span>
+<code><span class="kw">import</span> requests
+
+resp = requests.get(
+    <span class="str">"http://localhost:5889/api/v1/trending"</span>,
+    headers={<span class="str">"X-API-Key"</span>: <span class="str">"sk-pro_xxx"</span>},
+    params={<span class="str">"source"</span>: <span class="str">"nvd_cve"</span>, <span class="str">"limit"</span>: 10}
+)
+data = resp.json()
+<span class="kw">for</span> item <span class="kw">in</span> data[<span class="str">"items"</span>]:
+    <span class="kw">print</span>(item[<span class="str">"title"</span>])</code>
+            </div>
+
+            <hr style="border-color: var(--border); margin: 32px 0;">
+
+            <h2 id="search">GET /api/v1/search</h2>
+            <p>关键词全文搜索，在标题和描述中匹配。</p>
+
+            <h3>参数</h3>
+            <table>
+                <tr><th>参数</th><th>类型</th><th>默认</th><th>说明</th></tr>
+                <tr><td><code>q</code></td><td>string</td><td><strong>必填</strong></td><td>搜索关键词</td></tr>
+                <tr><td><code>limit</code></td><td>int</td><td>20</td><td>返回条数（最大 50）</td></tr>
+            </table>
+
+            <div class="code-block"><span class="lang">curl</span>
+<code>curl -H <span class="str">"X-API-Key: sk-pro_xxx"</span> \
+  <span class="str">"http://localhost:5889/api/v1/search?q=AI&limit=10"</span></code>
+            </div>
+
+            <hr style="border-color: var(--border); margin: 32px 0;">
+
+            <h2 id="limits">限流说明</h2>
+            <table>
+                <tr><th>套餐</th><th>日配额</th><th>每分钟</th><th>数据延迟</th></tr>
+                <tr><td>Free</td><td>20 次</td><td>5 次</td><td>&le; 6 小时</td></tr>
+                <tr><td>Pro</td><td>500 次</td><td>30 次</td><td>实时</td></tr>
+                <tr><td>Team</td><td>不限</td><td>60 次</td><td>实时</td></tr>
+            </table>
+            <p>超配额返回 <strong>429 Too Many Requests</strong>，配额每天 0:00 重置。如需提额请联系。</p>
+
+            <hr style="border-color: var(--border); margin: 32px 0;">
+
+            <h2 id="errors">错误码</h2>
+            <table>
+                <tr><th>状态码</th><th>含义</th><th>返回内容</th></tr>
+                <tr><td>200</td><td>成功</td><td>正常数据</td></tr>
+                <tr><td>400</td><td>参数错误</td><td><code>{"error": "missing q parameter"}</code></td></tr>
+                <tr><td>401</td><td>无 Key 或 Key 无效</td><td><code>{"error": "missing api key"}</code></td></tr>
+                <tr><td>429</td><td>配额用尽</td><td><code>{"error": "daily quota exceeded", "limit": 20}</code></td></tr>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

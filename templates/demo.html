@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}数据演示 — OpenCrawler{% endblock %}
+{% set active_page = 'demo' %}
+
+{% block head %}
+<meta name="demo-key" content="{{ demo_key }}">
+<style>
+.demo-tree{position:relative;margin-bottom:16px}
+.demo-tree-btn{
+    padding:9px 24px;border-radius:22px;font-size:13px;font-weight:600;cursor:pointer;
+    border:1.5px solid rgba(212,175,55,.3);
+    background:linear-gradient(135deg,#1a1a1a,#2d2d2d);
+    color:#d4af37;
+    font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+    letter-spacing:1px;
+    transition:transform .2s var(--ease-spring),box-shadow .25s var(--ease-smooth),border-color .2s var(--ease-smooth);
+    box-shadow:0 2px 12px rgba(212,175,55,.1),inset 0 1px 0 rgba(255,255,255,.06);
+    display:flex;align-items:center;gap:8px;position:relative;overflow:hidden;width:100%;justify-content:center;
+}
+.demo-tree-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(110deg,transparent 30%,rgba(212,175,55,.1) 50%,transparent 70%);
+    background-size:200% 100%;animation:shine 4s var(--ease-smooth) infinite;
+}
+.demo-tree-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,175,55,.2);border-color:rgba(212,175,55,.5)}
+.demo-tree-btn:active{transform:scale(.96)}
+.demo-tree-btn .arrow{font-size:10px;transition:transform .3s var(--ease-spring)}
+.demo-tree-btn.expanded .arrow{transform:rotate(180deg)}
+.demo-tree-panel{
+    position:absolute;top:calc(100% + 8px);left:0;right:0;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(16px) saturate(180%);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    border:1px solid rgba(212,175,55,.2);border-radius:14px;
+    box-shadow:0 12px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
+    padding:6px;opacity:0;pointer-events:none;
+    transform:translateY(-8px) scale(.95);transform-origin:top center;
+    transition:opacity .3s var(--ease-smooth),transform .3s var(--ease-spring);
+    z-index:50;
+}
+.demo-tree-panel.show{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
+.demo-tree-item{
+    display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;
+    font-size:13px;font-weight:500;color:var(--text);cursor:pointer;
+    transition:background .2s var(--ease-smooth),transform .15s var(--ease-spring),color .2s var(--ease-smooth);
+}
+.demo-tree-item:hover{background:rgba(212,175,55,.08);color:#b8860b;transform:translateX(4px)}
+.demo-tree-item.active{background:rgba(212,175,55,.12);color:#b8860b;font-weight:600}
+.demo-tree-item .item-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .2s var(--ease-smooth)}
+.demo-tree-item:hover .item-dot,.demo-tree-item.active .item-dot{background:#d4af37}
+.demo-tree-divider{height:1px;background:var(--border);margin:4px 8px}
+@keyframes shine{0%{background-position:-200% center}100%{background-position:200% center}}
+</style>
+{% endblock %}
+{% block content %}
+<section class="section" style="padding-top: 32px;">
+    <h2 class="section-title" style="text-align:left; margin-bottom: 8px;">实时数据演示</h2>
+    <p class="section-subtitle" style="text-align:left; margin-bottom: 16px;">以下数据通过 API 实时拉取，使用 Free 套餐（20次/天）</p>
+
+    <div class="demo-layout">
+        <div class="demo-sidebar" id="source-tags">
+            <div class="demo-tree">
+                <button class="demo-tree-btn" id="demoTreeBtn" onclick="toggleDemoTree()">
+                    <span id="demoTreeLabel">全部</span> <span class="arrow">▼</span>
+                </button>
+                <div class="demo-tree-panel" id="demoTreePanel">
+                    <div class="demo-tree-item active" data-source="" onclick="selectDemoSource(this,'全部')"><span class="item-dot"></span>全部</div>
+                    <div class="demo-tree-divider"></div>
+                    <div class="demo-tree-item" data-source="github_trending" onclick="selectDemoSource(this,'GitHub')"><span class="item-dot"></span>GitHub</div>
+                    <div class="demo-tree-item" data-source="hackernews" onclick="selectDemoSource(this,'Hacker News')"><span class="item-dot"></span>Hacker News</div>
+                    <div class="demo-tree-item" data-source="rss" onclick="selectDemoSource(this,'RSS')"><span class="item-dot"></span>RSS</div>
+                    <div class="demo-tree-item" data-source="nvd_cve" onclick="selectDemoSource(this,'CVE 漏洞')"><span class="item-dot"></span>CVE 漏洞</div>
+                    <div class="demo-tree-divider"></div>
+                    <div class="demo-tree-item" data-source="__saved__" onclick="selectDemoSource(this,'已保存')"><span class="item-dot"></span>已保存</div>
+                </div>
+            </div>
+            <button class="btn-sm primary" id="export-btn" style="width:100%;margin-top:8px;text-align:center">导出 JSON</button>
+        </div>
+        <div class="demo-main">
+            <div class="demo-items" id="demo-items">
+                <p style="color: var(--muted);">加载中...</p>
+            </div>
+            <div style="margin-top: 16px; text-align: center;">
+                <span id="quota-info" style="font-size: 13px; color: var(--muted);"></span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/product.js"></script>
+<script>
+window.toggleDemoTree = function() {
+    var btn = document.getElementById('demoTreeBtn');
+    var panel = document.getElementById('demoTreePanel');
+    var isOpen = panel.classList.contains('show');
+    if (isOpen) { panel.classList.remove('show'); btn.classList.remove('expanded'); }
+    else { panel.classList.add('show'); btn.classList.add('expanded'); }
+};
+window.selectDemoSource = function(el, label) {
+    document.querySelectorAll('.demo-tree-item').forEach(function(item) { item.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('demoTreeLabel').textContent = label;
+    currentSource = el.dataset.source;
+    if (currentSource === '__saved__') { loadSavedData(); } else { loadData(); }
+    panel = document.getElementById('demoTreePanel'); btn = document.getElementById('demoTreeBtn');
+    panel.classList.remove('show'); btn.classList.remove('expanded');
+};
+document.addEventListener('click', function(e) {
+    var tree = document.querySelector('.demo-tree');
+    if (tree && !tree.contains(e.target)) {
+        document.getElementById('demoTreePanel').classList.remove('show');
+        document.getElementById('demoTreeBtn').classList.remove('expanded');
+    }
+});
+</script>
+{% endblock %}

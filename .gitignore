@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 数据文件（部署时由 Volume 持久化，不入 Git）
+data/monitor.db
+data/monitor.db-shm
+data/monitor.db-wal
+data/notifications.json
+data/uploads/
+data/stash_config.yaml
+
+# 密钥文件
+.demo_key
+api_keys.json.bak
+
+# 日志
+*.log
+CUsersChrisserver.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.bak

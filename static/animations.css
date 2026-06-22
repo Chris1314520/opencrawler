@@ -1,0 +1,461 @@
+/* ═══════════════════════════════════════════════
+   OpenCrawler — iOS 级动效系统
+   设计理念: 质感 · 简约 · 高动感 · 细节感
+   ═══════════════════════════════════════════════ */
+
+/* ── 弹簧曲线变量 (iOS Spring Physics) ── */
+:root {
+  /* iOS 标准弹簧曲线 */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);     /* 弹性回弹 */
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);         /* 丝滑减速 */
+  --ease-decel: cubic-bezier(0.16, 1, 0.3, 1);           /* 强减速入场 */
+  --ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);            /* 快速响应 */
+  --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 弹性超调 */
+  --ease-power: cubic-bezier(0.77, 0, 0.175, 1);         /* 幂次曲线 */
+
+  /* 动效时长 */
+  --dur-instant: 0.1s;
+  --dur-fast: 0.2s;
+  --dur-normal: 0.35s;
+  --dur-slow: 0.5s;
+  --dur-page: 0.7s;
+
+  /* 阴影层级 */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.06);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,.12), 0 8px 20px rgba(0,0,0,.08);
+  --shadow-glow: 0 0 0 4px rgba(26,115,232,.08);
+
+  /* 毛玻璃 */
+  --blur-sm: blur(8px);
+  --blur-md: blur(16px);
+  --blur-lg: blur(24px);
+  --blur-xl: blur(40px);
+}
+
+/* ── 全局动效基础设施 ── */
+
+/* 硬件加速层 */
+.gpu {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* 平滑滚动 — iOS 惯性 */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── 1. 入场动画系统 ── */
+
+/* 淡入上移 (最常用) */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translate3d(0, 28px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 淡入缩放 */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 淡入左移 */
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translate3d(-32px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 淡入右移 */
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translate3d(32px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 弹性弹入 */
+@keyframes springIn {
+  0%   { opacity: 0; transform: scale(0.3) translateY(40px); }
+  60%  { opacity: 1; transform: scale(1.05) translateY(-4px); }
+  80%  { transform: scale(0.98) translateY(0); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* iOS 通知式滑入 */
+@keyframes slideInTop {
+  from { opacity: 0; transform: translate3d(0, -100%, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 底部弹出 */
+@keyframes slideInBottom {
+  from { opacity: 0; transform: translate3d(0, 100%, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 数字滚动 */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 应用入场类 */
+.anim-fade-up { animation: fadeInUp var(--dur-normal) var(--ease-decel) both; }
+.anim-fade-scale { animation: fadeInScale var(--dur-normal) var(--ease-spring) both; }
+.anim-fade-left { animation: fadeInLeft var(--dur-normal) var(--ease-decel) both; }
+.anim-fade-right { animation: fadeInRight var(--dur-normal) var(--ease-decel) both; }
+.anim-spring { animation: springIn var(--dur-slow) var(--ease-spring) both; }
+.anim-slide-top { animation: slideInTop var(--dur-normal) var(--ease-smooth) both; }
+.anim-slide-bottom { animation: slideInBottom var(--dur-normal) var(--ease-smooth) both; }
+
+/* ── 2. 交错动画系统 ── */
+.stagger > * { opacity: 0; animation: fadeInUp var(--dur-normal) var(--ease-decel) both; }
+.stagger > *:nth-child(1)  { animation-delay: 0.04s; }
+.stagger > *:nth-child(2)  { animation-delay: 0.08s; }
+.stagger > *:nth-child(3)  { animation-delay: 0.12s; }
+.stagger > *:nth-child(4)  { animation-delay: 0.16s; }
+.stagger > *:nth-child(5)  { animation-delay: 0.20s; }
+.stagger > *:nth-child(6)  { animation-delay: 0.24s; }
+.stagger > *:nth-child(7)  { animation-delay: 0.28s; }
+.stagger > *:nth-child(8)  { animation-delay: 0.32s; }
+.stagger > *:nth-child(9)  { animation-delay: 0.36s; }
+.stagger > *:nth-child(10) { animation-delay: 0.40s; }
+.stagger > *:nth-child(11) { animation-delay: 0.44s; }
+.stagger > *:nth-child(12) { animation-delay: 0.48s; }
+
+/* ── 3. 滚动触发动画 ── */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition: opacity var(--dur-slow) var(--ease-decel),
+              transform var(--dur-slow) var(--ease-decel);
+}
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+[data-reveal="scale"] {
+  transform: scale(0.9);
+}
+[data-reveal="scale"].revealed {
+  transform: scale(1);
+}
+[data-reveal="left"] {
+  transform: translate3d(-40px, 0, 0);
+}
+[data-reveal="right"] {
+  transform: translate3d(40px, 0, 0);
+}
+[data-reveal="left"].revealed,
+[data-reveal="right"].revealed {
+  transform: translate3d(0, 0, 0);
+}
+
+/* ── 4. 毛玻璃效果 ── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+}
+.glass-dark {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+}
+
+/* ── 5. 微交互 — 按钮按压 ── */
+.btn, .nav-cta, .btn-primary, .btn-outline, .btn-submit, .btn-sm {
+  transition: transform var(--dur-fast) var(--ease-spring),
+              box-shadow var(--dur-fast) var(--ease-smooth),
+              opacity var(--dur-fast) var(--ease-sharp),
+              background var(--dur-fast) var(--ease-smooth),
+              border-color var(--dur-fast) var(--ease-smooth);
+}
+.btn:active, .nav-cta:active, .btn-primary:active, .btn-submit:active {
+  transform: scale(0.95);
+}
+.btn:hover, .nav-cta:hover {
+  transform: translateY(-1px);
+}
+
+/* ── 6. 卡片悬浮 — 3D 透视 ── */
+.card, .pricing-card, .hl-card, .service-card, .item-card, .contact-card {
+  transition: transform var(--dur-normal) var(--ease-spring),
+              box-shadow var(--dur-normal) var(--ease-smooth),
+              border-color var(--dur-normal) var(--ease-smooth);
+  transform-style: preserve-3d;
+}
+.card:hover, .pricing-card:hover, .hl-card:hover, .service-card:hover, .contact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.card:active, .pricing-card:active, .hl-card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* ── 7. 导航栏 — iOS 毛玻璃 ── */
+.navbar {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: var(--blur-md) !important;
+  -webkit-backdrop-filter: var(--blur-md) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background var(--dur-normal) var(--ease-smooth),
+              box-shadow var(--dur-normal) var(--ease-smooth);
+}
+.navbar.scrolled {
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 导航链接 — 弹性下划线 */
+.nav-links a {
+  position: relative;
+  transition: color var(--dur-fast) var(--ease-smooth),
+              background var(--dur-fast) var(--ease-smooth);
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  transition: width var(--dur-normal) var(--ease-spring);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 60%;
+}
+
+/* ── 8. 骨架屏 — 闪烁加载 ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.04) 25%,
+    rgba(0,0,0,0.08) 50%,
+    rgba(0,0,0,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+/* ── 9. 脉冲动画 ── */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.pulse-dot {
+  position: relative;
+}
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-ring 1.8s var(--ease-smooth) infinite;
+}
+
+/* ── 10. Toast 通知 — iOS 弹簧入场 ── */
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translate3d(0, -120%, 0) scale(0.8); }
+  60%  { opacity: 1; transform: translate3d(0, 8px, 0) scale(1.02); }
+  80%  { transform: translate3d(0, -2px, 0) scale(0.99); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translate3d(0, -120%, 0) scale(0.85); }
+}
+.toast-item {
+  animation: toastIn var(--dur-slow) var(--ease-spring) both;
+}
+.toast-item.removing {
+  animation: toastOut var(--dur-normal) var(--ease-smooth) both;
+}
+
+/* ── 11. 页面切换 — iOS 推入 ── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.99); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+.pt-enter main {
+  animation: pageEnter var(--dur-page) var(--ease-decel) both;
+}
+
+/* ── 12. 数字计数动画 ── */
+.count-animate {
+  animation: countUp var(--dur-slow) var(--ease-spring) both;
+}
+
+/* ── 13. 标签药丸 — 弹性悬浮 ── */
+.topic-pill, .source-tag, .item-tag, .badge {
+  transition: transform var(--dur-fast) var(--ease-spring),
+              background var(--dur-fast) var(--ease-smooth),
+              border-color var(--dur-fast) var(--ease-smooth),
+              color var(--dur-fast) var(--ease-smooth);
+}
+.topic-pill:hover, .source-tag:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+.topic-pill:active, .source-tag:active {
+  transform: scale(0.96);
+}
+
+/* ── 14. 输入框 — iOS 聚焦动效 ── */
+.form-input, .form-group input {
+  transition: border-color var(--dur-normal) var(--ease-smooth),
+              box-shadow var(--dur-normal) var(--ease-smooth),
+              background var(--dur-normal) var(--ease-smooth);
+}
+.form-input:focus, .form-group input:focus {
+  box-shadow: var(--shadow-glow);
+  background: #fff;
+}
+
+/* ── 15. 链接悬浮 — 下划线生长 ── */
+a:not(.btn):not(.nav-cta):not(.nav-links a):not(.nav-logo) {
+  transition: color var(--dur-fast) var(--ease-smooth);
+}
+
+/* ── 16. 列表项 — 交错入场 ── */
+.item-card, .hl-card {
+  animation: fadeInUp var(--dur-normal) var(--ease-decel) both;
+}
+.item-card:nth-child(1)  { animation-delay: 0.02s; }
+.item-card:nth-child(2)  { animation-delay: 0.06s; }
+.item-card:nth-child(3)  { animation-delay: 0.10s; }
+.item-card:nth-child(4)  { animation-delay: 0.14s; }
+.item-card:nth-child(5)  { animation-delay: 0.18s; }
+.item-card:nth-child(6)  { animation-delay: 0.22s; }
+.item-card:nth-child(7)  { animation-delay: 0.26s; }
+.item-card:nth-child(8)  { animation-delay: 0.30s; }
+.item-card:nth-child(9)  { animation-delay: 0.34s; }
+.item-card:nth-child(10) { animation-delay: 0.38s; }
+
+/* ── 17. 保存按钮 — 心形弹跳 ── */
+@keyframes saveBounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35); }
+  50%  { transform: scale(0.9); }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.save-btn.saved,
+.save-btn:active {
+  animation: saveBounce 0.5s var(--ease-spring);
+}
+
+/* ── 18. 加载旋转器 — iOS 风格 ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(26, 115, 232, 0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s var(--ease-sharp) infinite;
+}
+
+/* ── 19. 渐变光效 — 微光扫过 ── */
+@keyframes shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shine-effect {
+  background: linear-gradient(
+    110deg,
+    transparent 33%,
+    rgba(255,255,255,0.4) 50%,
+    transparent 67%
+  );
+  background-size: 200% 100%;
+  animation: shine 3s var(--ease-smooth) infinite;
+}
+
+/* ── 20. 视差容器 ── */
+[data-parallax] {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+/* ── 21. 磁吸按钮 ── */
+[data-magnetic] {
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+
+/* ── 22. 涟漪效果 ── */
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple 0.6s var(--ease-smooth);
+  pointer-events: none;
+}
+
+/* ── 23. 渐隐渐显 ── */
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+.breathe {
+  animation: breathe 2s var(--ease-smooth) infinite;
+}
+
+/* ── 24. 3D 卡片倾斜 ── */
+[data-tilt] {
+  transform-style: preserve-3d;
+  transition: transform var(--dur-fast) var(--ease-smooth);
+}
+
+/* ── 25. 滚动进度条 ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9998;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] { opacity: 1; transform: none; }
+}
