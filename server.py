@@ -91,14 +91,26 @@ store = Store()
 config = load_config()
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or config.get("secret_key") or secrets.token_urlsafe(32)
 app.jinja_env.auto_reload = True
+app.permanent_session_lifetime = 86400  # Session 有效期 24 小时
 
 # No blueprints — single-user mode
 
 # ── Admin Key (for dashboard & management endpoints) ──
 ADMIN_KEY = os.environ.get("ADMIN_KEY") or config.get("admin_key", "") or f"admin_{secrets.token_urlsafe(32)}"
 if not os.environ.get("ADMIN_KEY") and not config.get("admin_key", ""):
-    print(f"[admin] Auto-generated Admin Key: {ADMIN_KEY}")
-    print(f"[admin] Set ADMIN_KEY env var or add admin_key to config.yaml to persist.")
+    import logging
+    logging.warning("Admin Key auto-generated. Set ADMIN_KEY env var or config.yaml to persist.")
+    # 不再明文打印密钥到 stdout，避免日志泄露
+
+# ── 安全响应头 ──
+@app.after_request
+def set_security_headers(resp):
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    resp.headers['X-XSS-Protection'] = '1; mode=block'
+    resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    resp.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    return resp
 
 # ── API Routes ──
 # ── API Key 鉴权模块 ──
@@ -187,32 +199,100 @@ def require_api_key(f):
 
 
 def require_admin(f):
-    """装饰器：验证 Admin Key，保护管理端点和仪表盘 API"""
+    """装饰器：验证 Admin Key（支持 Session Cookie 或 Header），保护管理端点和仪表盘 API"""
     @wraps(f)
     def wrapper(*args, **kwargs):
+        # 优先检查 Session Cookie（前端页面用）
+        if session.get("is_admin"):
+            return f(*args, **kwargs)
+        # 其次检查 Header / query param（API 调用用）
         key = request.headers.get('X-Admin-Key', '') or request.args.get('admin_key', '')
-        if not key or not secrets.compare_digest(key, ADMIN_KEY):
-            return jsonify({"error": "unauthorized", "hint": "Pass X-Admin-Key header or ?admin_key= query param"}), 401
-        return f(*args, **kwargs)
+        if key and secrets.compare_digest(key, ADMIN_KEY):
+            return f(*args, **kwargs)
+        return jsonify({"error": "unauthorized", "hint": "Visit /admin/login to authenticate"}), 401
     return wrapper
 
 
 def _get_or_create_demo_key():
-    """Get or create a persistent demo key for the public demo page (SQLite version)"""
+    """Get or create a persistent demo key for the public demo page (SQLite version).
+    Demo key uses 'free' tier (20/day) to prevent abuse."""
     demo_file = os.path.join(BASE_DIR, '.demo_key')
     if os.path.exists(demo_file):
         with open(demo_file, 'r') as f:
             raw = f.read().strip()
         if store.get_api_key_by_hash(_hash(raw)):
             return raw
-    raw = f"{KEY_PREFIX}team_{secrets.token_urlsafe(32)}"
-    store.create_api_key(_hash(raw), raw[:15] + "...", "team", "demo_user")
+    raw = f"{KEY_PREFIX}free_{secrets.token_urlsafe(32)}"
+    store.create_api_key(_hash(raw), raw[:15] + "...", "free", "demo_user")
     with open(demo_file, 'w') as f:
         f.write(raw)
     return raw
 
 
+# ── Admin 登录（Session Cookie 模式）──
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    """Admin 登录页：输入 Admin Key 后设置 Session Cookie，避免密钥泄露到前端"""
+    if request.method == "POST":
+        key = request.form.get("admin_key", "") or (request.get_json(silent=True) or {}).get("admin_key", "")
+        if key and secrets.compare_digest(key, ADMIN_KEY):
+            session.clear()
+            session["is_admin"] = True
+            session.permanent = True
+            next_url = request.args.get("next", "/dashboard")
+            if request.is_json or request.headers.get("Accept") == "application/json":
+                return jsonify({"ok": True, "redirect": next_url})
+            return redirect(next_url)
+        if request.is_json or request.headers.get("Accept") == "application/json":
+            return jsonify({"error": "invalid admin key"}), 401
+        return render_template("admin_login.html", error="密钥错误"), 401
+    return render_template("admin_login.html", error=None)
+
+
+@app.route("/admin/logout")
+def admin_logout():
+    """清除 Admin Session"""
+    session.clear()
+    return redirect("/")
+
+
 # ── 对外付费 API ──
+
+# ── SSRF 防护：统一的内网地址检查（含 IPv6）──
+PRIVATE_RANGES = [
+    __import__("ipaddress").ip_network("127.0.0.0/8"),
+    __import__("ipaddress").ip_network("10.0.0.0/8"),
+    __import__("ipaddress").ip_network("172.16.0.0/12"),
+    __import__("ipaddress").ip_network("192.168.0.0/16"),
+    __import__("ipaddress").ip_network("169.254.0.0/16"),
+    __import__("ipaddress").ip_network("0.0.0.0/8"),
+    __import__("ipaddress").ip_network("100.64.0.0/10"),   # CGNAT
+    __import__("ipaddress").ip_network("::1/128"),          # IPv6 loopback
+    __import__("ipaddress").ip_network("fc00::/7"),         # IPv6 ULA
+    __import__("ipaddress").ip_network("fe80::/10"),        # IPv6 link-local
+    __import__("ipaddress").ip_network("::ffff:0:0/96"),    # IPv4-mapped IPv6
+]
+
+
+def _is_private_url(url: str) -> bool:
+    """检查 URL 是否指向内网地址（防 SSRF），返回 True 表示危险"""
+    from urllib.parse import urlparse
+    import ipaddress, socket
+    host = urlparse(url).hostname or ""
+    if not host:
+        return True
+    try:
+        # 检查所有解析结果（防 DNS rebinding）
+        for info in socket.getaddrinfo(host, None):
+            addr = info[4][0]
+            ip = ipaddress.ip_address(addr)
+            for r in PRIVATE_RANGES:
+                if ip in r:
+                    return True
+    except (socket.gaierror, ValueError):
+        return True
+    return False
 
 @app.route("/api/v1/trending")
 @require_api_key
@@ -289,22 +369,9 @@ def api_fetch_article():
     if not url or not url.startswith(("http://", "https://")):
         return jsonify({"error": "invalid url"}), 400
 
-    # 禁止访问内网地址
-    from urllib.parse import urlparse
-    import ipaddress, socket
-    host = urlparse(url).hostname or ""
-    if not host:
-        return jsonify({"error": "invalid url"}), 400
-    try:
-        addr = socket.getaddrinfo(host, None)[0][4][0]
-        ip = ipaddress.ip_address(addr)
-        for r in [ipaddress.ip_network("127.0.0.0/8"), ipaddress.ip_network("10.0.0.0/8"),
-                   ipaddress.ip_network("172.16.0.0/12"), ipaddress.ip_network("192.168.0.0/16"),
-                   ipaddress.ip_network("169.254.0.0/16"), ipaddress.ip_network("0.0.0.0/8")]:
-            if ip in r:
-                return jsonify({"error": "internal addresses not allowed"}), 403
-    except (socket.gaierror, ValueError):
-        return jsonify({"error": "cannot resolve host"}), 400
+    # SSRF 防护（含 IPv6）
+    if _is_private_url(url):
+        return jsonify({"error": "internal addresses not allowed"}), 403
 
     try:
         resp = requests.get(url, timeout=20, headers={
@@ -353,21 +420,9 @@ def api_download_article():
     if not url or not url.startswith(("http://", "https://")):
         return jsonify({"error": "invalid url"}), 400
 
-    from urllib.parse import urlparse
-    import ipaddress, socket
-    host = urlparse(url).hostname or ""
-    if not host:
-        return jsonify({"error": "invalid url"}), 400
-    try:
-        addr = socket.getaddrinfo(host, None)[0][4][0]
-        ip = ipaddress.ip_address(addr)
-        for r in [ipaddress.ip_network("127.0.0.0/8"), ipaddress.ip_network("10.0.0.0/8"),
-                   ipaddress.ip_network("172.16.0.0/12"), ipaddress.ip_network("192.168.0.0/16"),
-                   ipaddress.ip_network("169.254.0.0/16"), ipaddress.ip_network("0.0.0.0/8")]:
-            if ip in r:
-                return jsonify({"error": "internal addresses not allowed"}), 403
-    except (socket.gaierror, ValueError):
-        return jsonify({"error": "cannot resolve host"}), 400
+    # SSRF 防护（含 IPv6）
+    if _is_private_url(url):
+        return jsonify({"error": "internal addresses not allowed"}), 403
 
     try:
         resp = requests.get(url, timeout=20, headers={
@@ -525,7 +580,10 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", admin_key=ADMIN_KEY)
+    # 未登录则跳转登录页
+    if not session.get("is_admin"):
+        return redirect("/admin/login?next=/dashboard")
+    return render_template("dashboard.html")
 
 
 @app.route("/demo")
@@ -536,8 +594,7 @@ def demo():
 
 @app.route("/console")
 def console_page():
-    demo_key = _get_or_create_demo_key()
-    return render_template("console.html", demo_key=demo_key, admin_key=ADMIN_KEY, sources=SOURCE_LABELS)
+    return render_template("console.html", sources=SOURCE_LABELS)
 
 
 @app.route("/github")
@@ -610,6 +667,12 @@ def script_market_page():
     return render_template("script_market.html")
 
 
+@app.route("/ai-workflow")
+def ai_workflow_page():
+    """AI 工作流页面 — 用户可挑选 AI 工作流用于数据/资源获取和数据分析"""
+    return render_template("ai_workflow.html")
+
+
 @app.route("/docs")
 def docs():
     return render_template("docs.html")
@@ -644,7 +707,6 @@ def favicon():
 
 
 @app.route("/api/stats")
-@require_admin
 def api_stats():
     raw = store.stats()
     sources = {}
@@ -654,7 +716,6 @@ def api_stats():
 
 
 @app.route("/api/source-labels")
-@require_admin
 def api_source_labels():
     """返回来源 ID → 中文名 映射 + 标签映射"""
     return jsonify({
@@ -664,7 +725,6 @@ def api_source_labels():
 
 
 @app.route("/api/items")
-@require_admin
 def api_items():
     source = request.args.get("source", "")
     tag = request.args.get("tag", "")
@@ -719,7 +779,6 @@ def api_items():
 
 
 @app.route("/api/filters")
-@require_admin
 def api_filters():
     stats = store.stats()
     sources = [SOURCE_LABELS.get(k, k) for k in stats.get("sources", {}).keys()]
@@ -743,37 +802,12 @@ def api_read():
 
     # SSRF protection: validate URL before fetching
     from urllib.parse import urlparse
-    import socket
-    import ipaddress
-
     parsed = urlparse(url)
-    if parsed.scheme not in ("https",):
-        return jsonify({"error": "仅支持 https:// 协议"}), 400
+    if parsed.scheme not in ("https", "http"):
+        return jsonify({"error": "仅支持 http(s):// 协议"}), 400
 
-    hostname = parsed.hostname or ""
-    if not hostname:
-        return jsonify({"error": "无法解析主机名"}), 400
-
-    # Block private/reserved IPs
-    private_ranges = [
-        ipaddress.ip_network("127.0.0.0/8"),
-        ipaddress.ip_network("10.0.0.0/8"),
-        ipaddress.ip_network("172.16.0.0/12"),
-        ipaddress.ip_network("192.168.0.0/16"),
-        ipaddress.ip_network("169.254.0.0/16"),
-        ipaddress.ip_network("0.0.0.0/8"),
-        ipaddress.ip_network("::1/128"),
-        ipaddress.ip_network("fc00::/7"),
-        ipaddress.ip_network("fe80::/10"),
-    ]
-    try:
-        addr = socket.getaddrinfo(hostname, None)[0][4][0]
-        ip = ipaddress.ip_address(addr)
-        for r in private_ranges:
-            if ip in r:
-                return jsonify({"error": "禁止访问内网地址"}), 403
-    except (socket.gaierror, ValueError):
-        return jsonify({"error": "无法解析目标主机"}), 400
+    if _is_private_url(url):
+        return jsonify({"error": "禁止访问内网地址"}), 403
 
     proxy = config.get("proxy", "")
     proxies = {"http": proxy, "https": proxy} if proxy else None
@@ -1019,6 +1053,130 @@ def api_toggle_fetch():
         else:
             _monitor.pause()
     return jsonify({"fetching": _fetching})
+
+
+# ── AI 助手聊天 ──
+
+@app.route("/api/ai/config", methods=["GET"])
+@require_admin
+def api_ai_config_get():
+    """获取 AI API 配置"""
+    ai_cfg = config.get("ai", {})
+    return jsonify({
+        "api_url": ai_cfg.get("api_url", ""),
+        "api_key": ai_cfg.get("api_key", ""),
+        "model": ai_cfg.get("model", "gpt-4o-mini"),
+    })
+
+
+@app.route("/api/ai/config", methods=["POST"])
+@require_admin
+def api_ai_config_set():
+    """保存 AI API 配置到 config.yaml"""
+    data = request.get_json(silent=True) or {}
+    api_url = data.get("api_url", "").strip()
+    api_key = data.get("api_key", "").strip()
+    model = data.get("model", "gpt-4o-mini").strip()
+
+    # 更新内存中的配置
+    if "ai" not in config:
+        config["ai"] = {}
+    config["ai"]["api_url"] = api_url
+    if api_key:
+        config["ai"]["api_key"] = api_key
+    config["ai"]["model"] = model
+
+    # 持久化到 config.yaml
+    try:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"写入配置文件失败: {e}"}), 500
+
+    return jsonify({"ok": True, "model": model})
+
+
+@app.route("/api/ai/chat", methods=["POST"])
+@require_admin
+def api_ai_chat():
+    """AI 助手聊天接口：代理转发到 LLM API（OpenAI 兼容格式）"""
+    data = request.get_json(silent=True) or {}
+    messages = data.get("messages", [])
+    context = data.get("context", "")  # 可选：当前阅读的文章内容
+
+    if not messages:
+        return jsonify({"error": "缺少 messages"}), 400
+
+    ai_cfg = config.get("ai", {})
+    api_url = ai_cfg.get("api_url", "")
+    api_key = ai_cfg.get("api_key", "")
+    model = ai_cfg.get("model", "gpt-4o-mini")
+
+    # 如果未配置 AI API，返回演示回复
+    if not api_url or not api_key:
+        last_msg = messages[-1].get("content", "") if messages else ""
+        demo_reply = _demo_ai_reply(last_msg, context)
+        return jsonify({
+            "reply": demo_reply,
+            "model": "demo-mode",
+            "note": "未配置 AI API，当前为演示模式。在 config.yaml 中添加 ai 配置以启用真实 AI。"
+        })
+
+    # 构建系统提示
+    system_prompt = {
+        "role": "system",
+        "content": (
+            "你是事件监视器的 AI 助手，帮助用户分析技术资讯、CVE 漏洞、GitHub 趋势等。"
+            "回答简洁专业，使用中文。如果用户提供了文章上下文，请基于该内容回答。"
+        )
+    }
+    if context:
+        system_prompt["content"] += f"\n\n当前阅读的文章内容（供参考）：\n{context[:8000]}"
+
+    full_messages = [system_prompt] + messages
+
+    try:
+        proxy = config.get("proxy", "")
+        proxies = {"http": proxy, "https": proxy} if proxy else None
+        resp = requests.post(
+            api_url,
+            json={
+                "model": model,
+                "messages": full_messages,
+                "max_tokens": 2000,
+                "temperature": 0.7,
+            },
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            timeout=60,
+            proxies=proxies,
+        )
+        if resp.status_code != 200:
+            return jsonify({"error": f"AI API 返回 {resp.status_code}: {resp.text[:200]}"}), 502
+
+        result = resp.json()
+        reply = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        return jsonify({"reply": reply, "model": model})
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "AI API 请求超时"}), 504
+    except Exception as e:
+        return jsonify({"error": f"AI 请求失败: {str(e)[:200]}"}), 500
+
+
+def _demo_ai_reply(user_msg: str, context: str) -> str:
+    """演示模式的 AI 回复（未配置真实 API 时使用）"""
+    msg_lower = user_msg.lower()
+    if any(kw in msg_lower for kw in ["你好", "hello", "hi", "嗨"]):
+        return "你好！我是事件监视器的 AI 助手。你可以问我关于资讯、CVE 漏洞、GitHub 趋势等问题。\n\n⚠️ 当前为演示模式，请在 config.yaml 中配置 AI API 以启用完整功能。"
+    if any(kw in msg_lower for kw in ["cve", "漏洞", "安全", "vulnerability"]):
+        return "关于安全漏洞：\n\n1. 建议关注 CVSS 评分 ≥ 7.0 的高危漏洞\n2. 优先修复已有公开 PoC 的漏洞\n3. 定期检查 NVD 数据库更新\n\n⚠️ 演示模式 — 配置 AI API 后可获得更详细的分析。"
+    if any(kw in msg_lower for kw in ["github", "趋势", "trending", "开源"]):
+        return "GitHub 趋势分析：\n\n1. 关注 stars 今日增长 >100 的项目\n2. 留意新兴语言和框架\n3. 检查是否有安全相关的工具更新\n\n⚠️ 演示模式 — 配置 AI API 后可获得实时分析。"
+    if context:
+        return f"我注意到你正在阅读一篇文章。基于内容摘要，这是一个关于技术话题的资讯。\n\n如果你配置了 AI API，我可以为你做更深入的内容分析、摘要提取、关键点总结等。\n\n⚠️ 演示模式 — 请在 config.yaml 中添加 ai 配置。"
+    return f"收到你的消息：「{user_msg[:100]}」\n\n⚠️ 当前为演示模式。在 config.yaml 中配置 ai.api_url 和 ai.api_key 后，我将能够提供真实的 AI 对话能力，包括：\n- 文章内容分析与摘要\n- CVE 漏洞风险评估\n- 技术趋势解读\n- 代码片段解释"
 
 
 # ── 后台监控调度 ──

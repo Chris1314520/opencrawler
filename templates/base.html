@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico">
     <title>{% block title %}OpenCrawler{% endblock %}</title>
     <link rel="stylesheet" href="/static/product.css">
     <link rel="stylesheet" href="/static/animations.css">
+    <link rel="stylesheet" href="/static/ai-assistant.css">
     <style>
     .gold-nav{color:#b45309 !important;font-weight:600}
     .gold-nav:hover{color:#92400e !important}
@@ -50,7 +52,18 @@
     <div class="pt-overlay" id="ptOverlay"></div>
     <nav class="navbar">
         <div class="navbar-inner">
-            <a href="/" class="nav-logo">OpenCrawler</a>
+            <a href="/" class="nav-logo">
+                <svg width="22" height="22" viewBox="0 0 64 64" style="flex-shrink:0">
+                    <defs><linearGradient id="navlogo" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a1a1a"/><stop offset="100%" stop-color="#2d2d2d"/></linearGradient></defs>
+                    <rect width="64" height="64" rx="14" fill="url(#navlogo)"/>
+                    <circle cx="32" cy="32" r="20" fill="none" stroke="#d4af37" stroke-width="2.5" opacity="0.3"/>
+                    <circle cx="32" cy="32" r="14" fill="none" stroke="#d4af37" stroke-width="2.5" opacity="0.5"/>
+                    <circle cx="32" cy="32" r="8" fill="none" stroke="#d4af37" stroke-width="2.5" opacity="0.7"/>
+                    <circle cx="32" cy="32" r="3" fill="#d4af37"/>
+                    <path d="M32 12 L32 20 M32 44 L32 52 M12 32 L20 32 M44 32 L52 32" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+                OpenCrawler
+            </a>
             <div class="nav-links">
                 <a href="/console" class="{% if active_page == 'console' %}active{% endif %}">资讯站</a>
                 <a href="/platforms" class="{% if active_page == 'platforms' %}active{% endif %}">平台</a>
@@ -59,6 +72,7 @@
                 <a href="/software" class="{% if active_page == 'software' %}active{% endif %}">软件站</a>
                 <a href="/agent-deploy" class="{% if active_page == 'agent_deploy' %}active{% endif %} gold-nav">Agent部署</a>
                 <a href="/script-market" class="{% if active_page == 'script_market' %}active{% endif %}">脚本市场</a>
+                <a href="/ai-workflow" class="{% if active_page == 'ai_workflow' %}active{% endif %} gold-nav">AI工作流</a>
                 <a href="/about" class="{% if active_page == 'about' %}active{% endif %} gold-nav">开发实践</a>
             </div>
             <a href="/console" class="nav-cta-gold">OpenCrawler</a>
@@ -103,5 +117,6 @@
     </script>
     {% block scripts %}{% endblock %}
     <script src="/static/animations.js"></script>
+    <script src="/static/ai-assistant.js"></script>
 </body>
 </html>

@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════
+   全局 AI 助手 — 自包含深色主题（不依赖页面 CSS 变量）
+   ═══════════════════════════════════════════════════ */
+
+/* ── 悬浮按钮 ── */
+#gai-fab{
+  position:fixed;right:20px;bottom:20px;z-index:10000;
+  width:52px;height:52px;border-radius:50%;cursor:pointer;
+  background:#58a6ff;border:none;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(88,166,255,.4);
+  transition:transform .2s,box-shadow .2s;
+}
+#gai-fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 28px rgba(88,166,255,.5)}
+#gai-fab:active{transform:scale(.95)}
+#gai-fab svg{width:24px;height:24px;color:#fff}
+#gai-fab .gai-badge{
+  position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-radius:50%;
+  background:#3fb950;border:2px solid #0d1117;font-size:9px;
+  display:none;align-items:center;justify-content:center;color:#fff;font-weight:700;
+}
+#gai-fab .gai-badge.show{display:flex}
+
+/* ── 页面跳转提示小字 ── */
+#gai-toast{
+  position:fixed;right:84px;bottom:24px;z-index:9999;
+  max-width:260px;padding:8px 14px;
+  background:#161b22;border:1px solid #30363d;border-radius:10px;
+  color:#8b949e;font-size:12px;line-height:1.5;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  opacity:0;transform:translateX(20px);pointer-events:none;
+  transition:opacity .3s,transform .3s;
+}
+#gai-toast.show{opacity:1;transform:translateX(0)}
+#gai-toast .toast-name{color:#58a6ff;font-weight:600}
+#gai-toast .toast-page{color:#c9d1d9;font-weight:500}
+
+/* ── 侧边栏 ── */
+#gai-sidebar{
+  position:fixed;top:0;right:0;bottom:0;width:400px;z-index:10001;
+  background:#0d1117;border-left:1px solid #30363d;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,.4);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;
+}
+#gai-sidebar.open{transform:translateX(0)}
+#gai-sidebar.dragging{transition:none}
+
+/* 拖拽手柄 */
+#gai-resize{
+  position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize;
+  z-index:10002;transition:background .15s;
+}
+#gai-resize:hover,#gai-resize.active{background:#58a6ff}
+
+/* 头部 */
+.gai-header{
+  padding:12px 16px;border-bottom:1px solid #30363d;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(88,166,255,.08),transparent);
+}
+.gai-header .gai-icon{
+  width:28px;height:28px;border-radius:8px;background:#58a6ff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(88,166,255,.15);flex-shrink:0;
+}
+.gai-header .gai-icon svg{width:16px;height:16px;color:#fff}
+.gai-header .gai-title-wrap{flex:1;min-width:0}
+.gai-header .gai-title{font-size:14px;font-weight:600;color:#c9d1d9}
+.gai-header .gai-title .gai-user-name{color:#58a6ff}
+.gai-header .gai-status{font-size:10px;color:#8b949e;display:flex;align-items:center;gap:4px}
+.gai-header .gai-status .dot{width:6px;height:6px;border-radius:50%;background:#3fb950}
+.gai-header .gai-btn{
+  width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;
+  background:transparent;color:#8b949e;font-size:14px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;
+}
+.gai-header .gai-btn:hover{background:rgba(255,255,255,.06);color:#c9d1d9}
+.gai-header .gai-btn svg{width:14px;height:14px}
+
+/* 上下文栏 */
+.gai-context-bar{
+  padding:6px 12px;background:rgba(88,166,255,.06);border-bottom:1px solid #30363d;
+  font-size:11px;color:#8b949e;display:none;align-items:center;gap:6px;flex-shrink:0;
+}
+.gai-context-bar.show{display:flex}
+.gai-context-bar .ctx-label{color:#58a6ff;font-weight:600}
+.gai-context-bar .ctx-clear{cursor:pointer;color:#8b949e;margin-left:auto;padding:2px 6px;border-radius:4px;transition:all .15s}
+.gai-context-bar .ctx-clear:hover{color:#f85149;background:rgba(248,81,73,.08)}
+
+/* 聊天内页面位置提示 */
+.gai-page-indicator{
+  padding:5px 12px;background:rgba(88,166,255,.04);border-bottom:1px solid #30363d;
+  font-size:11px;color:#8b949e;display:flex;align-items:center;gap:5px;flex-shrink:0;
+}
+.gai-page-indicator .pi-name{color:#58a6ff;font-weight:600}
+.gai-page-indicator .pi-arrow{opacity:.4}
+.gai-page-indicator .pi-page{color:#c9d1d9;font-weight:500}
+
+/* 工作流选择器 */
+.gai-workflow-bar{
+  padding:6px 12px;border-bottom:1px solid #30363d;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+}
+.gai-workflow-label{font-size:10px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.gai-workflow-select{
+  flex:1;background:rgba(255,255,255,.03);border:1px solid #30363d;
+  color:#c9d1d9;padding:4px 8px;border-radius:6px;font-size:11px;
+  font-family:inherit;cursor:pointer;transition:border-color .15s;
+  min-width:0;
+}
+.gai-workflow-select:focus{outline:none;border-color:#58a6ff}
+.gai-workflow-select option{background:#161b22;color:#c9d1d9}
+
+/* 消息区 */
+.gai-messages{flex:1;overflow-y:auto;padding:16px;scroll-behavior:smooth}
+.gai-messages::-webkit-scrollbar{width:6px}
+.gai-messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+.gai-messages::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.15)}
+
+.gai-msg{margin-bottom:16px;animation:gaiMsgIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes gaiMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.gai-msg-head{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.gai-msg-avatar{
+  width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+.gai-msg.user .gai-msg-avatar{background:rgba(88,166,255,.15);color:#58a6ff}
+.gai-msg.assistant .gai-msg-avatar{background:rgba(88,166,255,.15);color:#58a6ff}
+.gai-msg-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#8b949e}
+.gai-msg-time{font-size:9px;color:#8b949e;margin-left:auto}
+.gai-msg-bubble{
+  padding:10px 14px;border-radius:4px 12px 12px 12px;font-size:13px;line-height:1.7;
+  word-break:break-word;border:1px solid #30363d;color:#e6edf3;
+}
+.gai-msg.user .gai-msg-bubble{background:rgba(88,166,255,.15);border-color:rgba(88,166,255,.3)}
+.gai-msg.assistant .gai-msg-bubble{background:#21262d;border-color:#484f58}
+.gai-msg.assistant .gai-msg-bubble p{margin-bottom:8px}
+.gai-msg.assistant .gai-msg-bubble p:last-child{margin-bottom:0}
+.gai-msg.assistant .gai-msg-bubble code{
+  background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;
+  font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;
+}
+.gai-msg.assistant .gai-msg-bubble pre{
+  background:#0d1117;padding:10px 12px;border-radius:6px;overflow-x:auto;
+  font-size:12px;margin:8px 0;border:1px solid #30363d;
+}
+.gai-msg.assistant .gai-msg-bubble ul,.gai-msg.assistant .gai-msg-bubble ol{margin:6px 0 6px 20px}
+.gai-msg.assistant .gai-msg-bubble li{margin-bottom:3px}
+.gai-msg.assistant .gai-msg-bubble strong{color:#58a6ff}
+
+/* 打字指示器 */
+.gai-typing{display:flex;gap:4px;padding:8px 14px}
+.gai-typing span{
+  width:7px;height:7px;border-radius:50%;background:#8b949e;
+  animation:gaiTyping 1.4s infinite;
+}
+.gai-typing span:nth-child(2){animation-delay:.2s}
+.gai-typing span:nth-child(3){animation-delay:.4s}
+@keyframes gaiTyping{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1.2)}}
+
+/* 快捷操作 */
+.gai-quick{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;flex-shrink:0;border-bottom:1px solid #30363d}
+.gai-quick-btn{
+  padding:4px 10px;border-radius:14px;font-size:11px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid #30363d;
+  color:#8b949e;transition:all .15s;white-space:nowrap;
+}
+.gai-quick-btn:hover{background:rgba(88,166,255,.15);border-color:#58a6ff;color:#c9d1d9}
+
+/* 输入区 */
+.gai-input-area{padding:12px;border-top:1px solid #30363d;flex-shrink:0}
+.gai-input-wrap{display:flex;align-items:flex-end;gap:8px}
+.gai-input{
+  flex:1;background:#161b22;border:1px solid #30363d;
+  color:#c9d1d9;padding:10px 14px;border-radius:10px;font-size:13px;
+  font-family:inherit;resize:none;min-height:42px;max-height:120px;
+  line-height:1.5;transition:border-color .15s;
+}
+.gai-input:focus{outline:none;border-color:#58a6ff}
+.gai-input::placeholder{color:#8b949e}
+.gai-send{
+  width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;
+  background:#58a6ff;color:#fff;display:flex;align-items:center;justify-content:center;
+  transition:transform .1s,opacity .15s;flex-shrink:0;
+}
+.gai-send:hover{opacity:.85}
+.gai-send:active{transform:scale(.92)}
+.gai-send:disabled{opacity:.4;cursor:default}
+.gai-send svg{width:16px;height:16px}
+.gai-input-hint{font-size:10px;color:#8b949e;margin-top:6px;text-align:center}
+
+/* ── API 设置面板 ── */
+#gai-settings{
+  position:absolute;inset:0;z-index:10003;background:#0d1117;
+  display:none;flex-direction:column;
+}
+#gai-settings.show{display:flex}
+.gai-settings-header{
+  padding:12px 16px;border-bottom:1px solid #30363d;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.gai-settings-header .sh-title{font-size:14px;font-weight:600;flex:1;color:#58a6ff}
+.gai-settings-body{flex:1;overflow-y:auto;padding:16px}
+.gai-settings-body .cfg-group{margin-bottom:18px}
+.gai-settings-body .cfg-label{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.gai-settings-body .cfg-input{
+  width:100%;background:#161b22;border:1px solid #30363d;
+  color:#c9d1d9;padding:9px 12px;border-radius:8px;font-size:13px;
+  font-family:inherit;transition:border-color .15s;box-sizing:border-box;
+}
+.gai-settings-body .cfg-input:focus{outline:none;border-color:#58a6ff}
+.gai-settings-body .cfg-hint{font-size:11px;color:#8b949e;margin-top:4px;line-height:1.4}
+.gai-settings-body .cfg-save{
+  width:100%;padding:10px;border-radius:8px;border:none;cursor:pointer;
+  background:#58a6ff;color:#fff;font-size:13px;font-weight:600;transition:opacity .15s;
+}
+.gai-settings-body .cfg-save:hover{opacity:.85}
+#gai-cfg-ainame-save{margin-bottom:4px}
+.gai-settings-body .cfg-status{font-size:12px;margin-top:8px;text-align:center}
+.gai-settings-body .cfg-status.ok{color:#3fb950}
+.gai-settings-body .cfg-status.err{color:#f85149}
+.gai-settings-body .cfg-divider{height:1px;background:#30363d;margin:16px 0}
+.gai-settings-body .cfg-info{font-size:12px;color:#8b949e;line-height:1.6;padding:10px 12px;background:rgba(88,166,255,.06);border-radius:8px;border:1px solid #30363d}
+
+/* ── 用户 ID 输入弹窗 ── */
+#gai-user-modal{
+  position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,.6);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+}
+#gai-user-modal.show{display:flex}
+.gai-modal-card{
+  background:#0d1117;border:1px solid #30363d;border-radius:16px;
+  padding:32px 28px;max-width:380px;width:90%;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+  animation:gaiModalIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes gaiModalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+.gai-modal-card .modal-icon{
+  width:56px;height:56px;border-radius:16px;margin:0 auto 16px;
+  background:linear-gradient(135deg,#58a6ff,#1a73e8);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(88,166,255,.3);
+}
+.gai-modal-card .modal-icon svg{width:28px;height:28px;color:#fff}
+.gai-modal-card h3{text-align:center;font-size:20px;font-weight:700;color:#c9d1d9;margin-bottom:6px}
+.gai-modal-card p{text-align:center;font-size:13px;color:#8b949e;margin-bottom:20px;line-height:1.6}
+.gai-modal-card .modal-input-wrap{position:relative;margin-bottom:16px}
+.gai-modal-card .modal-input{
+  width:100%;padding:12px 16px;border-radius:10px;
+  background:#161b22;border:1px solid #30363d;
+  color:#c9d1d9;font-size:15px;font-family:inherit;
+  transition:border-color .15s;box-sizing:border-box;text-align:center;
+}
+.gai-modal-card .modal-input:focus{outline:none;border-color:#58a6ff}
+.gai-modal-card .modal-input::placeholder{color:#484f58}
+.gai-modal-card .modal-btns{display:flex;gap:10px}
+.gai-modal-card .modal-btn{
+  flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:all .15s;
+}
+.gai-modal-card .modal-btn.primary{background:#58a6ff;color:#fff}
+.gai-modal-card .modal-btn.primary:hover{opacity:.85}
+.gai-modal-card .modal-btn.secondary{background:rgba(255,255,255,.06);color:#8b949e;border:1px solid #30363d}
+.gai-modal-card .modal-btn.secondary:hover{color:#c9d1d9}
+
+@media(max-width:768px){
+  #gai-sidebar{width:100%}
+  #gai-toast{right:20px;bottom:84px;max-width:calc(100vw - 40px)}
+}

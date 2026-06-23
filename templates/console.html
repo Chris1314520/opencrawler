@@ -3,8 +3,6 @@
 {% set active_page = 'console' %}
 
 {% block head %}
-<meta name="demo-key" content="{{ demo_key }}">
-<meta name="admin-key" content="{{ admin_key }}">
 <style>
 .console-wrap{max-width:1100px;margin:0 auto;padding:24px}
 
@@ -57,10 +55,13 @@
 
 /* Toolbar */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
-.toolbar .search-box{flex:1;min-width:200px;position:relative}
-.toolbar .search-box input{width:100%;padding:10px 16px 10px 38px;background:#fff;border:1.5px solid var(--border);border-radius:24px;font-size:14px;color:var(--text);transition:all .2s}
+.toolbar .search-box{flex:1;min-width:200px;position:relative;display:flex;align-items:center}
+.toolbar .search-box input{width:100%;padding:10px 44px 10px 38px;background:#fff;border:1.5px solid var(--border);border-radius:24px;font-size:14px;color:var(--text);transition:all .2s}
 .toolbar .search-box input:focus{outline:none;border-color:#1a1a1a}
-.toolbar .search-box .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.toolbar .search-box .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;z-index:1}
+.toolbar .search-box .search-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#d4af37;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:1}
+.toolbar .search-box .search-btn:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 2px 8px rgba(212,175,55,.3)}
+.toolbar .search-box .search-btn:active{transform:translateY(-50%) scale(0.95)}
 .toolbar button{padding:9px 18px;border-radius:20px;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text);font-weight:500;transition:all .15s;white-space:nowrap}
 .toolbar button:hover{border-color:#1a1a1a}
 .toolbar button.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -135,9 +136,13 @@
 
   <!-- Toolbar -->
   <div class="toolbar">
+    <!-- 隐藏诱饵 input，防止浏览器自动填充真实输入框 -->
+    <input type="text" style="display:none" autocomplete="off" aria-hidden="true">
+    <input type="password" style="display:none" autocomplete="off" aria-hidden="true">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="搜索资讯..." onkeydown="if(event.key==='Enter')search()">
+      <input type="text" id="searchInput" placeholder="搜索资讯..." autocomplete="new-password" onkeydown="if(event.key==='Enter')search()">
+      <button class="search-btn" onclick="search()" title="搜索">🔍</button>
     </div>
     <select id="hoursSelect" onchange="currentHours=this.value;loadData()">
       <option value="">全部时间</option>
@@ -172,8 +177,6 @@
 
 {% block scripts %}
 <script>
-const DEMO_KEY = document.querySelector('meta[name="demo-key"]')?.content || '';
-const ADMIN_KEY = document.querySelector('meta[name="admin-key"]')?.content || '';
 let currentSource = '';
 let currentHours = '';
 let currentKeyword = '';
@@ -277,9 +280,16 @@ function loadData(append) {
   if (currentKeyword) params += '&keyword=' + encodeURIComponent(currentKeyword);
 
   fetch('/api/items?' + params, {
-    headers: { 'X-Admin-Key': ADMIN_KEY }
+    credentials: 'same-origin'
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (r.status === 401) {
+      document.getElementById('itemsList').innerHTML = '<div class="empty-state"><span class="icon">🔒</span><h3>需要登录</h3><p>请先<a href="/admin/login" style="color:var(--accent)">登录 Admin</a>后查看资讯数据</p></div>';
+      document.getElementById('statsText').textContent = '未登录';
+      return {items: [], total: 0};
+    }
+    return r.json();
+  })
   .then(function(data) {
     var items = data.items || [];
     if (append) {

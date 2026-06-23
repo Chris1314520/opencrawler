@@ -18,6 +18,7 @@ data/stash_config.yaml
 
 # 密钥文件
 .demo_key
+api_keys.json
 api_keys.json.bak
 
 # 日志
@@ -41,3 +42,4 @@ Thumbs.db
 CLAUDE_CODE_MEMORY.md
 CLAUDE_CODE_SKILLS.md
 AGENT_RESOURCES_INDEX.md
+data.db

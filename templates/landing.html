@@ -129,7 +129,7 @@
 .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 @media(max-width:900px){.service-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.service-grid{grid-template-columns:1fr}}
-.service-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:28px 24px;transition:transform 0.3s var(--ease-spring),box-shadow 0.3s var(--ease-smooth),border-color 0.3s var(--ease-smooth);text-decoration:none;color:var(--text);display:flex;flex-direction:column;opacity:0;transform:translateY(30px);will-change:transform}
+.service-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:28px 24px;transition:transform 0.3s var(--ease-spring),box-shadow 0.3s var(--ease-smooth),border-color 0.3s var(--ease-spring);text-decoration:none;color:var(--text);display:flex;flex-direction:column;will-change:transform}
 .service-card:hover{border-color:#1a1a1a;box-shadow:0 12px 32px rgba(0,0,0,.08);text-decoration:none;transform:translateY(-6px)}
 .service-card:active{transform:translateY(-2px) scale(0.99)}
 .service-card .card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
@@ -483,8 +483,8 @@ document.addEventListener('click', function(e) {
 // Service cards scroll reveal
 var cards = document.querySelectorAll('.service-card');
 cards.forEach(function(card, i) {
-  gsap.from(card, {
-    y: 40, autoAlpha: 0, duration: .5, ease: "power2.out",
+  gsap.fromTo(card, {y: 40, autoAlpha: 0}, {
+    y: 0, autoAlpha: 1, duration: .5, ease: "power2.out",
     scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none none" }
   });
 });
@@ -492,8 +492,8 @@ cards.forEach(function(card, i) {
 // Highlights stagger
 var hlCards = document.querySelectorAll('.hl-card');
 hlCards.forEach(function(c, i) {
-  gsap.from(c, {
-    y: 20, autoAlpha: 0, duration: .4, delay: i * .08, ease: "power2.out",
+  gsap.fromTo(c, {y: 20, autoAlpha: 0}, {
+    y: 0, autoAlpha: 1, duration: .4, delay: i * .08, ease: "power2.out",
     scrollTrigger: { trigger: "#highlights", start: "top 80%", toggleActions: "play none none none" }
   });
 });
