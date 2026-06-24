@@ -98,7 +98,7 @@ class Store:
         for attempt in range(3):
             try:
                 cur = self.conn.execute(
-                    """INSERT OR IGNORE INTO items
+                    """INSERT OR REPLACE INTO items
                        (source, title, url, description, tags, extra, fetched_at)
                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
                     (source, title, url, description, tags_str, extra_str, int(fetched_at))

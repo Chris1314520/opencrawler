@@ -137,6 +137,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
 
                 duration = video.get("duration", 0)  # 秒
                 tname = video.get("tname", "")  # 分区名
+                cover_url = video.get("pic", "")  # 封面图
 
                 desc = (f"UP主: {author} | 播放: {self._fmt_num(views)} | "
                         f"点赞: {self._fmt_num(likes)} | "
@@ -163,6 +164,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                         "rank": rank,
                         "bvid": bvid,
                         "category": tname,
+                        "cover_url": cover_url,
                     },
                 })
 
@@ -231,6 +233,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                         "duration": video.get("duration", 0),
                         "rank": rank,
                         "bvid": bvid,
+                        "cover_url": video.get("pic", ""),
                     },
                 })
 
@@ -525,6 +528,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                 likes = video.get("likeCount", 0)
                 comments = video.get("commentCount", 0)
                 duration = video.get("duration", 0)
+                cover_url = video.get("coverUrl", "") or video.get("photoUrl", "")
 
                 desc = (f"作者: {author_name} | "
                         f"播放: {self._fmt_num(views)} | "
@@ -546,6 +550,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                         "duration": duration,
                         "rank": rank,
                         "photo_id": photo_id,
+                        "cover_url": cover_url,
                     },
                 })
 
@@ -647,6 +652,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                         "duration": video.get("duration", 0),
                         "rank": rank,
                         "photo_id": photo_id,
+                        "cover_url": video.get("coverUrl", "") or video.get("photoUrl", ""),
                     },
                 })
 
@@ -727,6 +733,20 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                 comments = self._parse_num(interact.get("commentCount", "0"))
                 favorites = self._parse_num(interact.get("collectedCount", "0"))
 
+                # 封面图：优先 imageList 第一张，其次 cover.url
+                cover_url = ""
+                image_list = note.get("imageList", [])
+                if image_list and isinstance(image_list, list):
+                    first_img = image_list[0]
+                    if isinstance(first_img, dict):
+                        cover_url = first_img.get("urlDefault", "") or first_img.get("url", "")
+                    elif isinstance(first_img, str):
+                        cover_url = first_img
+                if not cover_url:
+                    cover = note.get("cover", {})
+                    if isinstance(cover, dict):
+                        cover_url = cover.get("urlDefault", "") or cover.get("url", "")
+
                 note_url = (
                     f"https://www.xiaohongshu.com/explore/{note_id}"
                     if note_id else "https://www.xiaohongshu.com/"
@@ -750,6 +770,7 @@ class ShortVideoTrendingFetcher(BaseFetcher):
                         "duration": 0,
                         "rank": rank,
                         "note_id": note_id,
+                        "cover_url": cover_url,
                     },
                 })
 

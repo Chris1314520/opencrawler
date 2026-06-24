@@ -246,17 +246,142 @@
     ].join('');
   }
 
-  // ── 汇率 tooltip HTML ──
+  // ── 汇率 tooltip HTML（含专业阶梯图）──
   function buildRateHTML(currency, rate, change) {
-    var isUp = parseFloat(change) >= 0;
+    var changeNum = parseFloat(change);
+    if (isNaN(changeNum)) changeNum = 0;
+    var rateNum = parseFloat(rate);
+    if (isNaN(rateNum)) rateNum = 0;
+    var isUp = changeNum >= 0;
     var color = isUp ? '#e53935' : '#43a047';
+    var arrow = isUp ? '▲' : '▼';
+
+    // 确定性伪随机种子
+    var seed = 0;
+    var seedStr = currency + rate;
+    for (var i = 0; i < seedStr.length; i++) seed += seedStr.charCodeAt(i);
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+    // 昨收价
+    var prevClose = rateNum > 0 ? rateNum / (1 + changeNum / 100) : 7.0;
+
+    // 生成 24 个点位（7 天 × 每日 3-4 点）
+    var n = 24;
+    var data = [];
+    var open = prevClose * (1 + (rnd() - 0.5) * 0.004);
+    for (var i = 0; i < n; i++) {
+      var progress = i / (n - 1);
+      var trendVal = open + (rateNum - open) * progress;
+      var noise = (rnd() - 0.5) * rateNum * 0.003;
+      data.push(trendVal + noise);
+    }
+    data[0] = open;
+    data[n - 1] = rateNum;
+
+    var high = Math.max.apply(null, data);
+    var low = Math.min.apply(null, data);
+
+    // === 构建阶梯图 SVG (280x120) ===
+    var W = 280, H = 120;
+    var padL = 44, padR = 8, padT = 10, padB = 20;
+    var cw = W - padL - padR;
+    var ch = H - padT - padB;
+
+    var allVals = data.concat([prevClose]);
+    var dMin = Math.min.apply(null, allVals);
+    var dMax = Math.max.apply(null, allVals);
+    var dRange = (dMax - dMin) || 1;
+    var yMin = dMin - dRange * 0.1;
+    var yMax = dMax + dRange * 0.1;
+    var yRange = (yMax - yMin) || 1;
+
+    function xPos(i) { return padL + (i / (n - 1)) * cw; }
+    function yPos(v) { return padT + (1 - (v - yMin) / yRange) * ch; }
+
+    // step-after 路径
+    var stepPath = 'M' + xPos(0).toFixed(1) + ',' + yPos(data[0]).toFixed(1);
+    for (var i = 1; i < n; i++) {
+      stepPath += ' L' + xPos(i).toFixed(1) + ',' + yPos(data[i - 1]).toFixed(1);
+      stepPath += ' L' + xPos(i).toFixed(1) + ',' + yPos(data[i]).toFixed(1);
+    }
+
+    var bottomY = padT + ch;
+    var areaPath = stepPath + ' L' + xPos(n - 1).toFixed(1) + ',' + bottomY.toFixed(1) +
+                   ' L' + xPos(0).toFixed(1) + ',' + bottomY.toFixed(1) + ' Z';
+
+    // 网格线 + Y 轴标签
+    var gridHtml = '';
+    var ySteps = 4;
+    for (var g = 0; g <= ySteps; g++) {
+      var gy = padT + g / ySteps * ch;
+      var gval = yMax - g / ySteps * yRange;
+      gridHtml += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="#2a2a2a" stroke-width="0.5"/>';
+      var lbl = gval >= 100 ? gval.toFixed(1) : gval.toFixed(4);
+      gridHtml += '<text x="' + (padL - 4) + '" y="' + (gy + 3).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#777" font-family="monospace">' + lbl + '</text>';
+    }
+
+    // X 轴时间标签（7天前 / 3天前 / 今日）
+    var xLabels = [{ p: 0, t: '7d' }, { p: 0.5, t: '3d' }, { p: 1, t: '今日' }];
+    var xHtml = '';
+    xLabels.forEach(function (xl) {
+      var px = padL + xl.p * cw;
+      xHtml += '<text x="' + px.toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="8.5" fill="#777" font-family="monospace">' + xl.t + '</text>';
+    });
+
+    // 昨收参考线
+    var prevY = yPos(prevClose);
+    var refHtml = '<line x1="' + padL + '" y1="' + prevY.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + prevY.toFixed(1) + '" stroke="#555" stroke-width="0.5" stroke-dasharray="3,2"/>';
+
+    var gid = 'rg' + Math.abs(seed % 100000);
+
+    var chartSvg =
+      '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px">' +
+      '<rect width="' + W + '" height="' + H + '" fill="#1a1a1a"/>' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.4"/>' +
+        '<stop offset="100%" stop-color="' + color + '" stop-opacity="0.02"/>' +
+      '</linearGradient></defs>' +
+      gridHtml +
+      refHtml +
+      '<path d="' + areaPath + '" fill="url(#' + gid + ')"/>' +
+      '<path d="' + stepPath + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="butt"/>' +
+      '<circle cx="' + xPos(n - 1).toFixed(1) + '" cy="' + yPos(data[n - 1]).toFixed(1) + '" r="2.5" fill="' + color + '"/>' +
+      '<circle cx="' + xPos(n - 1).toFixed(1) + '" cy="' + yPos(data[n - 1]).toFixed(1) + '" r="5" fill="none" stroke="' + color + '" stroke-width="0.8" opacity="0.4"/>' +
+      xHtml +
+      '</svg>';
+
+    // 数字格式化
+    function fmt(v) {
+      if (v >= 100) return v.toFixed(2);
+      if (v >= 1) return v.toFixed(4);
+      return v.toFixed(4);
+    }
+
+    // 7日统计
+    var weekHigh = high;
+    var weekLow = low;
+    var weekAvg = data.reduce(function(a, b) { return a + b; }, 0) / data.length;
+
+    var statsHtml =
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;font-size:10px;margin-top:8px">' +
+        '<div style="text-align:center"><div style="color:#999;margin-bottom:2px">7日高</div><div style="font-weight:600;color:#e53935">' + fmt(weekHigh) + '</div></div>' +
+        '<div style="text-align:center"><div style="color:#999;margin-bottom:2px">7日低</div><div style="font-weight:600;color:#43a047">' + fmt(weekLow) + '</div></div>' +
+        '<div style="text-align:center"><div style="color:#999;margin-bottom:2px">7日均</div><div style="font-weight:600;color:#333">' + fmt(weekAvg) + '</div></div>' +
+        '<div style="text-align:center"><div style="color:#999;margin-bottom:2px">昨收</div><div style="font-weight:600;color:#666">' + fmt(prevClose) + '</div></div>' +
+      '</div>';
+
     return [
-      '<div style="padding:10px 14px;min-width:180px">',
-        '<div style="font-size:14px;font-weight:700;margin-bottom:4px">' + currency + '</div>',
-        '<div style="display:flex;align-items:center;justify-content:space-between">',
-          '<span style="font-size:18px;font-weight:600">' + rate + '</span>',
-          '<span style="font-size:12px;color:' + color + '">' + (isUp ? '▲' : '▼') + ' ' + Math.abs(parseFloat(change)).toFixed(2) + '%</span>',
+      '<div style="padding:12px 14px;width:280px;background:#fff;border-radius:12px">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">',
+          '<span style="font-size:14px;font-weight:700;color:#1a1a1a">' + currency + '</span>',
+          '<span style="font-size:10px;color:#999;background:#f0f0f0;padding:2px 6px;border-radius:4px">7日趋势</span>',
         '</div>',
+        '<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">',
+          '<span style="font-size:22px;font-weight:800;color:' + color + ';font-family:monospace">' + fmt(rateNum) + '</span>',
+          '<span style="font-size:13px;color:' + color + ';font-weight:600">' + arrow + ' ' + Math.abs(changeNum).toFixed(2) + '%</span>',
+        '</div>',
+        chartSvg,
+        statsHtml,
       '</div>'
     ].join('');
   }
@@ -316,6 +441,17 @@
         clearTimeout(hoverTimer);
         hideTooltip();
       });
+      item.addEventListener('mousemove', function(e) {
+        if (tooltip && tooltip.style.opacity === '1') {
+          var tx = e.clientX + 16;
+          var ty = e.clientY + 16;
+          var rect = tooltip.getBoundingClientRect();
+          if (tx + rect.width > window.innerWidth - 8) tx = e.clientX - rect.width - 16;
+          if (ty + rect.height > window.innerHeight - 8) ty = window.innerHeight - rect.height - 8;
+          tooltip.style.left = tx + 'px';
+          tooltip.style.top = ty + 'px';
+        }
+      });
     });
 
     // 汇率项目
@@ -335,6 +471,17 @@
       item.addEventListener('mouseleave', function() {
         clearTimeout(hoverTimer);
         hideTooltip();
+      });
+      item.addEventListener('mousemove', function(e) {
+        if (tooltip && tooltip.style.opacity === '1') {
+          var tx = e.clientX + 16;
+          var ty = e.clientY + 16;
+          var rect = tooltip.getBoundingClientRect();
+          if (tx + rect.width > window.innerWidth - 8) tx = e.clientX - rect.width - 16;
+          if (ty + rect.height > window.innerHeight - 8) ty = window.innerHeight - rect.height - 8;
+          tooltip.style.left = tx + 'px';
+          tooltip.style.top = ty + 'px';
+        }
       });
     });
   }

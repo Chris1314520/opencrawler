@@ -92,11 +92,15 @@
 .sv-video-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);text-decoration:none;color:inherit;display:flex;flex-direction:column}
 .sv-video-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.1);border-color:var(--accent)}
 .sv-video-thumb{height:130px;background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 50%,#1a1a1a 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.sv-video-thumb::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.05) 0%,transparent 70%)}
-.sv-video-thumb .play-icon{font-size:32px;color:rgba(255,255,255,.7);transition:transform .3s var(--ease-spring)}
+.sv-video-thumb::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.05) 0%,transparent 70%);pointer-events:none;z-index:1}
+.sv-video-thumb.has-cover{background:linear-gradient(135deg,var(--thumb-color,#1a1a1a) 0%,#1a1a1a 100%)}
+.sv-video-thumb .sv-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .4s var(--ease-spring)}
+.sv-video-card:hover .sv-cover-img{transform:scale(1.06)}
+.sv-video-thumb.has-cover::after{background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.5) 100%);z-index:1}
+.sv-video-thumb .play-icon{font-size:32px;color:rgba(255,255,255,.7);transition:transform .3s var(--ease-spring);z-index:2;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 .sv-video-card:hover .play-icon{transform:scale(1.2)}
-.sv-video-thumb .platform-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;backdrop-filter:blur(4px)}
-.sv-video-thumb .duration-badge{position:absolute;bottom:8px;right:8px;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);color:#fff;backdrop-filter:blur(4px)}
+.sv-video-thumb .platform-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;backdrop-filter:blur(4px);z-index:2}
+.sv-video-thumb .duration-badge{position:absolute;bottom:8px;right:8px;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);color:#fff;backdrop-filter:blur(4px);z-index:2}
 .sv-video-body{padding:16px;flex:1;display:flex;flex-direction:column}
 .sv-video-title{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sv-video-author{font-size:11px;color:var(--muted);margin-bottom:12px}
@@ -107,6 +111,13 @@
 .sv-video-stats .vstat .vstat-label{font-size:10px}
 .sv-video-link{display:block;margin-top:auto;text-align:center;font-size:12px;font-weight:600;padding:9px;border-radius:10px;background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#fff;text-decoration:none;transition:all .2s var(--ease-spring)}
 .sv-video-link:hover{background:linear-gradient(135deg,#2d2d2d,#1a1a1a);text-decoration:none;transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+/* 平台专属渐变占位色（无封面图时） */
+#panel-douyin .sv-video-thumb:not(.has-cover){background:linear-gradient(135deg,#1a1a1a 0%,#2d0a1a 50%,#1a1a1a 100%)}
+#panel-bilibili .sv-video-thumb:not(.has-cover){background:linear-gradient(135deg,#0d1a26 0%,#003a52 50%,#0d1a26 100%)}
+#panel-kuaishou .sv-video-thumb:not(.has-cover){background:linear-gradient(135deg,#1a0a05 0%,#3d1500 50%,#1a0a05 100%)}
+#panel-xiaohongshu .sv-video-thumb:not(.has-cover){background:linear-gradient(135deg,#1a050d 0%,#3d0a1a 50%,#1a050d 100%)}
+#panel-weixin .sv-video-thumb:not(.has-cover){background:linear-gradient(135deg,#051a0d 0%,#0a3d1a 50%,#051a0d 100%)}
 
 /* 领域趋势分析 */
 .sv-domains{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
@@ -986,13 +997,30 @@
           var favorites = ex.favorites || 0;
           var comments = ex.comments || 0;
           var duration = ex.duration || '';
+          var coverUrl = ex.cover_url || '';
+          // 强制 HTTPS 避免混合内容拦截
+          if (coverUrl && coverUrl.indexOf('http://') === 0) {
+            coverUrl = 'https://' + coverUrl.slice(7);
+          }
           var platformName = {bilibili:'B站', douyin:'抖音', kuaishou:'快手', xiaohongshu:'小红书', weixin:'视频号'}[platform] || platform;
+          var platformColor = {bilibili:'#00A1D6', douyin:'#000000', kuaishou:'#FF4906', xiaohongshu:'#FF2442', weixin:'#07C160'}[platform] || '#333';
 
           html += '<a class="sv-video-card" href="' + videoUrl + '" target="_blank" rel="noopener">';
-          html += '<div class="sv-video-thumb">';
+          html += '<div class="sv-video-thumb' + (coverUrl ? ' has-cover' : '') + '"'
+               + (coverUrl ? ' style="--thumb-color:' + platformColor + '"' : '') + '>';
+          if (coverUrl) {
+            // 通过本地代理加载，绕过 CDN 防盗链
+            var proxyUrl = '/api/img_proxy?url=' + encodeURIComponent(coverUrl);
+            html += '<img class="sv-cover-img" src="' + proxyUrl + '" loading="lazy" alt="' + title.replace(/"/g, '&quot;') + '"'
+                 + ' onerror="this.style.display=\'none\';this.parentElement.classList.remove(\'has-cover\')">';
+          }
           html += '<span class="platform-badge">' + platformName + '</span>';
           html += '<span class="play-icon">▶</span>';
-          if (duration) html += '<span class="duration-badge">' + duration + '</span>';
+          if (duration) {
+            var dm = Math.floor(duration / 60);
+            var ds = duration % 60;
+            html += '<span class="duration-badge">' + String(dm).padStart(2,'0') + ':' + String(ds).padStart(2,'0') + '</span>';
+          }
           html += '</div>';
           html += '<div class="sv-video-body">';
           html += '<div class="sv-video-title">' + title + '</div>';

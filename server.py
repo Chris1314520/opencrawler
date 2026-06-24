@@ -16,7 +16,7 @@ import yaml
 from datetime import datetime
 from threading import Thread
 
-from flask import Flask, render_template, request, jsonify, g, session, redirect, send_file
+from flask import Flask, render_template, request, jsonify, g, session, redirect, send_file, Response
 from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
 
@@ -496,6 +496,50 @@ def platforms_page():
 def api_shortvideo():
     """短视频趋势数据 API（供前端 AJAX 刷新）"""
     return jsonify(_get_shortvideo_data())
+
+
+# ── 图片代理缓存（内存，1 小时过期）──
+_IMG_CACHE = {}
+_IMG_CACHE_TTL = 3600  # 秒
+
+@app.route("/api/img_proxy")
+def api_img_proxy():
+    """图片代理 — 解决 B站/快手等 CDN 防盗链问题"""
+    img_url = request.args.get("url", "")
+    if not img_url or not img_url.startswith(("http://", "https://")):
+        return Response(status=400)
+
+    # 检查缓存
+    now = time.time()
+    cached = _IMG_CACHE.get(img_url)
+    if cached and (now - cached["ts"]) < _IMG_CACHE_TTL:
+        return Response(cached["data"], content_type=cached["ctype"])
+
+    # 根据图片来源设置 referer
+    referer = "https://www.bilibili.com/"
+    if "hdslb.com" in img_url:
+        referer = "https://www.bilibili.com/"
+    elif "kwaicdn" in img_url or "kuaishou" in img_url:
+        referer = "https://www.kuaishou.com/"
+    elif "xhscdn" in img_url or "xiaohongshu" in img_url:
+        referer = "https://www.xiaohongshu.com/"
+
+    try:
+        headers = {
+            "Referer": referer,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        }
+        resp = requests.get(img_url, headers=headers, timeout=10, stream=True)
+        if resp.status_code == 200:
+            content_type = resp.headers.get("Content-Type", "image/jpeg")
+            data = resp.content
+            # 缓存（最多 200 张）
+            if len(_IMG_CACHE) < 200:
+                _IMG_CACHE[img_url] = {"data": data, "ctype": content_type, "ts": now}
+            return Response(data, content_type=content_type)
+        return Response(status=resp.status_code)
+    except Exception:
+        return Response(status=502)
 
 
 def _get_shortvideo_data():
@@ -1330,7 +1374,7 @@ if __name__ == "__main__":
         print(f"\n  Web 面板 (仅浏览): http://localhost:{args.port}\n")
 
     try:
-        app.run(host="0.0.0.0", port=args.port, debug=False, use_reloader=False)
+        app.run(host="0.0.0.0", port=args.port, debug=False, use_reloader=False, threaded=True)
     except KeyboardInterrupt:
         print("\n  已停止")
         store.close()
