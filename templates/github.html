@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}GitHub 开源项目 — OpenCrawler{% endblock %}
+{% block title %}GitHub 项目 — OpenCrawler{% endblock %}
 {% set active_page = 'github' %}
 
 {% block head %}
@@ -69,6 +69,7 @@
 .ai-card .ai-desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
 .ai-card a{font-size:11px;color:#1a73e8;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
 .ai-card a:hover{text-decoration:underline}
+  .tag-closed{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fff3e0;color:#e65100;margin-left:4px;vertical-align:middle}
 
 /* Course section */
 .course-section{margin-top:40px;margin-bottom:32px}
@@ -109,18 +110,18 @@
 <div class="github-layout">
 
     <div class="github-hero">
-        <h1>GitHub 开源项目资源中心</h1>
+        <h1>GitHub 项目资源中心</h1>
         <p>AI Agent · AI Skill · 大模型 · 计算机视觉 · DevOps — 分类索引 + 批量下载</p>
     </div>
 
     <!-- AI 专题 -->
     <div class="featured-section">
         <h3>AI Agent &amp; Skill 项目精选</h3>
-        <p class="feat-sub">全部开源 · 免费批量下载 · 持续追踪更新</p>
+        <p class="feat-sub">精选项目 · 免费批量下载 · 持续追踪更新</p>
         <div class="ai-cards">
             <div class="ai-card">
-                <div class="ai-name">Claude Code</div>
-                <div class="ai-desc">Anthropic 官方 CLI Agent，终端内编码调试一条龙</div>
+                <div class="ai-name">Claude Code <span class="tag-closed">闭源免费</span></div>
+                <div class="ai-desc">Anthropic 官方 CLI Agent，终端内编码调试一条龙（闭源，免费使用）</div>
                 <a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener">GitHub →</a>
             </div>
             <div class="ai-card">
@@ -230,7 +231,7 @@
 // ========== 项目数据库 ==========
 const PROJECTS = [
     // AI Agent
-    {name:"Claude Code",owner:"anthropics",desc:"Anthropic 官方 CLI Agent，终端内编码调试",lang:"Python",stars:58000,tags:["ai-agent","llm"],url:"https://github.com/anthropics/claude-code"},
+    {name:"Claude Code",owner:"anthropics",desc:"Anthropic 官方 CLI Agent（闭源免费），终端内编码调试",lang:"TypeScript",stars:58000,tags:["ai-agent","llm"],url:"https://github.com/anthropics/claude-code"},
     {name:"OpenManus",owner:"mannaandpoem",desc:"开源通用 AI Agent 框架，多工具+浏览器操控",lang:"Python",stars:42000,tags:["ai-agent"],url:"https://github.com/mannaandpoem/OpenManus"},
     {name:"CrewAI",owner:"crewAIInc",desc:"多 Agent 协作框架，角色扮演+任务委派",lang:"Python",stars:28000,tags:["ai-agent"],url:"https://github.com/crewAIInc/crewAI"},
     {name:"AutoGPT",owner:"Significant-Gravitas",desc:"自主 AI Agent 鼻祖，长链任务规划执行",lang:"Python",stars:172000,tags:["ai-agent"],url:"https://github.com/Significant-Gravitas/AutoGPT"},
@@ -260,7 +261,7 @@ const PROJECTS = [
     {name:"Mistral",owner:"mistralai",desc:"法国开源大模型，7B/8x7B/8x22B 多尺寸",lang:"Python",stars:16000,tags:["llm"],url:"https://github.com/mistralai/mistral-inference"},
     {name:"vLLM",owner:"vllm-project",desc:"高性能 LLM 推理引擎，PagedAttention 加速",lang:"Python",stars:48000,tags:["llm"],url:"https://github.com/vllm-project/vllm"},
     {name:"Ollama",owner:"ollama",desc:"本地一键运行大模型，LLaMA/Mistral/Qwen 全支持",lang:"Go",stars:125000,tags:["llm","ai-agent"],url:"https://github.com/ollama/ollama"},
-    {name:"LM Studio",owner:"lmstudio-ai",desc:"桌面端本地模型运行器，GUI+HuggingFace",lang:"TypeScript",stars:15000,tags:["llm"],url:"https://github.com/lmstudio-ai/lms"},
+    {name:"LM Studio",owner:"lmstudio-ai",desc:"桌面端本地模型运行器（闭源免费），GUI+HuggingFace",lang:"TypeScript",stars:15000,tags:["llm"],url:"https://github.com/lmstudio-ai/lms"},
     {name:"llama.cpp",owner:"ggml-org",desc:"C++ 大模型推理，CPU/GPU 混合，量化加速",lang:"C++",stars:78000,tags:["llm"],url:"https://github.com/ggml-org/llama.cpp"},
     {name:"Open WebUI",owner:"open-webui",desc:"类 ChatGPT 聊天界面，支持 Ollama/OpenAI/Claude",lang:"Python",stars:65000,tags:["llm"],url:"https://github.com/open-webui/open-webui"},
     {name:"Dify",owner:"langgenius",desc:"开源 LLMOps 平台，可视化搭建 AI 应用",lang:"Python",stars:68000,tags:["llm"],url:"https://github.com/langgenius/dify"},
