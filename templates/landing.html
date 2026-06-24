@@ -230,6 +230,37 @@
 .toast .toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0}
 .toast.success{border-color:#0d904f}
 .toast.success .toast-title{color:var(--green)}
+
+/* ── 移动端适配 ── */
+@media(max-width:768px){
+  .landing-hero{padding:60px 16px 40px}
+  .brand{font-size:32px}
+  .landing-hero h1{font-size:26px}
+  .landing-hero .subtitle{font-size:14px;margin-bottom:24px}
+  .hero-cta{flex-direction:column;gap:10px;width:100%}
+  .hero-cta a{width:100%;text-align:center}
+  .highlights,.topic-tree,.services,.guide-section,.live-preview-section,.stats-section{padding:0 16px;margin-bottom:40px}
+  .hl-grid{grid-template-columns:1fr}
+  .topic-tree-panel{min-width:260px;max-width:100%}
+  .service-grid{grid-template-columns:1fr}
+  .guide-grid{grid-template-columns:1fr}
+  .stats-bar{grid-template-columns:1fr 1fr;gap:12px}
+  .stats-bar .stat-item{padding:14px}
+  .stats-bar .stat-num{font-size:22px}
+  .footer-cta{padding:48px 16px}
+  .footer-cta h2{font-size:22px}
+  .footer-cta .btn{font-size:14px;padding:12px 28px}
+  .toast-container{top:10px;right:10px;left:10px}
+  .toast{min-width:auto;max-width:none}
+  .live-preview-grid{grid-template-columns:1fr}
+  .preview-card{padding:16px}
+}
+@media(max-width:480px){
+  .brand{font-size:26px}
+  .landing-hero h1{font-size:22px}
+  .stats-bar{grid-template-columns:1fr}
+  .topic-tree-btn{font-size:13px;padding:10px 16px}
+}
 </style>
 {% endblock %}
 

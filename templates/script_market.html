@@ -118,6 +118,23 @@
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.form-row{grid-template-columns:1fr}}
 
+/* ── 移动端增强适配 ── */
+@media(max-width:768px){
+  .market-layout{padding:12px 12px 40px}
+  .market-hero h1{font-size:22px}
+  .market-hero p{font-size:13px}
+  .script-row{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+  .script-row .sr-meta{gap:8px;font-size:11px}
+  .script-row .sr-actions{width:100%;justify-content:flex-end}
+  .creator-dash{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .market-hero h1{font-size:20px}
+  .creator-dash{grid-template-columns:1fr}
+  .script-row .sr-actions{flex-direction:column;gap:4px;width:100%}
+  .script-row .sr-actions a,.script-row .sr-actions button{width:100%;text-align:center}
+}
+
 .btn-dl{background:#1a73e8;color:#fff;border:none;padding:6px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer}
 .btn-dl:hover{opacity:.85}
 .btn-gh{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer}

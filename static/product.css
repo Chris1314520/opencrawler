@@ -294,12 +294,12 @@ a:hover { text-decoration: underline; }
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .hero h1 { font-size: 30px; }
-    .nav-links { display: none; }
     .demo-layout, .docs-layout { flex-direction: column; }
     .demo-sidebar { width: 100%; display: flex; gap: 6px; flex-wrap: wrap; }
     .demo-sidebar .source-tag { width: auto; }
     .docs-sidebar { width: 100%; position: static; display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
     .pricing-grid { grid-template-columns: 1fr; }
+    .footer{padding:24px 16px}
 }
 
 /* ── Nav User Dropdown ── */

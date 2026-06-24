@@ -62,10 +62,13 @@
 .featured-section h3{font-size:18px;font-weight:700;margin-bottom:4px}
 .featured-section .feat-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
 .ai-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.ai-card{background:var(--bg);border-radius:10px;padding:16px;text-align:center}
-.ai-card .ai-name{font-size:14px;font-weight:600;margin-bottom:4px}
-.ai-card .ai-desc{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4}
-.ai-card a{font-size:11px;color:#1a73e8;text-decoration:none}
+.ai-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:left;transition:all .2s}
+.ai-card:hover{border-color:#1a73e8;box-shadow:0 4px 12px rgba(0,0,0,.08);transform:translateY(-2px)}
+.ai-card .ai-name{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.ai-card .ai-name::before{content:'';display:inline-block;width:3px;height:14px;background:linear-gradient(180deg,#1a73e8,#58a6ff);border-radius:2px;flex-shrink:0}
+.ai-card .ai-desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.ai-card a{font-size:11px;color:#1a73e8;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+.ai-card a:hover{text-decoration:underline}
 
 /* Course section */
 .course-section{margin-top:40px;margin-bottom:32px}
@@ -82,6 +85,22 @@
 @media (max-width:768px){
     .project-grid{grid-template-columns:1fr}
     .ai-cards{grid-template-columns:1fr 1fr}
+    .github-layout{padding:12px}
+    .github-hero h1{font-size:22px}
+    .github-hero p{font-size:13px}
+    .github-toolbar{flex-direction:column;gap:8px}
+    .github-toolbar input{width:100%}
+    .github-toolbar .sort-btns{width:100%;justify-content:center}
+    .featured-section,.course-section{padding:16px;margin-bottom:20px}
+    .featured-section h3,.course-section h3{font-size:16px}
+    .proj-actions{flex-direction:column;gap:4px}
+    .proj-actions a{width:100%;text-align:center;padding:8px}
+}
+@media(max-width:480px){
+    .ai-cards{grid-template-columns:1fr}
+    .project-card{padding:14px}
+    .proj-header{flex-direction:column;gap:4px}
+    .github-hero h1{font-size:20px}
 }
 </style>
 {% endblock %}

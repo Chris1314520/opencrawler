@@ -267,6 +267,32 @@
 .gai-modal-card .modal-btn.secondary:hover{color:#c9d1d9}
 
 @media(max-width:768px){
-  #gai-sidebar{width:100%}
-  #gai-toast{right:20px;bottom:84px;max-width:calc(100vw - 40px)}
+  #gai-sidebar{width:100%;max-width:100%}
+  #gai-sidebar.open{right:0}
+  #gai-fab{width:48px;height:48px;bottom:16px;right:16px}
+  #gai-fab .fab-icon{font-size:22px}
+  #gai-toast{right:12px;bottom:76px;max-width:calc(100vw - 24px);left:12px}
+  #gai-toast .gai-toast-item{max-width:none}
+  .gai-header{padding:10px 12px}
+  .gai-header .gai-title{font-size:14px}
+  .gai-msg{padding:8px 12px}
+  .gai-msg .gai-msg-text{font-size:13px}
+  .gai-input-area{padding:8px 10px}
+  .gai-input-area textarea{font-size:14px}
+  .gai-settings-body{padding:14px}
+  .gai-settings-body .cfg-input{font-size:14px}
+  .gai-modal-card{padding:24px 16px;max-width:92%;width:92%}
+  .gai-modal-card .modal-input{font-size:16px}
+  .gai-workflow-bar{padding:6px 8px}
+  .gai-workflow-bar select{font-size:12px}
+}
+@media(max-width:480px){
+  #gai-fab{width:44px;height:44px;bottom:12px;right:12px}
+  #gai-fab .fab-icon{font-size:20px}
+  .gai-header .gai-title{font-size:13px}
+  .gai-header .gai-header-btn{width:30px;height:30px;font-size:14px}
+  .gai-msg .gai-msg-avatar{width:28px;height:28px;font-size:11px}
+  .gai-input-area textarea{height:36px}
+  .gai-workflow-bar{flex-direction:column;gap:4px}
+  .gai-workflow-bar select{width:100%}
 }

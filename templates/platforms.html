@@ -128,6 +128,32 @@
     display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;
 }
 @media(max-width:700px){.sv-eco-card{grid-template-columns:1fr;text-align:center}}
+
+/* ── 移动端适配 ── */
+@media(max-width:768px){
+  .platforms-layout{padding:12px}
+  .platforms-hero h1{font-size:22px}
+  .platforms-hero p{font-size:13px}
+  .plat-grid{grid-template-columns:1fr}
+  .trending-grid{grid-template-columns:1fr 1fr}
+  .sv-topic-grid{grid-template-columns:1fr}
+  .sv-video-grid{grid-template-columns:1fr}
+  .sv-project-grid{grid-template-columns:1fr}
+  .sv-plat-row{flex-direction:column;gap:8px}
+  .sv-plat-pill{width:100%;min-width:auto}
+  .trending-section{padding:16px;margin-bottom:20px}
+  .sv-section{margin-bottom:24px}
+  .sv-video-thumb{height:140px}
+  .sv-eco-card{grid-template-columns:1fr;text-align:center}
+}
+@media(max-width:480px){
+  .plat-grid{grid-template-columns:1fr}
+  .trending-grid{grid-template-columns:1fr}
+  .platforms-hero h1{font-size:20px}
+  .sv-video-thumb{height:120px}
+  .sv-topic-card{padding:14px}
+  .sv-video-card{border-radius:10px}
+}
 .sv-eco-card .eco-logo{
     width:56px;height:56px;border-radius:14px;
     display:flex;align-items:center;justify-content:center;

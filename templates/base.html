@@ -39,6 +39,27 @@
     }
     .nav-cta-gold:active{transform:scale(.95)}
 
+    /* 移动端汉堡菜单 */
+    .nav-toggle{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:4px;z-index:1001}
+    .nav-toggle span{display:block;width:22px;height:2px;background:#1a1a1a;border-radius:2px;transition:all .3s ease}
+    .nav-toggle.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+    .nav-toggle.open span:nth-child(2){opacity:0}
+    .nav-toggle.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+    @media(max-width:768px){
+        .nav-toggle{display:flex}
+        .nav-links{
+            position:fixed;top:0;right:-100%;width:75%;max-width:300px;height:100vh;
+            background:#fff;flex-direction:column;gap:0;padding:80px 0 20px;
+            box-shadow:-4px 0 24px rgba(0,0,0,.1);transition:right .3s ease;z-index:1000;overflow-y:auto
+        }
+        .nav-links.open{right:0}
+        .nav-links a{padding:14px 24px;border-radius:0;border-bottom:1px solid #f0f0f0;font-size:15px}
+        .nav-cta-gold{display:none}
+        .navbar-inner{justify-content:space-between}
+        .nav-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999}
+        .nav-backdrop.open{display:block}
+    }
+
     /* Page transition: fade + scale crossfade */
     .pt-overlay{position:fixed;inset:0;z-index:9999;background:#fff;opacity:0;pointer-events:none;transition:opacity .3s ease}
     .pt-overlay.pt-leave{opacity:1;pointer-events:auto}
@@ -76,8 +97,12 @@
                 <a href="/about" class="{% if active_page == 'about' %}active{% endif %} gold-nav">开发实践</a>
             </div>
             <a href="/console" class="nav-cta-gold">OpenCrawler</a>
+            <button class="nav-toggle" id="navToggle" aria-label="菜单">
+                <span></span><span></span><span></span>
+            </button>
         </div>
     </nav>
+    <div class="nav-backdrop" id="navBackdrop"></div>
 
     <main>
         {% block content %}{% endblock %}
@@ -114,6 +139,23 @@
         window.location = href;
       }
     });
+
+    // 移动端汉堡菜单
+    (function(){
+      var toggle = document.getElementById('navToggle');
+      var links = document.querySelector('.nav-links');
+      var backdrop = document.getElementById('navBackdrop');
+      function closeNav(){ toggle.classList.remove('open'); links.classList.remove('open'); backdrop.classList.remove('open'); }
+      if (toggle) {
+        toggle.addEventListener('click', function(){
+          toggle.classList.toggle('open');
+          links.classList.toggle('open');
+          backdrop.classList.toggle('open');
+        });
+      }
+      if (backdrop) backdrop.addEventListener('click', closeNav);
+      if (links) links.addEventListener('click', function(e){ if (e.target.tagName === 'A') closeNav(); });
+    })();
     </script>
     {% block scripts %}{% endblock %}
     <script src="/static/animations.js"></script>
