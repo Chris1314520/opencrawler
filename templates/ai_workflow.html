@@ -4,71 +4,311 @@
 
 {% block head %}
 <style>
-.workflow-layout{max-width:1100px;margin:0 auto;padding:20px 24px 64px}
+/* ===================== Layout ===================== */
+.workflow-layout{max-width:1180px;margin:0 auto;padding:24px 24px 80px}
 
-/* Hero */
-.wf-hero{text-align:center;padding:44px 20px;background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.02));border:1px solid rgba(212,175,55,.25);border-radius:14px;margin-bottom:28px;position:relative;overflow:hidden}
-.wf-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(212,175,55,.1),transparent 70%);pointer-events:none}
-.wf-hero .badge-gold{display:inline-block;padding:4px 14px;background:#d4af37;color:#000;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px}
-.wf-hero h1{font-size:30px;font-weight:800;margin-bottom:6px;font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif}
-.wf-hero h1 .gold{color:#d4af37}
-.wf-hero p{color:var(--muted);font-size:14px;max-width:620px;margin:0 auto;line-height:1.7}
+/* ===================== Hero ===================== */
+.wf-hero{
+  position:relative;overflow:hidden;border-radius:24px;
+  padding:68px 40px 60px;margin-bottom:28px;text-align:center;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(212,175,55,.18), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 100%, rgba(99,102,241,.14), transparent 60%),
+    linear-gradient(135deg,#08080f 0%,#13132a 45%,#0c0c18 100%);
+}
+.wf-hero::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(212,175,55,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(212,175,55,.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse 70% 60% at center,#000 20%,transparent 75%);
+  mask-image:radial-gradient(ellipse 70% 60% at center,#000 20%,transparent 75%);
+}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;animation:orbFloat 9s ease-in-out infinite}
+.orb-1{width:320px;height:320px;background:rgba(212,175,55,.22);top:-90px;right:-50px}
+.orb-2{width:260px;height:260px;background:rgba(99,102,241,.18);bottom:-70px;left:-40px;animation-delay:-4s}
+.orb-3{width:180px;height:180px;background:rgba(212,175,55,.12);top:40%;left:55%;animation-delay:-2s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-18px) scale(1.06)}}
 
-/* Category tabs */
-.wf-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);flex-wrap:wrap}
-.wf-tab{padding:10px 22px;font-size:14px;cursor:pointer;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-weight:500;white-space:nowrap}
-.wf-tab:hover{color:var(--text)}
-.wf-tab.active{color:#b45309;border-bottom-color:#d4af37;font-weight:600}
-.wf-tab .tab-count{font-size:11px;opacity:.55;margin-left:4px}
+.hero-content{position:relative;z-index:2}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 20px;border-radius:30px;margin-bottom:22px;
+  background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.28);
+  color:#d4af37;font-size:12px;font-weight:700;letter-spacing:2.5px;
+}
+.hero-badge .pulse-dot{width:7px;height:7px;border-radius:50%;background:#d4af37;box-shadow:0 0 8px #d4af37;animation:pulse 2s infinite}
+.wf-hero h1{
+  font-size:54px;font-weight:900;color:#fff;margin-bottom:18px;
+  font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;
+  letter-spacing:3px;line-height:1.1;
+}
+.gold-text{
+  background:linear-gradient(135deg,#f7e08a,#d4af37 40%,#b8860b);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.wf-hero .hero-sub{
+  color:rgba(255,255,255,.62);font-size:16px;max-width:680px;
+  margin:0 auto;line-height:1.85;word-break:break-word;
+}
+.hero-tags{display:flex;justify-content:center;gap:10px;margin-top:24px;flex-wrap:wrap}
+.hero-tag{
+  padding:5px 14px;border-radius:20px;font-size:12px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.7);
+}
 
-/* Workflow grid */
-.wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.wf-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;transition:all .3s var(--ease-spring);position:relative;overflow:hidden}
-.wf-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:rgba(212,175,55,.3)}
-.wf-card.enabled{border-color:rgba(212,175,55,.4);background:linear-gradient(135deg,var(--card),rgba(212,175,55,.03))}
-.wf-card .wf-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
-.wf-card .wf-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.wf-card .wf-icon.data{background:linear-gradient(135deg,#e8f0fe,#d4e4fc);color:#1a73e8}
-.wf-card .wf-icon.resource{background:linear-gradient(135deg,#e6f4ea,#cef5d8);color:#0d904f}
-.wf-card .wf-icon.analysis{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e37400}
-.wf-card .wf-name{font-size:15px;font-weight:700;margin-bottom:4px;line-height:1.3}
-.wf-card .wf-cat{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px}
-.wf-card .wf-cat.data{background:#e8f0fe;color:#1a73e8}
-.wf-card .wf-cat.resource{background:#e6f4ea;color:#0d904f}
-.wf-card .wf-cat.analysis{background:#fff3e0;color:#e37400}
-.wf-card .wf-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px}
-.wf-card .wf-steps{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
-.wf-card .wf-steps .step{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.wf-card .wf-steps .step-num{width:18px;height:18px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-.wf-card .wf-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
-.wf-card .wf-status{font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px}
-.wf-card .wf-status.off{color:var(--muted)}
-.wf-card .wf-status.on{color:#0d904f}
-.wf-card .wf-status .dot{width:6px;height:6px;border-radius:50%}
-.wf-card .wf-status.off .dot{background:var(--muted)}
-.wf-card .wf-status.on .dot{background:#0d904f;animation:pulse 2s infinite}
-.wf-toggle{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);transition:all .15s;white-space:nowrap}
-.wf-toggle:hover{border-color:#d4af37;color:#b45309}
-.wf-toggle.active{background:#d4af37;color:#000;border-color:#d4af37}
-.wf-toggle.active:hover{background:#c0841a}
+/* ===================== Stats Bar ===================== */
+.wf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:18px 20px;display:flex;align-items:center;gap:14px;
+  transition:transform .3s var(--ease-smooth),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:rgba(212,175,55,.35)}
+.stat-icon{
+  width:46px;height:46px;border-radius:13px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:21px;
+}
+.stat-icon.gold{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e}
+.stat-icon.blue{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}
+.stat-icon.green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}
+.stat-icon.purple{background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6}
+.stat-info{min-width:0}
+.stat-num{font-size:26px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.5px}
+.stat-label{font-size:12px;color:var(--muted);margin-top:5px;white-space:nowrap}
 
-/* Active workflows summary */
-.wf-summary{background:linear-gradient(135deg,#1a1a1a,#2d2d2d);border-radius:12px;padding:20px 24px;margin-bottom:24px;border:1px solid rgba(212,175,55,.15)}
-.wf-summary .ws-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.wf-summary .ws-title{font-size:14px;font-weight:700;color:#d4af37;font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;letter-spacing:1px}
-.wf-summary .ws-count{font-size:12px;color:rgba(255,255,255,.5)}
-.wf-summary .ws-list{display:flex;gap:8px;flex-wrap:wrap}
-.wf-summary .ws-chip{padding:5px 12px;border-radius:16px;font-size:12px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);color:#d4af37;display:flex;align-items:center;gap:6px}
-.wf-summary .ws-chip .chip-remove{cursor:pointer;opacity:.5;transition:opacity .15s}
-.wf-summary .ws-chip .chip-remove:hover{opacity:1}
-.wf-summary .ws-empty{font-size:13px;color:rgba(255,255,255,.4);text-align:center;padding:8px 0}
+/* ===================== Active Summary ===================== */
+.wf-summary{
+  background:linear-gradient(135deg,#0f0f1a,#1c1c2e);border-radius:16px;
+  padding:22px 26px;margin-bottom:28px;border:1px solid rgba(212,175,55,.18);
+  position:relative;overflow:hidden;
+}
+.wf-summary::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,.4),transparent);
+}
+.ws-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ws-title{
+  font-size:15px;font-weight:700;color:#d4af37;
+  font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;letter-spacing:1.5px;
+  display:flex;align-items:center;gap:8px;
+}
+.ws-count{font-size:13px;color:rgba(255,255,255,.5);font-weight:600}
+.ws-count strong{color:#d4af37;font-size:16px}
+.ws-list{display:flex;gap:8px;flex-wrap:wrap}
+.ws-chip{
+  padding:6px 14px;border-radius:18px;font-size:12px;font-weight:500;
+  background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);
+  color:#e8d08a;display:flex;align-items:center;gap:8px;
+  transition:all .2s var(--ease-smooth);
+}
+.ws-chip:hover{background:rgba(212,175,55,.18);border-color:rgba(212,175,55,.4)}
+.ws-chip .chip-remove{cursor:pointer;opacity:.5;transition:opacity .15s;font-size:14px;line-height:1}
+.ws-chip .chip-remove:hover{opacity:1;color:#fff}
+.ws-empty{font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:6px 0}
 
+/* ===================== Section Headers ===================== */
+.wf-section{margin-bottom:44px}
+.wf-section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;padding-bottom:0;
+}
+.wf-section-title{display:flex;align-items:center;gap:12px}
+.section-icon{
+  width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+.section-icon.cat-data{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1a73e8}
+.section-icon.cat-resource{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#0d904f}
+.section-icon.cat-analysis{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#e37400}
+.section-icon.cat-featured{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#b45309}
+.wf-section-title h2{
+  font-size:22px;font-weight:800;color:var(--text);line-height:1.2;
+  font-family:"YouYuan","幼圆","Microsoft YaHei",sans-serif;letter-spacing:1px;
+}
+.wf-section-desc{font-size:13px;color:var(--muted);font-weight:500}
+.wf-section-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);margin-left:20px}
+
+/* ===================== Category Tabs ===================== */
+.wf-tabs{
+  display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;
+  padding:6px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;
+}
+.wf-tab{
+  padding:9px 20px;font-size:14px;cursor:pointer;color:var(--muted);
+  background:none;border:none;border-radius:10px;
+  transition:all .2s var(--ease-smooth);font-weight:600;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.wf-tab:hover{color:var(--text);background:rgba(0,0,0,.03)}
+.wf-tab.active{
+  color:#fff;background:linear-gradient(135deg,#1a1a1a,#2d2d2d);
+  box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+.wf-tab.active .tab-count{background:rgba(212,175,55,.25);color:#d4af37}
+.wf-tab .tab-count{
+  font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;
+  background:rgba(0,0,0,.06);color:var(--muted);
+}
+
+/* ===================== Grids ===================== */
+.wf-featured-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.wf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+
+/* ===================== Workflow Card ===================== */
+.wf-card{
+  position:relative;display:flex;flex-direction:column;height:100%;
+  background:#fff;border:1px solid var(--border);border-radius:18px;
+  padding:24px;overflow:hidden;
+  transition:transform .35s var(--ease-spring),box-shadow .35s var(--ease-smooth),border-color .35s var(--ease-smooth);
+  animation:wfCardIn .5s var(--ease-decel) both;
+}
+@keyframes wfCardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.wf-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--card-accent,#d4af37),transparent);
+  opacity:0;transition:opacity .35s var(--ease-smooth);
+}
+.wf-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 48px rgba(0,0,0,.1),0 6px 16px rgba(0,0,0,.06);
+  border-color:rgba(212,175,55,.35);
+}
+.wf-card:hover::before{opacity:1}
+.wf-card.enabled{
+  border-color:rgba(212,175,55,.3);
+  background:linear-gradient(180deg,#fffdf5,#fff 40%);
+}
+.wf-card.enabled::before{opacity:.5;background:linear-gradient(90deg,transparent,#d4af37,transparent)}
+
+/* Featured card enhancements */
+.wf-card.featured{padding:26px}
+.wf-card.featured .wf-icon-large{width:60px;height:60px;font-size:28px;border-radius:16px}
+.wf-card.featured .wf-name{font-size:17px}
+.wf-card.featured .wf-desc{font-size:13.5px}
+.wf-ribbon{
+  position:absolute;top:16px;right:-30px;transform:rotate(35deg);
+  background:linear-gradient(135deg,#d4af37,#b8860b);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 34px;
+  box-shadow:0 2px 8px rgba(212,175,55,.3);z-index:3;
+}
+
+/* Card head */
+.wf-card-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.wf-icon-large{
+  width:50px;height:50px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  transition:transform .35s var(--ease-spring);
+}
+.wf-card:hover .wf-icon-large{transform:scale(1.08) rotate(-3deg)}
+.wf-icon-large.cat-data{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1a73e8}
+.wf-icon-large.cat-resource{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#0d904f}
+.wf-icon-large.cat-analysis{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#e37400}
+.wf-card-meta{flex:1;min-width:0}
+.wf-badge{
+  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;padding:3px 9px;border-radius:6px;margin-bottom:6px;
+}
+.wf-badge.cat-data{background:#e8f0fe;color:#1a73e8}
+.wf-badge.cat-resource{background:#e6f4ea;color:#0d904f}
+.wf-badge.cat-analysis{background:#fff3e0;color:#e37400}
+.wf-name{
+  font-size:15.5px;font-weight:800;color:var(--text);line-height:1.35;
+  margin-bottom:0;word-break:break-word;overflow-wrap:break-word;
+}
+.wf-desc{
+  font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;
+  word-break:break-word;overflow-wrap:break-word;flex-shrink:0;
+}
+
+/* ===================== Flow Diagram ===================== */
+.wf-flow{
+  display:flex;align-items:flex-start;gap:0;
+  padding:14px 12px;margin-bottom:16px;flex:1;
+  background:var(--card);border-radius:12px;border:1px solid var(--border);
+}
+.flow-step{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;
+  text-align:center;min-width:0;
+}
+.flow-num{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#d4af37,#b8860b);color:#fff;
+  font-size:13px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(212,175,55,.3);
+}
+.flow-label{
+  font-size:11px;color:var(--muted);line-height:1.35;font-weight:500;
+  word-break:break-word;overflow-wrap:break-word;
+}
+.flow-arrow{
+  flex:0 0 22px;height:30px;position:relative;flex-shrink:0;
+}
+.flow-arrow::before{
+  content:'';position:absolute;left:2px;right:7px;top:50%;
+  height:2px;transform:translateY(-50%);
+  background:linear-gradient(90deg,rgba(212,175,55,.25),rgba(212,175,55,.5));
+}
+.flow-arrow::after{
+  content:'';position:absolute;right:1px;top:50%;transform:translateY(-50%);
+  border-left:6px solid rgba(212,175,55,.5);
+  border-top:4px solid transparent;border-bottom:4px solid transparent;
+}
+
+/* ===================== Card Footer ===================== */
+.wf-card-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid var(--border);flex-shrink:0;gap:10px;
+}
+.wf-status{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.wf-status.off{color:var(--muted)}
+.wf-status.on{color:#0d904f}
+.wf-status .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.wf-status.off .dot{background:var(--muted);opacity:.5}
+.wf-status.on .dot{background:#0d904f;box-shadow:0 0 6px rgba(13,144,79,.5);animation:pulse 2s infinite}
+
+.wf-btn{
+  padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;
+  cursor:pointer;border:none;white-space:nowrap;
+  transition:all .2s var(--ease-smooth);
+  background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+.wf-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.wf-btn:active{transform:scale(.96)}
+.wf-btn.active{
+  background:linear-gradient(135deg,#d4af37,#b8860b);color:#fff;
+  box-shadow:0 2px 10px rgba(212,175,55,.3);
+}
+.wf-btn.active:hover{background:linear-gradient(135deg,#e0bd50,#c8941a)}
+
+/* ===================== Animations ===================== */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* ===================== Responsive ===================== */
+@media(max-width:900px){
+  .wf-featured-grid,.wf-grid{grid-template-columns:repeat(2,1fr)}
+  .wf-stats{grid-template-columns:repeat(2,1fr)}
+  .wf-hero h1{font-size:40px}
+  .wf-hero{padding:48px 28px 44px}
+}
 @media(max-width:640px){
-  .wf-grid{grid-template-columns:1fr}
+  .wf-featured-grid,.wf-grid{grid-template-columns:1fr}
+  .wf-stats{grid-template-columns:repeat(2,1fr)}
+  .wf-hero h1{font-size:32px;letter-spacing:1px}
+  .wf-hero{padding:40px 20px 36px}
+  .hero-sub{font-size:14px!important}
   .wf-tabs{overflow-x:auto;flex-wrap:nowrap}
   .wf-tab{white-space:nowrap}
+  .wf-section-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .wf-section-line{display:none}
+  .wf-flow{padding:12px 6px}
+  .flow-arrow{flex:0 0 14px}
+  .flow-label{font-size:10px}
 }
 </style>
 {% endblock %}
@@ -76,34 +316,77 @@
 {% block content %}
 <div class="workflow-layout">
 
-<!-- Hero -->
-<div class="wf-hero">
-  <div class="badge-gold">AI WORKFLOW</div>
-  <h1><span class="gold">AI 工作流</span></h1>
-  <p>挑选你的 AI 工作流，用于数据和资源的获取、数据的分析。每个工作流结合爬虫数据与 AI 能力，自动化完成信息采集、处理和洞察生成。</p>
-</div>
+<!-- ===== Hero ===== -->
+<section class="wf-hero">
+  <div class="hero-orb orb-1"></div>
+  <div class="hero-orb orb-2"></div>
+  <div class="hero-orb orb-3"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="pulse-dot"></span>AI WORKFLOW ENGINE</div>
+    <h1>AI <span class="gold-text">工作流</span></h1>
+    <p class="hero-sub">挑选并组合你的 AI 工作流，用于数据和资源的获取、智能分析与洞察生成。每个工作流将爬虫数据采集与 AI 推理能力深度结合，自动化完成从信息采集到结构化输出的全流程。</p>
+    <div class="hero-tags">
+      <span class="hero-tag">自动采集</span>
+      <span class="hero-tag">AI 分析</span>
+      <span class="hero-tag">趋势预测</span>
+      <span class="hero-tag">智能摘要</span>
+    </div>
+  </div>
+</section>
 
-<!-- Active summary -->
+<!-- ===== Stats Bar ===== -->
+<section class="wf-stats">
+  <div class="stat-card">
+    <div class="stat-icon gold">📦</div>
+    <div class="stat-info">
+      <div class="stat-num">12</div>
+      <div class="stat-label">工作流总数</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue">📂</div>
+    <div class="stat-info">
+      <div class="stat-num">3</div>
+      <div class="stat-label">分类领域</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green">⚡</div>
+    <div class="stat-info">
+      <div class="stat-num" id="statEnabled">0</div>
+      <div class="stat-label">已启用</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple">🤖</div>
+    <div class="stat-info">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">AI 驱动</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Active Summary ===== -->
 <div class="wf-summary">
   <div class="ws-head">
-    <span class="ws-title">已启用工作流</span>
-    <span class="ws-count" id="wsCount">0 个</span>
+    <span class="ws-title">⚡ 已启用工作流</span>
+    <span class="ws-count"><strong id="wsCountNum">0</strong> 个工作流运行中</span>
   </div>
   <div class="ws-list" id="wsList">
-    <div class="ws-empty">尚未启用任何工作流，点击下方卡片开启</div>
+    <div class="ws-empty">尚未启用任何工作流，点击下方卡片中的「使用此工作流」按钮开启</div>
   </div>
 </div>
 
-<!-- Category tabs -->
+<!-- ===== Category Tabs ===== -->
 <div class="wf-tabs" id="wfTabs">
-  <button class="wf-tab active" data-cat="all">全部<span class="tab-count">12</span></button>
-  <button class="wf-tab" data-cat="data">数据获取<span class="tab-count">4</span></button>
-  <button class="wf-tab" data-cat="resource">资源获取<span class="tab-count">4</span></button>
-  <button class="wf-tab" data-cat="analysis">数据分析<span class="tab-count">4</span></button>
+  <button class="wf-tab active" data-cat="all">全部 <span class="tab-count">12</span></button>
+  <button class="wf-tab" data-cat="data">数据获取 <span class="tab-count">4</span></button>
+  <button class="wf-tab" data-cat="resource">资源获取 <span class="tab-count">4</span></button>
+  <button class="wf-tab" data-cat="analysis">数据分析 <span class="tab-count">4</span></button>
 </div>
 
-<!-- Workflow grid -->
-<div class="wf-grid" id="wfGrid"></div>
+<!-- ===== Workflow Grid (dynamic) ===== -->
+<div id="wfGrid"></div>
 
 </div>
 {% endblock %}
@@ -112,81 +395,154 @@
 <script>
 var WORKFLOWS = [
   // ── 数据获取 ──
-  {id:'wf-gh-trending',cat:'data',icon:'📈',name:'GitHub Trending AI 分析',
+  {id:'wf-gh-trending',cat:'data',icon:'📈',name:'GitHub Trending AI 分析',featured:true,
    desc:'自动抓取 GitHub 热门项目，AI 分析技术趋势、语言分布和增长预测。',
-   steps:['抓取 GitHub Trending 数据','AI 分析热门领域','生成趋势报告']},
+   steps:['抓取 Trending','AI 分析趋势','生成报告']},
   {id:'wf-cve-monitor',cat:'data',icon:'🛡️',name:'CVE 漏洞智能监控',
    desc:'监控 NVD 漏洞数据库，AI 评估风险等级、影响范围和修复建议。',
-   steps:['拉取最新 CVE 数据','AI 评估风险等级','生成修复建议']},
+   steps:['拉取 CVE 数据','AI 评估风险','修复建议']},
   {id:'wf-rss-aggregate',cat:'data',icon:'📡',name:'RSS 资讯智能聚合',
    desc:'聚合多源 RSS 订阅源，AI 自动去重、分类并生成每日摘要。',
-   steps:['抓取 RSS 源数据','AI 去重和分类','生成每日摘要']},
+   steps:['抓取 RSS 源','AI 去重分类','每日摘要']},
   {id:'wf-shortvideo-trend',cat:'data',icon:'🎬',name:'短视频趋势追踪',
    desc:'追踪 B站/抖音等技术短视频，AI 识别热门话题和内容趋势。',
-   steps:['抓取短视频热门数据','AI 识别技术话题','生成趋势分析']},
+   steps:['抓取热门数据','AI 识别话题','趋势分析']},
 
   // ── 资源获取 ──
-  {id:'wf-dev-search',cat:'resource',icon:'🔍',name:'开发者资源智能检索',
+  {id:'wf-dev-search',cat:'resource',icon:'🔍',name:'开发者资源智能检索',featured:true,
    desc:'AI 驱动的开发者资源搜索，按领域推荐工具、文档和 API。',
-   steps:['解析搜索意图','匹配资源数据库','AI 排序推荐']},
+   steps:['解析搜索意图','匹配资源库','AI 排序推荐']},
   {id:'wf-doc-extract',cat:'resource',icon:'📄',name:'技术文档自动提取',
    desc:'从网页提取技术文档，AI 结构化整理为 Markdown 格式。',
-   steps:['抓取网页内容','AI 提取正文','结构化输出 Markdown']},
+   steps:['抓取网页内容','AI 提取正文','输出 Markdown']},
   {id:'wf-api-doc',cat:'resource',icon:'🔌',name:'API 文档智能抓取',
    desc:'自动抓取 API 文档，AI 生成调用示例和参数说明。',
-   steps:['抓取 API 文档页面','AI 解析接口定义','生成调用示例']},
+   steps:['抓取文档页面','AI 解析接口','生成示例']},
   {id:'wf-repo-analyze',cat:'resource',icon:'📦',name:'代码仓库分析',
    desc:'分析 GitHub 仓库，AI 生成项目摘要、技术栈和使用建议。',
-   steps:['获取仓库元数据','AI 分析代码结构','生成项目摘要']},
+   steps:['获取仓库元数据','AI 分析结构','项目摘要']},
 
   // ── 数据分析 ──
-  {id:'wf-news-trend',cat:'analysis',icon:'📊',name:'资讯趋势分析',
+  {id:'wf-news-trend',cat:'analysis',icon:'📊',name:'资讯趋势分析',featured:true,
    desc:'分析技术资讯的热点趋势，AI 生成趋势报告和预测。',
-   steps:['聚合多源资讯数据','AI 分析热点趋势','生成趋势报告']},
+   steps:['聚合资讯数据','AI 分析热点','趋势报告']},
   {id:'wf-finance-insight',cat:'analysis',icon:'💹',name:'金融数据 AI 解读',
    desc:'解读 A 股数据走势，AI 生成投资参考和风险提示。',
-   steps:['获取金融数据','AI 分析走势','生成投资参考']},
+   steps:['获取金融数据','AI 分析走势','投资参考']},
   {id:'wf-techstack-eval',cat:'analysis',icon:'⚙️',name:'技术栈评估',
    desc:'AI 评估技术栈优劣势，给出迁移建议和兼容性分析。',
-   steps:['收集技术栈信息','AI 评估优劣','生成迁移建议']},
+   steps:['收集技术栈信息','AI 评估优劣','迁移建议']},
   {id:'wf-threat-intel',cat:'analysis',icon:'🔐',name:'安全威胁情报',
    desc:'汇总安全资讯和漏洞数据，AI 生成威胁情报报告。',
-   steps:['聚合安全数据源','AI 分析威胁级别','生成情报报告']},
+   steps:['聚合安全数据','AI 分析威胁','情报报告']},
 ];
 
 var CAT_LABELS = {data:'数据获取',resource:'资源获取',analysis:'数据分析'};
+var CAT_DESC = {
+  data:'自动采集多源数据，AI 智能处理与趋势预测',
+  resource:'智能检索与提取开发者资源，结构化输出',
+  analysis:'深度分析数据趋势，生成洞察与决策参考'
+};
+var CAT_ICONS = {data:'📡',resource:'🔍',analysis:'📊'};
 var enabledWorkflows = JSON.parse(localStorage.getItem('opencrawler_wf_enabled') || '[]');
 
-function renderWorkflows(cat){
-  var items = WORKFLOWS;
-  if(cat && cat !== 'all') items = items.filter(function(w){return w.cat === cat;});
-  var html = items.map(function(w){
-    var isEnabled = enabledWorkflows.indexOf(w.id) !== -1;
-    var catLabel = CAT_LABELS[w.cat];
-    var stepsHtml = w.steps.map(function(s,i){
-      return '<div class="step"><span class="step-num">'+(i+1)+'</span><span>'+s+'</span></div>';
-    }).join('');
-    return '<div class="wf-card'+(isEnabled?' enabled':'')+'">' +
-      '<div class="wf-top">' +
-        '<div class="wf-icon '+w.cat+'">'+w.icon+'</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div class="wf-name">'+w.name+'</div>' +
-          '<span class="wf-cat '+w.cat+'">'+catLabel+'</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="wf-desc">'+w.desc+'</div>' +
-      '<div class="wf-steps">'+stepsHtml+'</div>' +
-      '<div class="wf-foot">' +
-        '<span class="wf-status '+(isEnabled?'on':'off')+'">' +
-          '<span class="dot"></span>'+(isEnabled?'已启用':'未启用')+
-        '</span>' +
-        '<button class="wf-toggle'+(isEnabled?' active':'')+'" onclick="toggleWorkflow(\''+w.id+'\')">'+(isEnabled?'已启用':'启用')+'</button>' +
-      '</div>' +
+/* ---- Render a single card ---- */
+function renderCard(w, isFeatured){
+  var isEnabled = enabledWorkflows.indexOf(w.id) !== -1;
+  var catLabel = CAT_LABELS[w.cat];
+  // Interleave steps and arrows to build the flow diagram
+  var flowHtml = '';
+  for(var i=0;i<w.steps.length;i++){
+    if(i>0) flowHtml += '<div class="flow-arrow"></div>';
+    flowHtml += '<div class="flow-step">' +
+      '<div class="flow-num">'+(i+1)+'</div>' +
+      '<div class="flow-label">'+w.steps[i]+'</div>' +
     '</div>';
-  }).join('');
-  document.getElementById('wfGrid').innerHTML = html;
+  }
+
+  return '<div class="wf-card'+(isFeatured?' featured':'')+(isEnabled?' enabled':'')+'" style="--card-accent:#d4af37">' +
+    (isFeatured ? '<div class="wf-ribbon">精选</div>' : '') +
+    '<div class="wf-card-head">' +
+      '<div class="wf-icon-large cat-'+w.cat+'">'+w.icon+'</div>' +
+      '<div class="wf-card-meta">' +
+        '<span class="wf-badge cat-'+w.cat+'">'+catLabel+'</span>' +
+        '<div class="wf-name">'+w.name+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="wf-desc">'+w.desc+'</div>' +
+    '<div class="wf-flow">'+flowHtml+'</div>' +
+    '<div class="wf-card-foot">' +
+      '<span class="wf-status '+(isEnabled?'on':'off')+'">' +
+        '<span class="dot"></span>'+(isEnabled?'运行中':'未启用')+
+      '</span>' +
+      '<button class="wf-btn'+(isEnabled?' active':'')+'" onclick="toggleWorkflow(\''+w.id+'\')">'+(isEnabled?'已启用':'使用此工作流')+'</button>' +
+    '</div>' +
+  '</div>';
 }
 
+/* ---- Render workflows by category ---- */
+function renderWorkflows(cat){
+  var container = document.getElementById('wfGrid');
+  var html = '';
+
+  if(cat === 'all'){
+    // ── Featured section ──
+    var featured = WORKFLOWS.filter(function(w){return w.featured;});
+    if(featured.length){
+      html += '<div class="wf-section">' +
+        '<div class="wf-section-head">' +
+          '<div class="wf-section-title">' +
+            '<div class="section-icon cat-featured">★</div>' +
+            '<h2>精选工作流</h2>' +
+          '</div>' +
+          '<span class="wf-section-desc">最受欢迎的 AI 工作流推荐</span>' +
+          '<div class="wf-section-line"></div>' +
+        '</div>' +
+        '<div class="wf-featured-grid">' +
+          featured.map(function(w){return renderCard(w,true);}).join('') +
+        '</div>' +
+      '</div>';
+    }
+    // ── Grouped sections by category ──
+    ['data','resource','analysis'].forEach(function(c){
+      var items = WORKFLOWS.filter(function(w){return w.cat === c && !w.featured;});
+      if(items.length === 0) return;
+      html += '<div class="wf-section">' +
+        '<div class="wf-section-head">' +
+          '<div class="wf-section-title">' +
+            '<div class="section-icon cat-'+c+'">'+CAT_ICONS[c]+'</div>' +
+            '<h2>'+CAT_LABELS[c]+'</h2>' +
+          '</div>' +
+          '<span class="wf-section-desc">'+CAT_DESC[c]+'</span>' +
+          '<div class="wf-section-line"></div>' +
+        '</div>' +
+        '<div class="wf-grid">' +
+          items.map(function(w){return renderCard(w,false);}).join('') +
+        '</div>' +
+      '</div>';
+    });
+  } else {
+    // ── Single category ──
+    var items = WORKFLOWS.filter(function(w){return w.cat === cat;});
+    html += '<div class="wf-section">' +
+      '<div class="wf-section-head">' +
+        '<div class="wf-section-title">' +
+          '<div class="section-icon cat-'+cat+'">'+CAT_ICONS[cat]+'</div>' +
+          '<h2>'+CAT_LABELS[cat]+'</h2>' +
+        '</div>' +
+        '<span class="wf-section-desc">'+CAT_DESC[cat]+'</span>' +
+        '<div class="wf-section-line"></div>' +
+      '</div>' +
+      '<div class="wf-grid">' +
+        items.map(function(w){return renderCard(w,false);}).join('') +
+      '</div>' +
+    '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+/* ---- Toggle workflow on/off ---- */
 function toggleWorkflow(id){
   var idx = enabledWorkflows.indexOf(id);
   if(idx === -1){
@@ -195,38 +551,42 @@ function toggleWorkflow(id){
     enabledWorkflows.splice(idx, 1);
   }
   localStorage.setItem('opencrawler_wf_enabled', JSON.stringify(enabledWorkflows));
-  // 重新渲染
   var activeTab = document.querySelector('.wf-tab.active');
   renderWorkflows(activeTab ? activeTab.dataset.cat : 'all');
   renderSummary();
 }
 
+/* ---- Render active summary + stats ---- */
 function renderSummary(){
   var list = document.getElementById('wsList');
-  var count = document.getElementById('wsCount');
-  count.textContent = enabledWorkflows.length + ' 个';
+  var countNum = document.getElementById('wsCountNum');
+  var statEnabled = document.getElementById('statEnabled');
+  countNum.textContent = enabledWorkflows.length;
+  statEnabled.textContent = enabledWorkflows.length;
+
   if(enabledWorkflows.length === 0){
-    list.innerHTML = '<div class="ws-empty">尚未启用任何工作流，点击下方卡片开启</div>';
+    list.innerHTML = '<div class="ws-empty">尚未启用任何工作流，点击下方卡片中的「使用此工作流」按钮开启</div>';
     return;
   }
   var html = enabledWorkflows.map(function(id){
     var w = WORKFLOWS.find(function(x){return x.id === id;});
     if(!w) return '';
     return '<div class="ws-chip">'+w.icon+' '+w.name+
-      ' <span class="chip-remove" onclick="toggleWorkflow(\''+w.id+'\')">✕</span></div>';
+      ' <span class="chip-remove" onclick="toggleWorkflow(\''+w.id+'\')" title="停用">✕</span></div>';
   }).join('');
   list.innerHTML = html;
 }
 
-// Tab switching
+/* ---- Tab switching ---- */
 document.getElementById('wfTabs').addEventListener('click', function(e){
-  if(!e.target.classList.contains('wf-tab')) return;
+  var tab = e.target.closest('.wf-tab');
+  if(!tab) return;
   this.querySelectorAll('.wf-tab').forEach(function(t){t.classList.remove('active');});
-  e.target.classList.add('active');
-  renderWorkflows(e.target.dataset.cat);
+  tab.classList.add('active');
+  renderWorkflows(tab.dataset.cat);
 });
 
-// Init
+/* ---- Init ---- */
 renderWorkflows('all');
 renderSummary();
 </script>

@@ -21,6 +21,25 @@
 }
 #gai-fab .gai-badge.show{display:flex}
 
+/* ── 悬浮按钮提示标签 ── */
+#gai-fab-tip{
+  position:fixed;right:82px;bottom:28px;z-index:10000;
+  background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:10px;
+  font-size:13px;font-weight:500;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+  opacity:0;transform:translateX(10px);pointer-events:none;
+  transition:opacity .3s,transform .3s;
+}
+#gai-fab-tip.show{opacity:1;transform:translateX(0)}
+#gai-fab-tip .tip-icon{margin-right:4px}
+#gai-fab-tip::after{
+  content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+  border:6px solid transparent;border-left-color:#1a1a1a;
+}
+@media(max-width:768px){
+  #gai-fab-tip{right:72px;bottom:24px;font-size:12px;padding:6px 10px}
+}
+
 /* ── 页面跳转提示小字 ── */
 #gai-toast{
   position:fixed;right:84px;bottom:24px;z-index:9999;

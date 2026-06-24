@@ -85,6 +85,17 @@
 .disclaimer-box h4{font-size:14px;color:#f85149;margin-bottom:4px}
 .disclaimer-box p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
 
+/* 汇率行情 */
+.rate-strip{margin-bottom:28px}
+.rate-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.rate-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;transition:all .15s;cursor:default}
+.rate-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.rate-cur{font-size:12px;color:var(--muted);margin-bottom:4px}
+.rate-val{font-size:20px;font-weight:700;color:var(--text)}
+.rate-chg{font-size:11px;font-weight:600;margin-top:2px}
+.rate-chg.up{color:#e53935}
+.rate-chg.down{color:#43a047}
+
 /* Calendar */
 .cal-list{list-style:none}
 .cal-list li{padding:9px 0;border-bottom:1px solid var(--bg);font-size:13px;display:flex;gap:8px}
@@ -171,28 +182,28 @@
 <!-- A股主要指数 -->
 <div class="finance-layout">
 <div class="index-strip" id="indexStrip">
-  <div class="index-card">
-    <div class="idx-name">上证指数</div>
+  <div class="index-card" data-stock data-stock-name="上证指数" data-stock-code="000001.SH" data-stock-price="3358.27" data-stock-change="0.42">
+    <div class="idx-name">📊 上证指数</div>
     <div class="idx-price" id="idxSH">--</div>
     <div class="idx-change flat" id="idxSHChg">--</div>
   </div>
-  <div class="index-card">
-    <div class="idx-name">深证成指</div>
+  <div class="index-card" data-stock data-stock-name="深证成指" data-stock-code="399001.SZ" data-stock-price="10867.53" data-stock-change="0.18">
+    <div class="idx-name">📈 深证成指</div>
     <div class="idx-price" id="idxSZ">--</div>
     <div class="idx-change flat" id="idxSZChg">--</div>
   </div>
-  <div class="index-card">
-    <div class="idx-name">创业板指</div>
+  <div class="index-card" data-stock data-stock-name="创业板指" data-stock-code="399006.SZ" data-stock-price="2245.10" data-stock-change="-0.33">
+    <div class="idx-name">🚀 创业板指</div>
     <div class="idx-price" id="idxCY">--</div>
     <div class="idx-change flat" id="idxCYChg">--</div>
   </div>
-  <div class="index-card">
-    <div class="idx-name">科创50</div>
+  <div class="index-card" data-stock data-stock-name="科创50" data-stock-code="000688.SH" data-stock-price="987.45" data-stock-change="1.21">
+    <div class="idx-name">🔬 科创50</div>
     <div class="idx-price" id="idxKC">--</div>
     <div class="idx-change flat" id="idxKCChg">--</div>
   </div>
-  <div class="index-card">
-    <div class="idx-name">沪深300</div>
+  <div class="index-card" data-stock data-stock-name="沪深300" data-stock-code="000300.SH" data-stock-price="3982.15" data-stock-change="0.05">
+    <div class="idx-name">💹 沪深300</div>
     <div class="idx-price" id="idxHS">--</div>
     <div class="idx-change flat" id="idxHSChg">--</div>
   </div>
@@ -200,23 +211,23 @@
 
 <!-- 全球市场 -->
 <div class="global-strip">
-  <div class="global-card">
-    <div class="gl-name">道琼斯</div>
+  <div class="global-card" data-stock data-stock-name="道琼斯" data-stock-code="DJI" data-stock-price="42358.19" data-stock-change="0.15">
+    <div class="gl-name">🇺🇸 道琼斯</div>
     <div class="gl-price" id="glDJI">--</div>
     <div class="gl-change flat" id="glDJIChg">--</div>
   </div>
-  <div class="global-card">
-    <div class="gl-name">纳斯达克</div>
+  <div class="global-card" data-stock data-stock-name="纳斯达克" data-stock-code="IXIC" data-stock-price="19012.54" data-stock-change="-0.22">
+    <div class="gl-name">🇺🇸 纳斯达克</div>
     <div class="gl-price" id="glIXIC">--</div>
     <div class="gl-change flat" id="glIXICChg">--</div>
   </div>
-  <div class="global-card">
-    <div class="gl-name">恒生指数</div>
+  <div class="global-card" data-stock data-stock-name="恒生指数" data-stock-code="HSI" data-stock-price="19634.81" data-stock-change="0.87">
+    <div class="gl-name">🇭🇰 恒生指数</div>
     <div class="gl-price" id="glHSI">--</div>
     <div class="gl-change flat" id="glHSIChg">--</div>
   </div>
-  <div class="global-card">
-    <div class="gl-name">日经225</div>
+  <div class="global-card" data-stock data-stock-name="日经225" data-stock-code="N225" data-stock-price="38762.90" data-stock-change="0.53">
+    <div class="gl-name">🇯🇵 日经225</div>
     <div class="gl-price" id="glN225">--</div>
     <div class="gl-change flat" id="glN225Chg">--</div>
   </div>
@@ -226,6 +237,53 @@
 <div class="disclaimer-box">
   <h4>风险提示</h4>
   <p>本站仅提供公开市场数据的索引与聚合服务，所有数据来源于公开接口。数据可能存在延迟，不构成任何投资建议。投资有风险，入市需谨慎。过往表现不代表未来收益。本站不提供交易服务，不推荐具体股票，不对用户的投资决策承担任何责任。</p>
+</div>
+
+<!-- 汇率行情 -->
+<div class="rate-strip" id="rateStrip">
+  <h3 style="font-size:16px;margin-bottom:12px">主要货币汇率 <span style="font-size:12px;color:var(--muted);font-weight:400">· 人民币基准价 · 仅供参考</span></h3>
+  <div class="rate-grid">
+    <div class="rate-card" data-rate="美元 USD" data-rate-value="7.2473" data-rate-change="0.0012">
+      <div class="rate-cur">$ 美元 USD</div>
+      <div class="rate-val">7.2473</div>
+      <div class="rate-chg up">▲ 0.12%</div>
+    </div>
+    <div class="rate-card" data-rate="欧元 EUR" data-rate-value="7.8321" data-rate-change="-0.0035">
+      <div class="rate-cur">€ 欧元 EUR</div>
+      <div class="rate-val">7.8321</div>
+      <div class="rate-chg down">▼ 0.35%</div>
+    </div>
+    <div class="rate-card" data-rate="日元 JPY" data-rate-value="0.0487" data-rate-change="0.0008">
+      <div class="rate-cur">¥ 日元 JPY</div>
+      <div class="rate-val">0.0487</div>
+      <div class="rate-chg up">▲ 0.08%</div>
+    </div>
+    <div class="rate-card" data-rate="英镑 GBP" data-rate-value="9.1842" data-rate-change="-0.0021">
+      <div class="rate-cur">£ 英镑 GBP</div>
+      <div class="rate-val">9.1842</div>
+      <div class="rate-chg down">▼ 0.21%</div>
+    </div>
+    <div class="rate-card" data-rate="港币 HKD" data-rate-value="0.9285" data-rate-change="0.0005">
+      <div class="rate-cur">HK$ 港币 HKD</div>
+      <div class="rate-val">0.9285</div>
+      <div class="rate-chg up">▲ 0.05%</div>
+    </div>
+    <div class="rate-card" data-rate="韩元 KRW" data-rate-value="0.0053" data-rate-change="-0.0012">
+      <div class="rate-cur">₩ 韩元 KRW</div>
+      <div class="rate-val">0.0053</div>
+      <div class="rate-chg down">▼ 0.12%</div>
+    </div>
+    <div class="rate-card" data-rate="新加坡元 SGD" data-rate-value="5.3847" data-rate-change="0.0018">
+      <div class="rate-cur">S$ 新加坡元 SGD</div>
+      <div class="rate-val">5.3847</div>
+      <div class="rate-chg up">▲ 0.18%</div>
+    </div>
+    <div class="rate-card" data-rate="澳元 AUD" data-rate-value="4.7821" data-rate-change="-0.0028">
+      <div class="rate-cur">A$ 澳元 AUD</div>
+      <div class="rate-val">4.7821</div>
+      <div class="rate-chg down">▼ 0.28%</div>
+    </div>
+  </div>
 </div>
 
 <!-- 市场概览 + 热门股票 -->
@@ -437,7 +495,7 @@ function renderHotStocks() {
   var html = MOCK_STOCKS.map(function(s) {
     var dir = parseFloat(s.pct) >= 0 ? 'up' : 'down';
     var pre = parseFloat(s.pct) >= 0 ? '+' : '';
-    return '<li>' +
+    return '<li data-stock data-stock-name="' + s.name + '" data-stock-code="' + s.code + '" data-stock-price="' + s.price + '" data-stock-change="' + parseFloat(s.pct) + '">' +
       '<div><span class="stock-name">' + s.name + '</span><span class="stock-code">' + s.code + '</span></div>' +
       '<div style="display:flex;align-items:center;">' +
         '<span class="stock-price">' + s.price + '</span>' +

@@ -535,6 +535,7 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
         '<span class="gai-badge" id="gai-badge">0</span>' +
       '</button>' +
+      '<div id="gai-fab-tip"><span class="tip-icon">🤖</span> AI 助手 · 点击对话</div>' +
 
       // 侧边栏
       '<div id="gai-sidebar">' +
@@ -660,6 +661,24 @@
   function bindEvents() {
     var fab = document.getElementById('gai-fab');
     if (fab) fab.addEventListener('click', toggleSidebar);
+
+    // AI 助手提示标签
+    var tip = document.getElementById('gai-fab-tip');
+    if (tip && fab) {
+      var tipTimer = null;
+      function showTip() { tip.classList.add('show'); }
+      function hideTip() { tip.classList.remove('show'); }
+      // 页面加载后 3 秒自动显示，8 秒后隐藏
+      setTimeout(showTip, 3000);
+      tipTimer = setTimeout(hideTip, 11000);
+      // 鼠标悬停时显示
+      fab.addEventListener('mouseenter', showTip);
+      fab.addEventListener('mouseleave', function() {
+        setTimeout(hideTip, 2000);
+      });
+      // 点击后隐藏
+      fab.addEventListener('click', hideTip);
+    }
 
     var btnClose = document.getElementById('gai-btn-close');
     if (btnClose) btnClose.addEventListener('click', toggleSidebar);

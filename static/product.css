@@ -71,13 +71,16 @@ a:hover { text-decoration: underline; }
     gap: 8px;
 }
 .nav-logo:hover { text-decoration: none; color: var(--accent); }
-.nav-links { display: flex; gap: 4px; }
+.nav-links { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.nav-links::-webkit-scrollbar { display: none; }
 .nav-links a {
     color: var(--muted);
-    padding: 8px 16px;
+    padding: 8px 12px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: color 0.2s var(--ease-smooth), background 0.2s var(--ease-smooth), transform 0.15s var(--ease-spring);
 }
 .nav-links a:hover { color: var(--text); background: var(--card-hover); text-decoration: none; transform: translateY(-1px); }

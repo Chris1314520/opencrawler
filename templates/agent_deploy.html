@@ -86,23 +86,12 @@
 
 {% block content %}
 
-{% if not has_access %}
-<!-- === GATED: 未购买 === -->
-<div class="deploy-layout">
-<div class="gate-lock">
-  <span class="lock-icon">🔒</span>
-  <h3>购买教程后解锁</h3>
-  <p>Agent 部署完全指南包含 OpenClaw / Hermes / OpenHuman<br>从零到一的完整部署流程，仅需 29.9 元永久买断</p>
-  <a href="/pay?tier=tutorial" class="btn-gold">29.9 元 · 立即购买</a>
-</div>
-</div>
-{% else %}
-<!-- === UNLOCKED: 已购买 === -->
+<!-- === 开源免费 · 全部开放 === -->
 <div class="deploy-layout">
 <div class="deploy-hero">
-  <div class="badge-gold">PREMIUM</div>
+  <div class="badge-gold">开源免费</div>
   <h1><span class="gold">Agent 部署完全指南</span></h1>
-  <p>从环境准备到生产运行，覆盖 OpenClaw / Hermes / OpenHuman 三大通用 Agent 的完整部署流程。国内网络友好，每一步都有详细说明。</p>
+  <p>从环境准备到生产运行，覆盖 OpenClaw / Hermes / OpenHuman 三大通用 Agent 的完整部署流程。国内网络友好，每一步都有详细说明。全部开源 · 永久免费。</p>
 </div>
 
 <div class="deploy-body">
@@ -572,7 +561,6 @@ exec python -m openhuman "$@"</pre>
   </div><!-- /deploy-content -->
 </div><!-- /deploy-body -->
 </div><!-- /deploy-layout -->
-{% endif %}
 
 {% endblock %}
 

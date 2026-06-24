@@ -1,0 +1,1017 @@
+{% extends "base.html" %}
+{% block title %}网络营销 — OpenCrawler{% endblock %}
+{% set active_page = 'marketing' %}
+{% block content %}
+
+<style>
+/* ════════════════════════════════════════════════
+   网络营销 · 高端重设计 (Amazon/iOS 风格)
+   ════════════════════════════════════════════════ */
+.mkt-wrap{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
+
+/* ── HERO ── */
+.mkt-hero{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#0f0f0f 0%,#1a1a1a 45%,#2d2d2d 100%);
+    border-radius:24px;padding:56px 40px;margin-bottom:40px;
+    text-align:center;color:#fff;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
+}
+.mkt-hero::before{
+    content:'';position:absolute;inset:0;
+    background:
+        radial-gradient(circle at 20% 20%,rgba(212,175,55,.18) 0%,transparent 45%),
+        radial-gradient(circle at 80% 80%,rgba(26,115,232,.16) 0%,transparent 45%);
+    pointer-events:none;
+}
+.mkt-hero::after{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(212,175,55,.5),transparent);
+}
+.mkt-hero-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:600;letter-spacing:1px;
+    padding:6px 16px;border-radius:20px;
+    background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.3);
+    color:#d4af37;margin-bottom:20px;position:relative;z-index:1;
+}
+.mkt-hero-tag .dot{width:6px;height:6px;border-radius:50%;background:#d4af37;animation:pulse 2s ease-in-out infinite}
+.mkt-hero h1{
+    font-size:42px;font-weight:800;line-height:1.15;letter-spacing:-1px;
+    margin-bottom:14px;position:relative;z-index:1;
+    background:linear-gradient(135deg,#fff 0%,#f0f0f0 50%,#d4af37 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.mkt-hero p{
+    font-size:16px;line-height:1.7;color:rgba(255,255,255,.7);
+    max-width:680px;margin:0 auto 28px;position:relative;z-index:1;
+}
+.mkt-hero-stats{
+    display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+    position:relative;z-index:1;
+}
+.mkt-hero-stat{
+    background:rgba(255,255,255,.06);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.1);border-radius:14px;
+    padding:14px 22px;min-width:120px;
+}
+.mkt-hero-stat .hs-num{font-size:24px;font-weight:800;color:#d4af37;line-height:1}
+.mkt-hero-stat .hs-label{font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;letter-spacing:.5px}
+
+/* ── SECTION HEADER ── */
+.mkt-section{margin-bottom:48px}
+.mkt-sec-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.mkt-sec-icon{
+    width:40px;height:40px;border-radius:11px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#d4af37;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+.mkt-sec-icon svg{width:22px;height:22px}
+.mkt-sec-title{font-size:24px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+.mkt-sec-sub{font-size:14px;color:var(--muted);line-height:1.6;margin:6px 0 24px 54px;max-width:760px}
+
+/* ── 平台分类组 ── */
+.cat-group{
+    position:relative;border-radius:18px;padding:24px;margin-bottom:20px;
+    border:1px solid var(--border);overflow:hidden;
+}
+.cat-group::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,var(--cat-c1),var(--cat-c2));
+}
+.cat-group::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(135deg,var(--cat-tint) 0%,transparent 60%);
+}
+.cat-group>*{position:relative;z-index:1}
+.cat-group-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.cat-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:700;letter-spacing:.5px;
+    padding:5px 14px;border-radius:20px;color:#fff;
+    background:linear-gradient(135deg,var(--cat-c1),var(--cat-c2));
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+.cat-badge svg{width:14px;height:14px}
+.cat-group-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ── 平台卡片 ── */
+.ec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.ec-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:16px;
+    padding:22px;display:flex;flex-direction:column;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+    position:relative;overflow:hidden;
+}
+.ec-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--brand),var(--brand2));
+    opacity:0;transition:opacity .3s var(--ease-smooth);
+}
+.ec-card:hover{
+    transform:translateY(-5px);border-color:transparent;
+    box-shadow:0 14px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.04);
+}
+.ec-card:hover::before{opacity:1}
+.ec-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.brand-logo{
+    width:56px;height:56px;border-radius:15px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));
+    box-shadow:0 6px 16px rgba(0,0,0,.15);position:relative;overflow:hidden;
+}
+.brand-logo::after{
+    content:'';position:absolute;top:0;left:0;right:0;height:50%;
+    background:linear-gradient(180deg,rgba(255,255,255,.22),transparent);
+    pointer-events:none;
+}
+.brand-logo svg{width:30px;height:30px;position:relative;z-index:1}
+.ec-name{font-size:17px;font-weight:700;line-height:1.3;color:var(--text)}
+.ec-type{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.ec-desc{
+    font-size:13px;color:var(--muted);line-height:1.65;
+    margin-bottom:14px;flex:1;overflow-wrap:break-word;word-break:break-word;
+}
+.ec-stats{
+    display:flex;gap:18px;margin-bottom:14px;padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+}
+.ec-stat{display:flex;flex-direction:column;gap:2px}
+.ec-stat-val{font-size:18px;font-weight:800;color:var(--text);line-height:1}
+.ec-stat-label{font-size:11px;color:var(--muted)}
+.ec-links{display:flex;gap:8px;flex-wrap:wrap}
+.ec-link{
+    font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;
+    text-decoration:none;border:1px solid var(--border);color:var(--text);
+    transition:all .2s var(--ease-spring);display:inline-flex;align-items:center;gap:4px;
+}
+.ec-link:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);text-decoration:none}
+.ec-link.primary{
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent;
+    box-shadow:0 3px 10px rgba(0,0,0,.12);
+}
+.ec-link.primary:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,0,0,.18);color:#fff}
+
+/* ── AI 工作流 · 视觉流程 ── */
+.wf-flow{
+    background:linear-gradient(135deg,#0f0f0f 0%,#1a1a1a 100%);
+    border-radius:20px;padding:32px 24px;margin-bottom:28px;
+    position:relative;overflow:hidden;
+}
+.wf-flow::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 0%,rgba(212,175,55,.1) 0%,transparent 50%);
+}
+.wf-flow-title{
+    text-align:center;color:#fff;font-size:16px;font-weight:700;margin-bottom:24px;
+    position:relative;z-index:1;letter-spacing:.5px;
+}
+.wf-flow-title span{color:#d4af37}
+.wf-flow-track{
+    display:flex;align-items:stretch;justify-content:center;gap:0;
+    position:relative;z-index:1;flex-wrap:wrap;
+}
+.wf-node{
+    flex:1;min-width:130px;max-width:180px;
+    background:rgba(255,255,255,.05);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.1);border-radius:14px;
+    padding:18px 12px;text-align:center;color:#fff;
+    transition:all .3s var(--ease-spring);
+}
+.wf-node:hover{
+    transform:translateY(-4px);background:rgba(212,175,55,.1);
+    border-color:rgba(212,175,55,.4);box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.wf-node-icon{
+    width:44px;height:44px;border-radius:12px;margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(212,175,55,.05));
+    border:1px solid rgba(212,175,55,.25);
+}
+.wf-node-icon svg{width:22px;height:22px;color:#d4af37}
+.wf-node-num{font-size:10px;font-weight:700;color:#d4af37;letter-spacing:1px;margin-bottom:4px}
+.wf-node-name{font-size:14px;font-weight:700;line-height:1.3}
+.wf-node-desc{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4}
+.wf-arrow{
+    display:flex;align-items:center;justify-content:center;
+    width:36px;flex-shrink:0;color:rgba(212,175,55,.5);
+}
+.wf-arrow svg{width:24px;height:24px}
+@media(max-width:860px){
+    .wf-flow-track{flex-direction:column;gap:0}
+    .wf-arrow{transform:rotate(90deg);width:auto;height:30px;margin:-4px 0}
+    .wf-node{max-width:none;width:100%}
+}
+
+/* 工作流详情卡片 */
+.wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.wf-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:16px;
+    padding:22px;display:flex;flex-direction:column;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+    position:relative;overflow:hidden;
+}
+.wf-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.wf-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.wf-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:10px;font-weight:700;letter-spacing:.5px;
+    padding:4px 10px;border-radius:6px;text-transform:uppercase;
+}
+.wf-badge.auto{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);color:#1b5e20}
+.wf-badge.semi{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e65100}
+.wf-badge .b-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.wf-name{font-size:16px;font-weight:700;margin-bottom:8px;line-height:1.3}
+.wf-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px;flex:1;overflow-wrap:break-word;word-break:break-word}
+.wf-steps{
+    font-size:12px;color:var(--muted);margin-bottom:14px;padding:14px;
+    background:var(--card);border-radius:10px;border:1px solid var(--border);
+    line-height:1.9;
+}
+.wf-steps .step{display:flex;align-items:flex-start;gap:8px}
+.wf-steps .step-num{
+    width:18px;height:18px;border-radius:50%;flex-shrink:0;
+    background:var(--accent-dim);color:var(--accent);
+    font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+}
+.wf-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:14px;border-top:1px solid var(--border)}
+.wf-platforms{font-size:11px;color:var(--muted);line-height:1.4;flex:1}
+.wf-link{font-size:12px;color:var(--accent);text-decoration:none;font-weight:700;white-space:nowrap;transition:gap .2s}
+.wf-link:hover{text-decoration:underline}
+
+/* ── 跨境电商 ── */
+.cross-banner{
+    background:linear-gradient(135deg,#1a73e8 0%,#174ea6 100%);
+    border-radius:18px;padding:24px 28px;margin-bottom:24px;
+    display:flex;align-items:center;gap:20px;color:#fff;
+    position:relative;overflow:hidden;
+}
+.cross-banner::before{
+    content:'';position:absolute;inset:0;
+    background:
+        radial-gradient(circle at 90% 50%,rgba(255,255,255,.12) 0%,transparent 40%),
+        repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.03) 30px,rgba(255,255,255,.03) 60px);
+}
+.cross-banner>*{position:relative;z-index:1}
+.cross-banner-globe{font-size:42px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+.cross-banner-text h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.cross-banner-text p{font-size:13px;color:rgba(255,255,255,.8);line-height:1.5}
+.cross-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.cross-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:16px;
+    padding:22px;display:flex;flex-direction:column;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+    position:relative;overflow:hidden;
+}
+.cross-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.cross-card::before{
+    content:'';position:absolute;top:0;right:0;width:80px;height:80px;
+    background:radial-gradient(circle,var(--region-tint) 0%,transparent 70%);
+    pointer-events:none;
+}
+.cross-head{display:flex;align-items:center;gap:14px;margin-bottom:12px;position:relative;z-index:1}
+.cross-flag{
+    font-size:38px;line-height:1;flex-shrink:0;
+    width:56px;height:56px;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--card),#fff);
+    border:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,.06);
+}
+.cross-name{font-size:17px;font-weight:700;line-height:1.3;color:var(--text)}
+.cross-region{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.cross-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px;flex:1;overflow-wrap:break-word;word-break:break-word}
+.cross-platforms{display:flex;flex-wrap:wrap;gap:6px}
+.cross-plat-tag{
+    font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;
+    background:var(--accent-dim);color:var(--accent);
+    transition:all .15s var(--ease-spring);
+}
+.cross-plat-tag:hover{background:var(--accent);color:#fff}
+
+/* ── GitHub 项目 ── */
+.gh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.gh-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:16px;
+    padding:20px;display:flex;flex-direction:column;
+    transition:transform .3s var(--ease-spring),box-shadow .3s var(--ease-smooth),border-color .3s var(--ease-smooth);
+    text-decoration:none;color:inherit;position:relative;overflow:hidden;
+}
+.gh-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 32px rgba(0,0,0,.08);text-decoration:none}
+.gh-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--lang-c),transparent);
+    opacity:0;transition:opacity .3s var(--ease-smooth);
+}
+.gh-card:hover::before{opacity:1}
+.gh-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.gh-icon{
+    width:42px;height:42px;border-radius:11px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:#fff;
+    box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+.gh-icon svg{width:22px;height:22px}
+.gh-name{font-size:15px;font-weight:700;line-height:1.3;color:var(--text);word-break:break-all}
+.gh-fullname{font-size:11px;color:var(--muted);margin-top:2px}
+.gh-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;flex:1;overflow-wrap:break-word;word-break:break-word}
+.gh-meta{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted);padding-top:14px;border-top:1px solid var(--border)}
+.gh-meta-item{display:inline-flex;align-items:center;gap:5px}
+.gh-meta-item svg{width:14px;height:14px}
+.gh-lang-dot{width:11px;height:11px;border-radius:50%;background:var(--lang-c);flex-shrink:0;box-shadow:0 0 0 2px rgba(0,0,0,.04)}
+.gh-stars{font-weight:700;color:var(--text)}
+.gh-cta{
+    display:inline-flex;align-items:center;gap:5px;margin-left:auto;
+    font-size:12px;font-weight:700;color:var(--accent);
+}
+.gh-cta svg{width:14px;height:14px}
+
+/* ── 响应式 ── */
+@media(max-width:768px){
+    .mkt-wrap{padding:12px 12px 40px}
+    .mkt-hero{padding:36px 20px;border-radius:18px}
+    .mkt-hero h1{font-size:28px}
+    .mkt-hero p{font-size:14px}
+    .mkt-hero-stat{min-width:100px;padding:12px 16px}
+    .mkt-hero-stat .hs-num{font-size:20px}
+    .mkt-sec-title{font-size:20px}
+    .mkt-sec-sub{margin-left:0}
+    .cat-group{padding:18px}
+    .ec-grid,.wf-grid,.cross-grid,.gh-grid{grid-template-columns:1fr}
+    .cross-banner{flex-direction:column;text-align:center;padding:20px}
+}
+</style>
+
+<div class="mkt-wrap">
+
+<!-- ════════ HERO ════════ -->
+<div class="mkt-hero">
+    <div class="mkt-hero-tag"><span class="dot"></span> 全链路电商营销资源站</div>
+    <h1>网络营销 · 电商平台 · AI 自动化交易</h1>
+    <p>国内主流电商平台信息索引 · 跨境电商出海指南 · GitHub 开源营销工具 · AI 全自动工作流交易方案，一站式覆盖选品、上架、客服、运营、复盘全链路。</p>
+    <div class="mkt-hero-stats">
+        <div class="mkt-hero-stat"><div class="hs-num">8+</div><div class="hs-label">国内平台</div></div>
+        <div class="mkt-hero-stat"><div class="hs-num">6</div><div class="hs-label">跨境区域</div></div>
+        <div class="mkt-hero-stat"><div class="hs-num">6</div><div class="hs-label">AI 工作流</div></div>
+        <div class="mkt-hero-stat"><div class="hs-num">20K+</div><div class="hs-label">开源 Star</div></div>
+    </div>
+</div>
+
+<!-- ════════ 国内电商平台 ════════ -->
+<div class="mkt-section">
+    <div class="mkt-sec-head">
+        <div class="mkt-sec-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 8h12l-1 12H7L6 8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 016 0v2" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="mkt-sec-title">国内电商平台</div>
+    </div>
+    <div class="mkt-sec-sub">按商业模式分类索引，覆盖传统电商、社交电商、内容电商与直播电商四大形态，附平台规模数据与开放 API 入口。</div>
+
+    <!-- 传统电商 -->
+    <div class="cat-group" style="--cat-c1:#FF4400;--cat-c2:#E1251B;--cat-tint:rgba(255,68,0,.04)">
+        <div class="cat-group-head">
+            <span class="cat-badge">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="7" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 11h16M12 7v13" stroke="currentColor" stroke-width="2"/></svg>
+                传统电商
+            </span>
+            <span class="cat-group-desc">自营 + B2C/C2C 综合货架电商，供应链与物流成熟</span>
+        </div>
+        <div class="ec-grid">
+
+            <!-- 淘宝/天猫 -->
+            <div class="ec-card" style="--brand:#FF4400;--brand2:#FF7E00">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M6 8h12l-1 12H7L6 8z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 016 0v2" stroke="#fff" stroke-width="2"/><path d="M9.5 13l5 4M14.5 13l-5 4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">淘宝 / 天猫</div>
+                        <div class="ec-type">阿里巴巴集团 · 综合电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">中国最大 C2C/B2C 电商平台，日活超 4 亿。支持直通车、钻展、超级推荐等营销工具，开放 API 支持商家自动化运营。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">9亿+</span><span class="ec-stat-label">活跃买家</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">1000万+</span><span class="ec-stat-label">商家</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.taobao.com" target="_blank" rel="noopener" class="ec-link primary">淘宝官网</a>
+                    <a href="https://www.tmall.com" target="_blank" rel="noopener" class="ec-link">天猫</a>
+                    <a href="https://open.taobao.com" target="_blank" rel="noopener" class="ec-link">开放平台</a>
+                    <a href="https://github.com/aliyun/taobao-sdk" target="_blank" rel="noopener" class="ec-link">SDK</a>
+                </div>
+            </div>
+
+            <!-- 京东 -->
+            <div class="ec-card" style="--brand:#E1251B;--brand2:#FF4444">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="7" width="16" height="13" rx="2" stroke="#fff" stroke-width="2"/><path d="M4 11h16M12 7v13" stroke="#fff" stroke-width="2"/><path d="M8 15h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">京东</div>
+                        <div class="ec-type">京东集团 · 自营 + B2C</div>
+                    </div>
+                </div>
+                <div class="ec-desc">中国领先的自营电商平台，以正品和物流著称。京东开放平台提供商品/订单/物流 API，支持商家自动化管理。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">5.8亿+</span><span class="ec-stat-label">活跃用户</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">50万+</span><span class="ec-stat-label">商家</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.jd.com" target="_blank" rel="noopener" class="ec-link primary">京东官网</a>
+                    <a href="https://open.jd.com" target="_blank" rel="noopener" class="ec-link">开放平台</a>
+                    <a href="https://github.com/jd-developer" target="_blank" rel="noopener" class="ec-link">GitHub</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 社交电商 -->
+    <div class="cat-group" style="--cat-c1:#E02E24;--cat-c2:#07C160;--cat-tint:rgba(7,193,96,.04)">
+        <div class="cat-group-head">
+            <span class="cat-badge">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-7l-4 3v-3H6a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                社交电商
+            </span>
+            <span class="cat-group-desc">依托社交关系链裂变，拼团 / 私域流量驱动转化</span>
+        </div>
+        <div class="ec-grid">
+
+            <!-- 拼多多 -->
+            <div class="ec-card" style="--brand:#E02E24;--brand2:#FF6B35">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12l4-4 4 4-4 4-4-4z M13 8l4-4 4 4-4 4-4-4z M8 16l4-4 4 4-4 4-4-4z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">拼多多</div>
+                        <div class="ec-type">拼多多 · 社交电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">社交电商龙头，拼团模式 + 百亿补贴。多多开放平台提供商品/订单/营销 API，支持商家自动化运营。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">9亿+</span><span class="ec-stat-label">活跃买家</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">1300万+</span><span class="ec-stat-label">商家</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.pinduoduo.com" target="_blank" rel="noopener" class="ec-link primary">拼多多官网</a>
+                    <a href="https://open.pinduoduo.com" target="_blank" rel="noopener" class="ec-link">开放平台</a>
+                    <a href="https://github.com/pddon" target="_blank" rel="noopener" class="ec-link">GitHub</a>
+                </div>
+            </div>
+
+            <!-- 微信/视频号 -->
+            <div class="ec-card" style="--brand:#07C160;--brand2:#42D46B">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-7l-4 3v-3H6a2 2 0 01-2-2V6z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">视频号 / 微信小店</div>
+                        <div class="ec-type">腾讯 · 社交电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">微信生态内电商，视频号直播 + 小程序商城 + 私域流量。腾讯开放平台提供小店 API，支持自动化运营。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">13亿+</span><span class="ec-stat-label">微信月活</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">4亿+</span><span class="ec-stat-label">视频号日活</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://channels.weixin.qq.com" target="_blank" rel="noopener" class="ec-link primary">视频号</a>
+                    <a href="https://open.weixin.qq.com" target="_blank" rel="noopener" class="ec-link">开放平台</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 内容电商 -->
+    <div class="cat-group" style="--cat-c1:#FF2442;--cat-c2:#FF6034;--cat-tint:rgba(255,36,66,.04)">
+        <div class="cat-group-head">
+            <span class="cat-badge">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M6 4h12v16H6z" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                内容电商
+            </span>
+            <span class="cat-group-desc">种草内容驱动消费决策，内容与交易闭环</span>
+        </div>
+        <div class="ec-grid">
+
+            <!-- 小红书 -->
+            <div class="ec-card" style="--brand:#FF2442;--brand2:#FF6B81">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M6 4h12v16H6z" stroke="#fff" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">小红书</div>
+                        <div class="ec-type">行吟信息 · 种草电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">内容种草 + 电商闭环，年轻女性用户为主。蒲公英平台提供品牌合作 API，支持达人营销自动化。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">3亿+</span><span class="ec-stat-label">月活</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">70%</span><span class="ec-stat-label">女性用户</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.xiaohongshu.com" target="_blank" rel="noopener" class="ec-link primary">小红书官网</a>
+                    <a href="https://www.pugongying.com" target="_blank" rel="noopener" class="ec-link">蒲公英平台</a>
+                </div>
+            </div>
+
+            <!-- 得物 -->
+            <div class="ec-card" style="--brand:#FF6034;--brand2:#FF8A5B">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 16l3-1 3-5 4 2 5-1 3 3v3H3z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M3 16h18" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">得物</div>
+                        <div class="ec-type">得物 App · 潮流电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">潮流品类垂直电商，先鉴别后发货模式。年轻用户为主，球鞋/潮服/奢侈品品类强势。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">3亿+</span><span class="ec-stat-label">注册用户</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">70%</span><span class="ec-stat-label">90后用户</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.dewu.com" target="_blank" rel="noopener" class="ec-link primary">得物官网</a>
+                    <a href="https://open.dewu.com" target="_blank" rel="noopener" class="ec-link">商家入驻</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 直播电商 -->
+    <div class="cat-group" style="--cat-c1:#000000;--cat-c2:#FF4364;--cat-tint:rgba(255,67,100,.04)">
+        <div class="cat-group-head">
+            <span class="cat-badge" style="background:linear-gradient(135deg,#000,#FF4364)">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="14" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M17 10l4-2v8l-4-2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                直播电商
+            </span>
+            <span class="cat-group-desc">短视频 / 直播间兴趣推荐驱动，内容即货架</span>
+        </div>
+        <div class="ec-grid">
+
+            <!-- 抖音 -->
+            <div class="ec-card" style="--brand:#000000;--brand2:#25F4EE">
+                <div class="ec-head">
+                    <div class="brand-logo" style="background:linear-gradient(135deg,#000000,#25F4EE)">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M9 18a3 3 0 100-6 3 3 0 000 6z" stroke="#fff" stroke-width="2"/><path d="M12 12V4l6 2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">抖音电商</div>
+                        <div class="ec-type">字节跳动 · 兴趣电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">短视频 + 直播电商龙头，兴趣推荐驱动。抖店开放平台提供商品/订单/直播/达人 API，支持全链路自动化。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">7亿+</span><span class="ec-stat-label">日活</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">500万+</span><span class="ec-stat-label">商家</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.douyin.com" target="_blank" rel="noopener" class="ec-link primary" style="background:linear-gradient(135deg,#000,#25F4EE)">抖音官网</a>
+                    <a href="https://op.jinritemai.com" target="_blank" rel="noopener" class="ec-link">抖店开放平台</a>
+                    <a href="https://github.com/bytedance" target="_blank" rel="noopener" class="ec-link">GitHub</a>
+                </div>
+            </div>
+
+            <!-- 快手 -->
+            <div class="ec-card" style="--brand:#FF4364;--brand2:#FF6B81">
+                <div class="ec-head">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="14" height="12" rx="2" stroke="#fff" stroke-width="2"/><path d="M17 10l4-2v8l-4-2" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="ec-name">快手电商</div>
+                        <div class="ec-type">快手科技 · 直播电商</div>
+                    </div>
+                </div>
+                <div class="ec-desc">直播电商头部平台，信任电商模式。快手电商开放平台提供商品/订单/直播/达人 API。</div>
+                <div class="ec-stats">
+                    <div class="ec-stat"><span class="ec-stat-val">4亿+</span><span class="ec-stat-label">日活</span></div>
+                    <div class="ec-stat"><span class="ec-stat-val">300万+</span><span class="ec-stat-label">商家</span></div>
+                </div>
+                <div class="ec-links">
+                    <a href="https://www.kuaishou.com" target="_blank" rel="noopener" class="ec-link primary">快手官网</a>
+                    <a href="https://open.kwaixiaodian.com" target="_blank" rel="noopener" class="ec-link">开放平台</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ════════ AI 全自动工作流交易 ════════ -->
+<div class="mkt-section">
+    <div class="mkt-sec-head">
+        <div class="mkt-sec-icon">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2"/><path d="M9 8V6a3 3 0 016 0v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg>
+        </div>
+        <div class="mkt-sec-title">AI 全自动工作流交易</div>
+    </div>
+    <div class="mkt-sec-sub">利用 AI Agent + 平台 API 实现电商全链路自动化。上方为标准工作流闭环，下方卡片为各环节可落地方案。</div>
+
+    <!-- 视觉流程图 -->
+    <div class="wf-flow">
+        <div class="wf-flow-title">AI 电商自动化闭环 · <span>选品 → 上架 → 客服 → 运营 → 复盘</span></div>
+        <div class="wf-flow-track">
+            <div class="wf-node">
+                <div class="wf-node-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+                <div class="wf-node-num">STEP 01</div>
+                <div class="wf-node-name">智能选品</div>
+                <div class="wf-node-desc">热销榜 + 竞品分析</div>
+            </div>
+            <div class="wf-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="wf-node">
+                <div class="wf-node-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+                <div class="wf-node-num">STEP 02</div>
+                <div class="wf-node-name">自动上架</div>
+                <div class="wf-node-desc">AI 生成详情页</div>
+            </div>
+            <div class="wf-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="wf-node">
+                <div class="wf-node-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-7l-4 3v-3H6a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+                <div class="wf-node-num">STEP 03</div>
+                <div class="wf-node-name">智能客服</div>
+                <div class="wf-node-desc">7x24 无人值守</div>
+            </div>
+            <div class="wf-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="wf-node">
+                <div class="wf-node-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17l5-5 4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 8h4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="wf-node-num">STEP 04</div>
+                <div class="wf-node-name">动态运营</div>
+                <div class="wf-node-desc">定价 + 竞品监控</div>
+            </div>
+            <div class="wf-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="wf-node">
+                <div class="wf-node-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H4z" stroke="currentColor" stroke-width="2"/><path d="M8 16v4M16 16v4M4 12h16" stroke="currentColor" stroke-width="2"/></svg></div>
+                <div class="wf-node-num">STEP 05</div>
+                <div class="wf-node-name">数据复盘</div>
+                <div class="wf-node-desc">报告 + 优化建议</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工作流详情卡片 -->
+    <div class="wf-grid">
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge auto"><span class="b-dot"></span>全自动</span>
+            </div>
+            <div class="wf-name">智能选品工作流</div>
+            <div class="wf-desc">AI 分析热销榜单 + 竞品数据 + 趋势关键词，自动推荐高利润商品，支持多平台对比。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>抓取各平台热销榜</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 分析利润空间</span></div>
+                <div class="step"><span class="step-num">3</span><span>生成选品报告</span></div>
+                <div class="step"><span class="step-num">4</span><span>自动对接供应链</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">淘宝 · 拼多多 · 1688 · 抖音</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge auto"><span class="b-dot"></span>全自动</span>
+            </div>
+            <div class="wf-name">自动上架 + 详情页生成</div>
+            <div class="wf-desc">AI 自动生成商品标题、详情页文案、主图设计，批量调用平台 API 上架，支持多店铺同步。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>输入商品基础信息</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 生成标题 + 文案 + 图片</span></div>
+                <div class="step"><span class="step-num">3</span><span>调用平台 API 上架</span></div>
+                <div class="step"><span class="step-num">4</span><span>多店铺批量同步</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">淘宝 · 京东 · 拼多多 · 抖音</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge auto"><span class="b-dot"></span>全自动</span>
+            </div>
+            <div class="wf-name">智能客服 + 售后自动化</div>
+            <div class="wf-desc">AI 接入平台客服 API，自动回复买家咨询、处理退换货、跟进物流，7x24 小时无人值守。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>监听平台客服消息</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 理解意图 + 自动回复</span></div>
+                <div class="step"><span class="step-num">3</span><span>自动处理退换货流程</span></div>
+                <div class="step"><span class="step-num">4</span><span>生成客服日报</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">全平台支持</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge semi"><span class="b-dot"></span>半自动</span>
+            </div>
+            <div class="wf-name">动态定价 + 竞品监控</div>
+            <div class="wf-desc">实时监控竞品价格变化，AI 根据库存/销量/竞品自动调整定价策略，支持价格预警。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>定时抓取竞品价格</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 计算最优价格</span></div>
+                <div class="step"><span class="step-num">3</span><span>人工确认后自动改价</span></div>
+                <div class="step"><span class="step-num">4</span><span>价格异常预警</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">淘宝 · 京东 · 拼多多</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge auto"><span class="b-dot"></span>全自动</span>
+            </div>
+            <div class="wf-name">直播带货 AI 数字人</div>
+            <div class="wf-desc">AI 数字人 7x24 小时直播带货，自动讲解商品、回答弹幕、引导下单，支持多平台同步直播。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>导入商品话术库</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 数字人自动直播</span></div>
+                <div class="step"><span class="step-num">3</span><span>实时回复弹幕</span></div>
+                <div class="step"><span class="step-num">4</span><span>多平台同步推流</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">抖音 · 快手 · 视频号</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+        <div class="wf-card">
+            <div class="wf-card-head">
+                <span class="wf-badge semi"><span class="b-dot"></span>半自动</span>
+            </div>
+            <div class="wf-name">数据分析 + 运营复盘</div>
+            <div class="wf-desc">自动汇总多平台销售数据，AI 生成运营报告，识别爆款/滞销品，给出优化建议。</div>
+            <div class="wf-steps">
+                <div class="step"><span class="step-num">1</span><span>汇总多平台数据</span></div>
+                <div class="step"><span class="step-num">2</span><span>AI 分析趋势 + 异常</span></div>
+                <div class="step"><span class="step-num">3</span><span>生成可视化报告</span></div>
+                <div class="step"><span class="step-num">4</span><span>推送优化建议</span></div>
+            </div>
+            <div class="wf-footer">
+                <span class="wf-platforms">全平台支持</span>
+                <a href="/ai-workflow" class="wf-link">查看详情 →</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ════════ 跨境电商出海 ════════ -->
+<div class="mkt-section">
+    <div class="mkt-sec-head">
+        <div class="mkt-sec-icon">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="mkt-sec-title">跨境电商出海</div>
+    </div>
+    <div class="mkt-sec-sub">全球六大区域市场索引，覆盖主流跨境平台与本地化运营要点。</div>
+
+    <div class="cross-banner">
+        <div class="cross-banner-globe">🌍</div>
+        <div class="cross-banner-text">
+            <h3>出海全景 · 6 大区域 · 20+ 平台</h3>
+            <p>从北美到拉美，从欧洲到东南亚，按区域梳理主导平台、客单价特征与合规要点，助力品牌全球化布局。</p>
+        </div>
+    </div>
+
+    <div class="cross-grid">
+
+        <div class="cross-card" style="--region-tint:rgba(60,130,246,.08)">
+            <div class="cross-head">
+                <div class="cross-flag">🇺🇸</div>
+                <div>
+                    <div class="cross-name">北美市场</div>
+                    <div class="cross-region">美国 · 加拿大 · 墨西哥</div>
+                </div>
+            </div>
+            <div class="cross-desc">全球最大电商市场，亚马逊主导。FBA 物流成熟，品牌化运营是关键。TikTok Shop 快速增长。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">Amazon</span>
+                <span class="cross-plat-tag">Walmart</span>
+                <span class="cross-plat-tag">eBay</span>
+                <span class="cross-plat-tag">TikTok Shop</span>
+                <span class="cross-plat-tag">Shopify</span>
+            </div>
+        </div>
+
+        <div class="cross-card" style="--region-tint:rgba(60,130,246,.08)">
+            <div class="cross-head">
+                <div class="cross-flag">🇪🇺</div>
+                <div>
+                    <div class="cross-name">欧洲市场</div>
+                    <div class="cross-region">英 · 德 · 法 · 意 · 西</div>
+                </div>
+            </div>
+            <div class="cross-desc">高客单价市场，VAT 合规要求高。亚马逊欧洲站为主，AliExpress 速卖通覆盖广。GDPR 数据合规需注意。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">Amazon EU</span>
+                <span class="cross-plat-tag">AliExpress</span>
+                <span class="cross-plat-tag">Allegro</span>
+                <span class="cross-plat-tag">Cdiscount</span>
+            </div>
+        </div>
+
+        <div class="cross-card" style="--region-tint:rgba(255,170,40,.1)">
+            <div class="cross-head">
+                <div class="cross-flag">🇸🇦</div>
+                <div>
+                    <div class="cross-name">中东市场</div>
+                    <div class="cross-region">沙特 · 阿联酋 · 埃及</div>
+                </div>
+            </div>
+            <div class="cross-desc">增速最快的新兴市场，Noon 和 Amazon.ae 主导。客单价高、竞争少，适合品牌出海。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">Noon</span>
+                <span class="cross-plat-tag">Amazon.ae</span>
+                <span class="cross-plat-tag">Jumia</span>
+            </div>
+        </div>
+
+        <div class="cross-card" style="--region-tint:rgba(255,170,40,.1)">
+            <div class="cross-head">
+                <div class="cross-flag">🇹🇭</div>
+                <div>
+                    <div class="cross-name">东南亚市场</div>
+                    <div class="cross-region">印尼 · 泰国 · 越南 · 马来</div>
+                </div>
+            </div>
+            <div class="cross-desc">Shopee 和 Lazada 双雄并立，TikTok Shop 增速惊人。价格敏感型市场，适合白牌走量。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">Shopee</span>
+                <span class="cross-plat-tag">Lazada</span>
+                <span class="cross-plat-tag">TikTok Shop</span>
+                <span class="cross-plat-tag">Tokopedia</span>
+            </div>
+        </div>
+
+        <div class="cross-card" style="--region-tint:rgba(255,67,100,.08)">
+            <div class="cross-head">
+                <div class="cross-flag">🇯🇵</div>
+                <div>
+                    <div class="cross-name">日韩市场</div>
+                    <div class="cross-region">日本 · 韩国</div>
+                </div>
+            </div>
+            <div class="cross-desc">高消费力市场，品质要求高。日本 Amazon.co.jp 和 Rakuten 主导，韩国 Coupang 独大。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">Amazon.co.jp</span>
+                <span class="cross-plat-tag">Rakuten</span>
+                <span class="cross-plat-tag">Coupang</span>
+                <span class="cross-plat-tag">Qoo10</span>
+            </div>
+        </div>
+
+        <div class="cross-card" style="--region-tint:rgba(63,185,80,.08)">
+            <div class="cross-head">
+                <div class="cross-flag">🇧🇷</div>
+                <div>
+                    <div class="cross-name">拉美市场</div>
+                    <div class="cross-region">巴西 · 墨西哥 · 阿根廷</div>
+                </div>
+            </div>
+            <div class="cross-desc">MercadoLibre 区域霸主，速卖通增长快。关税复杂，本地化运营是关键。</div>
+            <div class="cross-platforms">
+                <span class="cross-plat-tag">MercadoLibre</span>
+                <span class="cross-plat-tag">AliExpress</span>
+                <span class="cross-plat-tag">Amazon</span>
+                <span class="cross-plat-tag">Shopee</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ════════ GitHub 开源营销工具 ════════ -->
+<div class="mkt-section">
+    <div class="mkt-sec-head">
+        <div class="mkt-sec-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05A9.36 9.36 0 0112 6.84c.85 0 1.71.12 2.51.34 1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0022 12.25C22 6.58 17.52 2 12 2z"/></svg>
+        </div>
+        <div class="mkt-sec-title">GitHub 开源营销工具</div>
+    </div>
+    <div class="mkt-sec-sub">社区开发者为电商平台打造的开源自动化工具，覆盖采集、运营、AI Agent 等场景。</div>
+
+    <div class="gh-grid">
+
+        <a href="https://github.com/DormyMo/SpiderKeeper" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3572A5">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4M9 11h4M11 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+                <div>
+                    <div class="gh-name">SpiderKeeper</div>
+                    <div class="gh-fullname">DormyMo/SpiderKeeper</div>
+                </div>
+            </div>
+            <div class="gh-desc">电商数据采集管理平台，支持淘宝/京东/拼多多商品数据爬取，Scrapy 可视化。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>Python</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">3.2K</span></span>
+                <span class="gh-meta-item">MIT</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+        <a href="https://github.com/SmirkCao/tb-auto" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3572A5">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8h12l-1 12H7L6 8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 016 0v2" stroke="currentColor" stroke-width="2"/></svg></div>
+                <div>
+                    <div class="gh-name">tb-auto</div>
+                    <div class="gh-fullname">SmirkCao/tb-auto</div>
+                </div>
+            </div>
+            <div class="gh-desc">淘宝自动化工具，自动签到/领券/下单，Selenium 驱动。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>Python</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">1.8K</span></span>
+                <span class="gh-meta-item">GPL</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+        <a href="https://github.com/PasserByJia/douyin-shop-tool" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3572A5">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/><path d="M12 12V4l6 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div>
+                    <div class="gh-name">douyin-shop-tool</div>
+                    <div class="gh-fullname">PasserByJia/douyin-shop-tool</div>
+                </div>
+            </div>
+            <div class="gh-desc">抖店自动化运营工具，批量上架/改价/订单管理，支持多店铺。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>Python</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">2.4K</span></span>
+                <span class="gh-meta-item">Apache-2.0</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+        <a href="https://github.com/ai-ecommerce/agent" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3572A5">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2"/><path d="M9 8V6a3 3 0 016 0v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></div>
+                <div>
+                    <div class="gh-name">ai-ecommerce-agent</div>
+                    <div class="gh-fullname">ai-ecommerce/agent</div>
+                </div>
+            </div>
+            <div class="gh-desc">AI 电商 Agent，自动选品 + 定价 + 客服，支持多平台 API 对接。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>Python</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">5.1K</span></span>
+                <span class="gh-meta-item">MIT</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+        <a href="https://github.com/ReaJason/xhs" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3572A5">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 4h12v16H6z" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+                <div>
+                    <div class="gh-name">xhs-toolkit</div>
+                    <div class="gh-fullname">ReaJason/xhs</div>
+                </div>
+            </div>
+            <div class="gh-desc">小红书自动化工具，笔记发布/数据采集/达人分析，API 逆向。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>Python</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">4.6K</span></span>
+                <span class="gh-meta-item">MIT</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+        <a href="https://github.com/cross-border/shop" target="_blank" rel="noopener" class="gh-card" style="--lang-c:#3178c6">
+            <div class="gh-head">
+                <div class="gh-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="2"/></svg></div>
+                <div>
+                    <div class="gh-name">cross-border-shop</div>
+                    <div class="gh-fullname">cross-border/shop</div>
+                </div>
+            </div>
+            <div class="gh-desc">跨境电商多平台管理工具，支持 Amazon/Shopee/AliExpress 统一管理。</div>
+            <div class="gh-meta">
+                <span class="gh-meta-item"><span class="gh-lang-dot"></span>TypeScript</span>
+                <span class="gh-meta-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="gh-stars">2.1K</span></span>
+                <span class="gh-meta-item">MIT</span>
+                <span class="gh-cta">查看 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+        </a>
+
+    </div>
+</div>
+
+</div>
+{% endblock %}

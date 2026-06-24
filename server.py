@@ -673,6 +673,12 @@ def ai_workflow_page():
     return render_template("ai_workflow.html")
 
 
+@app.route("/marketing")
+def marketing_page():
+    """网络营销页面 — 电商平台信息、AI 工作流交易、跨境电商"""
+    return render_template("marketing.html", active_page="marketing")
+
+
 @app.route("/docs")
 def docs():
     return render_template("docs.html")
