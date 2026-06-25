@@ -1,20 +1,27 @@
 """NVD CVE 漏洞抓取器 —— 通过 NIST NVD API 2.0（直连，不走代理）"""
 
-import requests as req
+import logging
 from datetime import datetime, timedelta, timezone
 
+from . import BaseFetcher
 
-class NVDCVEFetcher:
-    """从 NVD API 获取近期 CVE 漏洞"""
+logger = logging.getLogger(__name__)
+
+
+class NVDCVEFetcher(BaseFetcher):
+    """从 NVD API 获取近期 CVE 漏洞。
+
+    继承 BaseFetcher，复用自动重试 / 连接池 / 统一日志。
+    NVD 是美国政府站点，直连即可（trust_env=False 已在基类设置）。
+    """
 
     API = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
     def __init__(self, proxy: str = "", days_back: int = 7, max_results: int = 20):
+        # NVD 直连，不使用代理
+        super().__init__(proxy="", timeout=30)
         self.days_back = days_back
         self.max_results = max_results
-        # NVD 是美国政府站点，直连即可
-        self.session = req.Session()
-        self.session.trust_env = False
 
     def fetch(self) -> list[dict]:
         end = datetime.now(timezone.utc)
@@ -26,13 +33,13 @@ class NVDCVEFetcher:
         }
 
         try:
-            resp = self.session.get(self.API, params=params, timeout=30)
+            resp = self._get(self.API, timeout=30, params=params)
             if resp.status_code != 200:
-                print(f"  [CVE] HTTP {resp.status_code}")
+                logger.warning("[CVE] HTTP %d", resp.status_code)
                 return []
             data = resp.json()
         except Exception as e:
-            print(f"  [CVE] 请求失败: {e}")
+            logger.error("[CVE] 请求失败: %s", e)
             return []
 
         results = []

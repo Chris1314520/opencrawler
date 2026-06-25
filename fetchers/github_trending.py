@@ -1,8 +1,11 @@
 """GitHub Trending 抓取器 —— 通过 RSSHub 或直接解析"""
 
+import logging
 import re
 from bs4 import BeautifulSoup
 from . import BaseFetcher, safe_str
+
+logger = logging.getLogger(__name__)
 
 
 class GitHubTrendingFetcher(BaseFetcher):
@@ -23,7 +26,8 @@ class GitHubTrendingFetcher(BaseFetcher):
                     items = self._fetch_one(lang, since)
                     results.extend(items)
                 except Exception as e:
-                    print(f"  [GitHub] 抓取失败 (lang={lang!r}, since={since}): {e}")
+                    logger.warning("[GitHub] 抓取失败 (lang=%r, since=%s): %s",
+                                   lang, since, e)
         return results
 
     def _fetch_one(self, language: str, since: str) -> list[dict]:
@@ -34,11 +38,11 @@ class GitHubTrendingFetcher(BaseFetcher):
         try:
             resp = self._get(url, timeout=30)
         except Exception as e:
-            print(f"  [GitHub] 请求失败: {e}")
+            logger.warning("[GitHub] 请求失败: %s", e)
             return []
 
         if resp.status_code != 200:
-            print(f"  [GitHub] HTTP {resp.status_code} for {url}")
+            logger.warning("[GitHub] HTTP %d for %s", resp.status_code, url)
             return []
 
         soup = BeautifulSoup(resp.text, "html.parser")

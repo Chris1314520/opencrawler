@@ -1,7 +1,11 @@
-"""Hacker News 抓取器 —— 通过官方 Firebase API"""
+"""Hacker News 抓取器 —— 通过官方 Firebase API，并发获取条目详情"""
 
-import time
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from . import BaseFetcher
+
+logger = logging.getLogger(__name__)
 
 
 class HackerNewsFetcher(BaseFetcher):
@@ -16,23 +20,31 @@ class HackerNewsFetcher(BaseFetcher):
         try:
             resp = self._get(self.API_TOP, timeout=15)
             if resp.status_code != 200:
-                print(f"  [HN] 获取列表 HTTP {resp.status_code}")
+                logger.warning("[HN] 获取列表 HTTP %d", resp.status_code)
                 return []
             ids = resp.json()[:self.max_items]
         except Exception as e:
-            print(f"  [HN] 获取列表失败: {e}")
+            logger.error("[HN] 获取列表失败: %s", e)
             return []
 
+        # 并发获取 item 详情（max_workers=5 控制并发度，避免触发限流）
         results = []
-        for i, item_id in enumerate(ids):
-            if i > 0:
-                time.sleep(0.1)  # 避免触发 Firebase 限流
-            try:
-                item = self._fetch_item(item_id)
-                if item:
-                    results.append(item)
-            except Exception as e:
-                print(f"  [HN] 条目 {item_id} 失败: {e}")
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_id = {
+                executor.submit(self._fetch_item, item_id): item_id
+                for item_id in ids
+            }
+            for future in as_completed(future_to_id):
+                item_id = future_to_id[future]
+                try:
+                    item = future.result()
+                    if item:
+                        results.append(item)
+                except Exception as e:
+                    logger.warning("[HN] 条目 %s 失败: %s", item_id, e)
+
+        # 按原始顺序排序（as_completed 返回顺序不确定）
+        results.sort(key=lambda x: ids.index(x["extra"]["hn_id"]))
         return results
 
     def _fetch_item(self, item_id: int) -> dict | None:

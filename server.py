@@ -3,19 +3,25 @@
 
 import argparse
 import hashlib
+import ipaddress
 import json
+import logging
 import os
 import re
 import secrets
+import socket
+import threading
 import requests
 import sys
 import time
-from functools import wraps
+from collections import OrderedDict
+from datetime import datetime
+from functools import wraps, lru_cache
+from io import BytesIO
+from threading import Thread
+from urllib.parse import urlparse
 
 import yaml
-from datetime import datetime
-from threading import Thread
-
 from flask import Flask, render_template, request, jsonify, g, session, redirect, send_file, Response
 from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
@@ -23,12 +29,14 @@ from curl_cffi import requests as cffi_requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+logger = logging.getLogger(__name__)
+
 sys.path.insert(0, os.path.dirname(__file__))
 from storage import Store
 from notifier import Notifier
 from fetchers.github_trending import GitHubTrendingFetcher
 from fetchers.hackernews import HackerNewsFetcher
-from fetchers.rss_feeds import RSSFetcherWithProxy
+from fetchers.rss_feeds import RSSFetcher
 from fetchers.curl_cffi_rss import CurlCffiRSSFetcher
 from fetchers.nvd_cve import NVDCVEFetcher
 from fetchers.shortvideo_trending import ShortVideoTrendingFetcher
@@ -90,16 +98,18 @@ app = Flask(__name__)
 store = Store()
 config = load_config()
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or config.get("secret_key") or secrets.token_urlsafe(32)
-app.jinja_env.auto_reload = True
+app.jinja_env.auto_reload = False
 app.permanent_session_lifetime = 86400  # Session 有效期 24 小时
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # No blueprints — single-user mode
 
 # ── Admin Key (for dashboard & management endpoints) ──
 ADMIN_KEY = os.environ.get("ADMIN_KEY") or config.get("admin_key", "") or f"admin_{secrets.token_urlsafe(32)}"
 if not os.environ.get("ADMIN_KEY") and not config.get("admin_key", ""):
-    import logging
-    logging.warning("Admin Key auto-generated. Set ADMIN_KEY env var or config.yaml to persist.")
+    logger.warning("Admin Key auto-generated. Set ADMIN_KEY env var or config.yaml to persist.")
     # 不再明文打印密钥到 stdout，避免日志泄露
 
 # ── 安全响应头 ──
@@ -107,10 +117,34 @@ if not os.environ.get("ADMIN_KEY") and not config.get("admin_key", ""):
 def set_security_headers(resp):
     resp.headers['X-Content-Type-Options'] = 'nosniff'
     resp.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    resp.headers['X-XSS-Protection'] = '1; mode=block'
     resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     resp.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    resp.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:;"
     return resp
+
+
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "not found"}), 404
+    return render_template("landing.html"), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.error(f"500 error: {e}", exc_info=True)
+    return jsonify({"error": "internal server error"}), 500
+
+@app.errorhandler(Exception)
+def unhandled_exception(e):
+    logger.error(f"Unhandled exception: {e}", exc_info=True)
+    return jsonify({"error": "internal server error"}), 500
+
+def _safe_int(value, default):
+    """安全解析整数参数"""
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 # ── API Routes ──
 # ── API Key 鉴权模块 ──
@@ -213,6 +247,70 @@ def require_admin(f):
     return wrapper
 
 
+# ── 公共工具函数 ──
+
+_HTTP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept": "text/html,application/xhtml+xml,*/*",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+}
+
+def _parse_extra(row: dict) -> dict:
+    """解析 extra 字段的 JSON，失败返回空 dict"""
+    val = row.get("extra")
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    return val if isinstance(val, dict) else {}
+
+def _inject_labels(row: dict) -> dict:
+    """为行注入 source_label 并解析 extra"""
+    row["source_label"] = SOURCE_LABELS.get(row.get("source", ""), row.get("source", ""))
+    row["extra"] = _parse_extra(row)
+    return row
+
+def _make_quota(info: dict, tier: str) -> dict:
+    """构造 API 配额信息"""
+    return {
+        "used_today": info.get("daily_used", 0),
+        "daily_limit": TIER_LIMITS.get(tier, TIER_LIMITS["free"])["daily"],
+    }
+
+def _get_proxies() -> dict | None:
+    """从配置构造 proxies 字典"""
+    proxy = config.get("proxy", "")
+    return {"http": proxy, "https": proxy} if proxy else None
+
+def _validate_external_url(url: str) -> tuple[bool, str]:
+    """验证 URL 格式和 SSRF 防护。返回 (is_valid, error_msg)"""
+    if not url or not url.startswith(("http://", "https://")):
+        return False, "invalid url"
+    if _is_private_url(url):
+        return False, "internal addresses not allowed"
+    return True, ""
+
+def _fetch_and_clean_html(url: str, timeout: int = 20) -> tuple[str, str]:
+    """抓取网页并清洗返回 (title, text)。
+    用于 api_fetch_article 和 api_download_article 的公共逻辑。"""
+    resp = requests.get(url, timeout=timeout, headers=_HTTP_HEADERS)
+    resp.encoding = resp.apparent_encoding or "utf-8"
+    if resp.status_code != 200:
+        raise ValueError(f"upstream returned {resp.status_code}")
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup.select("script, style, nav, footer, header, .sidebar, .ad, .advertisement, .comment, .comments"):
+        tag.decompose()
+
+    article = (soup.select_one("article") or soup.select_one(".article")
+               or soup.select_one(".content") or soup.select_one("main") or soup.body)
+    text = article.get_text("\n", strip=True) if article else soup.get_text("\n", strip=True)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    title = soup.title.string.strip() if soup.title else ""
+    return title, text
+
+
 def _get_or_create_demo_key():
     """Get or create a persistent demo key for the public demo page (SQLite version).
     Demo key uses 'free' tier (20/day) to prevent abuse."""
@@ -261,24 +359,22 @@ def admin_logout():
 
 # ── SSRF 防护：统一的内网地址检查（含 IPv6）──
 PRIVATE_RANGES = [
-    __import__("ipaddress").ip_network("127.0.0.0/8"),
-    __import__("ipaddress").ip_network("10.0.0.0/8"),
-    __import__("ipaddress").ip_network("172.16.0.0/12"),
-    __import__("ipaddress").ip_network("192.168.0.0/16"),
-    __import__("ipaddress").ip_network("169.254.0.0/16"),
-    __import__("ipaddress").ip_network("0.0.0.0/8"),
-    __import__("ipaddress").ip_network("100.64.0.0/10"),   # CGNAT
-    __import__("ipaddress").ip_network("::1/128"),          # IPv6 loopback
-    __import__("ipaddress").ip_network("fc00::/7"),         # IPv6 ULA
-    __import__("ipaddress").ip_network("fe80::/10"),        # IPv6 link-local
-    __import__("ipaddress").ip_network("::ffff:0:0/96"),    # IPv4-mapped IPv6
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("100.64.0.0/10"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+    ipaddress.ip_network("::ffff:0:0/96"),
 ]
 
 
 def _is_private_url(url: str) -> bool:
     """检查 URL 是否指向内网地址（防 SSRF），返回 True 表示危险"""
-    from urllib.parse import urlparse
-    import ipaddress, socket
     host = urlparse(url).hostname or ""
     if not host:
         return True
@@ -300,7 +396,7 @@ def api_v1_trending():
     """付费 API: 获取聚合情报数据"""
     source = request.args.get("source", "")
     keyword = request.args.get("keyword", "")
-    limit = min(int(request.args.get("limit", 10)), 50)
+    limit = min(_safe_int(request.args.get("limit", 10), 10), 50)
     hours = request.args.get("hours", type=int)
 
     # Pro 以下用户不能查实时数据（hours=1 表示只要最新的）
@@ -313,21 +409,13 @@ def api_v1_trending():
         rows = [r for r in rows if kw in r.get("title","").lower() or kw in r.get("description","").lower()]
 
     for r in rows:
-        r["source_label"] = SOURCE_LABELS.get(r.get("source",""), r.get("source",""))
-        if isinstance(r.get("extra"), str):
-            try:
-                r["extra"] = json.loads(r["extra"])
-            except json.JSONDecodeError:
-                r["extra"] = {}
+        _inject_labels(r)
 
     info = g.api_info
     return jsonify({
         "items": rows,
         "total": len(rows),
-        "quota": {
-            "used_today": info["daily_used"],
-            "daily_limit": TIER_LIMITS[g.api_tier]["daily"],
-        },
+        "quota": _make_quota(info, g.api_tier),
         "tier": g.api_tier,
     })
 
@@ -339,7 +427,7 @@ def api_v1_search():
     q = request.args.get("q", "")
     if not q:
         return jsonify({"error": "missing q parameter"}), 400
-    limit = min(int(request.args.get("limit", 20)), 50)
+    limit = min(_safe_int(request.args.get("limit", 20), 20), 50)
 
     rows = store.query(limit=500)  # 取最近500条
     kw = q.lower()
@@ -347,17 +435,14 @@ def api_v1_search():
     rows = rows[:limit]
 
     for r in rows:
-        r["source_label"] = SOURCE_LABELS.get(r.get("source",""), r.get("source",""))
+        _inject_labels(r)
 
     info = g.api_info
     return jsonify({
         "items": rows,
         "total": len(rows),
         "query": q,
-        "quota": {
-            "used_today": info["daily_used"],
-            "daily_limit": TIER_LIMITS[g.api_tier]["daily"],
-        },
+        "quota": _make_quota(info, g.api_tier),
     })
 
 
@@ -366,45 +451,21 @@ def api_v1_search():
 def api_fetch_article():
     """抓取原文内容，返回清洗后的文本"""
     url = request.args.get("url", "")
-    if not url or not url.startswith(("http://", "https://")):
-        return jsonify({"error": "invalid url"}), 400
 
-    # SSRF 防护（含 IPv6）
-    if _is_private_url(url):
-        return jsonify({"error": "internal addresses not allowed"}), 403
+    # SSRF 防护 + URL 校验
+    ok, err = _validate_external_url(url)
+    if not ok:
+        return jsonify({"error": err}), 400 if err == "invalid url" else 403
 
     try:
-        resp = requests.get(url, timeout=20, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "text/html,application/xhtml+xml,*/*",
-        })
-        resp.encoding = resp.apparent_encoding or "utf-8"
+        title, text = _fetch_and_clean_html(url, timeout=20)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 502
     except Exception as e:
         return jsonify({"error": f"fetch failed: {e}"}), 502
 
-    if resp.status_code != 200:
-        return jsonify({"error": f"upstream returned {resp.status_code}"}), 502
-
-    # 提取正文
-    soup = BeautifulSoup(resp.text, "html.parser")
-    # 去除无用元素
-    for tag in soup.select("script, style, nav, footer, header, .sidebar, .ad, .advertisement, .comment, .comments"):
-        tag.decompose()
-
-    # 尝试找正文容器
-    article = soup.select_one("article") or soup.select_one(".article") or soup.select_one(".content") or soup.select_one("main") or soup.body
-    if article:
-        text = article.get_text("\n", strip=True)
-    else:
-        text = soup.get_text("\n", strip=True)
-
-    # 清洗：合并空行
-    import re
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    title = soup.title.string if soup.title else ""
-
     return jsonify({
-        "title": title.strip() if title else "",
+        "title": title,
         "url": url,
         "content": text[:50000],  # 最多 50000 字
         "length": len(text),
@@ -417,41 +478,28 @@ def api_download_article():
     """下载原文为 TXT 文件"""
     url = request.args.get("url", "")
     fmt = request.args.get("format", "txt")  # txt 或 md
-    if not url or not url.startswith(("http://", "https://")):
-        return jsonify({"error": "invalid url"}), 400
 
-    # SSRF 防护（含 IPv6）
-    if _is_private_url(url):
-        return jsonify({"error": "internal addresses not allowed"}), 403
+    # SSRF 防护 + URL 校验
+    ok, err = _validate_external_url(url)
+    if not ok:
+        return jsonify({"error": err}), 400 if err == "invalid url" else 403
 
     try:
-        resp = requests.get(url, timeout=20, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "text/html,application/xhtml+xml,*/*",
-        })
-        resp.encoding = resp.apparent_encoding or "utf-8"
+        title, text = _fetch_and_clean_html(url, timeout=20)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 502
     except Exception as e:
         return jsonify({"error": f"fetch failed: {e}"}), 502
 
-    if resp.status_code != 200:
-        return jsonify({"error": f"upstream returned {resp.status_code}"}), 502
-
-    soup = BeautifulSoup(resp.text, "html.parser")
-    for tag in soup.select("script, style, nav, footer, header, .sidebar, .ad, .advertisement, .comment, .comments"):
-        tag.decompose()
-
-    article = soup.select_one("article") or soup.select_one(".article") or soup.select_one(".content") or soup.select_one("main") or soup.body
-    text = article.get_text("\n", strip=True) if article else soup.get_text("\n", strip=True)
-    import re
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    title = soup.title.string.strip() if soup.title else "article"
+    if not title:
+        title = "article"
 
     # 检测是否英文为主，自动翻译中文版
     cn_text = ""
     non_cn = sum(1 for c in text if c.isascii() and c.isalpha())
     if len(text) > 0 and non_cn / max(len(text), 1) > 0.5:
         try:
-            cn_text = _translate_text(text[:8000])
+            cn_text = _translate_text_cached(text[:8000])
         except Exception:
             cn_text = ""
 
@@ -468,7 +516,6 @@ def api_download_article():
         filename = f"{title[:50]}.txt"
         mimetype = "text/plain"
 
-    from io import BytesIO
     return send_file(
         BytesIO(content.encode("utf-8")),
         mimetype=mimetype,
@@ -498,9 +545,10 @@ def api_shortvideo():
     return jsonify(_get_shortvideo_data())
 
 
-# ── 图片代理缓存（内存，1 小时过期）──
-_IMG_CACHE = {}
+# ── 图片代理缓存（内存，1 小时过期，LRU 淘汰）──
+_IMG_CACHE = OrderedDict()
 _IMG_CACHE_TTL = 3600  # 秒
+_IMG_CACHE_MAX = 200
 
 @app.route("/api/img_proxy")
 def api_img_proxy():
@@ -513,6 +561,7 @@ def api_img_proxy():
     now = time.time()
     cached = _IMG_CACHE.get(img_url)
     if cached and (now - cached["ts"]) < _IMG_CACHE_TTL:
+        _IMG_CACHE.move_to_end(img_url)  # LRU 更新
         return Response(cached["data"], content_type=cached["ctype"])
 
     # 根据图片来源设置 referer
@@ -533,9 +582,11 @@ def api_img_proxy():
         if resp.status_code == 200:
             content_type = resp.headers.get("Content-Type", "image/jpeg")
             data = resp.content
-            # 缓存（最多 200 张）
-            if len(_IMG_CACHE) < 200:
-                _IMG_CACHE[img_url] = {"data": data, "ctype": content_type, "ts": now}
+            # 缓存（LRU 淘汰最旧的）
+            _IMG_CACHE[img_url] = {"data": data, "ctype": content_type, "ts": now}
+            _IMG_CACHE.move_to_end(img_url)
+            while len(_IMG_CACHE) > _IMG_CACHE_MAX:
+                _IMG_CACHE.popitem(last=False)  # 淘汰最旧的
             return Response(data, content_type=content_type)
         return Response(status=resp.status_code)
     except Exception:
@@ -552,7 +603,7 @@ def _get_shortvideo_data():
         )
         platforms = {}
         for row in rows:
-            extra = json.loads(row.get("extra", "{}")) if isinstance(row.get("extra"), str) else row.get("extra", {})
+            extra = _parse_extra(row)
             platform = extra.get("platform", "unknown")
             if platform not in platforms:
                 platforms[platform] = []
@@ -671,7 +722,7 @@ def _get_finance_data():
         sectors = []
         indices = []
         for row in rows:
-            extra = json.loads(row.get("extra", "{}")) if isinstance(row.get("extra"), str) else row.get("extra", {})
+            extra = _parse_extra(row)
             dtype = extra.get("type", "")
             item = {
                 "title": row.get("title", ""),
@@ -749,7 +800,6 @@ def user():
 @app.route("/favicon.ico")
 def favicon():
     """返回空的 favicon 防止 404"""
-    from io import BytesIO
     return send_file(
         BytesIO(b'\x00\x00\x01\x00\x01\x00\x10\x10\x00\x00\x01\x00 \x00h\x04\x00\x00\x16\x00\x00\x00(\x00\x00\x00\x10\x00\x00\x00 \x00\x00\x00\x01\x00 \x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
         mimetype="image/x-icon",
@@ -812,18 +862,12 @@ def api_items():
         has_more = len(rows) > limit
         items = rows[:limit]
         if source_id or tag or hours:
-            all_rows = store.query(source=source_id or None, tag=tag or None, hours=hours, limit=10000)
-            total = len(all_rows)
+            total = store.count(source=source_id or None, tag=tag or None, hours=hours)
         else:
             total = store.stats()["total"]
 
     for r in items:
-        r["source_label"] = SOURCE_LABELS.get(r.get("source",""), r.get("source",""))
-        if isinstance(r.get("extra"), str):
-            try:
-                r["extra"] = json.loads(r["extra"])
-            except json.JSONDecodeError:
-                r["extra"] = {}
+        _inject_labels(r)
 
     return jsonify({"items": items, "total": total, "has_more": has_more})
 
@@ -851,16 +895,14 @@ def api_read():
         return jsonify({"error": "缺少 url 参数"}), 400
 
     # SSRF protection: validate URL before fetching
-    from urllib.parse import urlparse
-    parsed = urlparse(url)
-    if parsed.scheme not in ("https", "http"):
-        return jsonify({"error": "仅支持 http(s):// 协议"}), 400
-
-    if _is_private_url(url):
+    ok, err = _validate_external_url(url)
+    if not ok:
+        if err == "invalid url":
+            return jsonify({"error": "仅支持 http(s):// 协议"}), 400
         return jsonify({"error": "禁止访问内网地址"}), 403
 
+    proxies = _get_proxies()
     proxy = config.get("proxy", "")
-    proxies = {"http": proxy, "https": proxy} if proxy else None
 
     resp = None
     last_error = ""
@@ -882,30 +924,20 @@ def api_read():
     # 策略3: requests + 代理
     if resp is None or resp.status_code != 200:
         try:
-            import requests as req
-            s = req.Session()
+            s = requests.Session()
             s.trust_env = False
             if proxy:
                 s.proxies = proxies
-            resp = s.get(url, timeout=20, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml,*/*",
-                "Accept-Language": "zh-CN,zh;q=0.9",
-            })
+            resp = s.get(url, timeout=20, headers=_HTTP_HEADERS)
         except Exception as e:
             last_error = str(e)[:100]
 
     # 策略4: requests 直连
     if resp is None or resp.status_code != 200:
         try:
-            import requests as req
-            s = req.Session()
+            s = requests.Session()
             s.trust_env = False
-            resp = s.get(url, timeout=20, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml,*/*",
-                "Accept-Language": "zh-CN,zh;q=0.9",
-            })
+            resp = s.get(url, timeout=20, headers=_HTTP_HEADERS)
         except Exception as e:
             last_error = str(e)[:100]
 
@@ -989,6 +1021,21 @@ def _escape(s: str) -> str:
 # ── 翻译引擎 ──
 GOOGLE_TRANSLATE = "https://translate.googleapis.com/translate_a/single"
 
+_TRANSLATE_CACHE = {}
+_TRANSLATE_CACHE_MAX = 100
+
+def _translate_text_cached(text: str, target: str = "zh-CN") -> str:
+    """带缓存的翻译"""
+    cache_key = hashlib.md5(f"{text[:500]}_{target}".encode()).hexdigest()
+    cached = _TRANSLATE_CACHE.get(cache_key)
+    if cached:
+        return cached
+    result = _translate_text(text, target)
+    if len(_TRANSLATE_CACHE) < _TRANSLATE_CACHE_MAX:
+        _TRANSLATE_CACHE[cache_key] = result
+    return result
+
+
 def _translate_text(text: str, target: str = "zh-CN") -> str:
     """使用 Google Translate 将文本翻译为中文"""
     if not text or not text.strip():
@@ -1038,8 +1085,7 @@ def _translate_text(text: str, target: str = "zh-CN") -> str:
                     continue
 
             if not resp or resp.status_code != 200:
-                import requests as req
-                s = req.Session()
+                s = requests.Session()
                 s.trust_env = False
                 if proxy:
                     s.proxies = proxies
@@ -1069,7 +1115,7 @@ def api_translate():
     if not text:
         return jsonify({"error": "缺少 text"}), 400
     try:
-        translated = _translate_text(text)
+        translated = _translate_text_cached(text)
         return jsonify({"text": text, "translated": translated})
     except Exception as e:
         return jsonify({"error": str(e)[:200]}), 500
@@ -1259,7 +1305,7 @@ class Monitor:
             )
         rss_feeds = cfg.get("rss_feeds", [])
         if rss_feeds:
-            self.fetchers["rss"] = RSSFetcherWithProxy(proxy=self.proxy, feeds=rss_feeds)
+            self.fetchers["rss"] = RSSFetcher(proxy=self.proxy, feeds=rss_feeds)
         cffi_feeds = cfg.get("curl_cffi_feeds", [])
         if cffi_feeds:
             self.fetchers["curl_cffi_rss"] = CurlCffiRSSFetcher(proxy=self.proxy, feeds=cffi_feeds)
@@ -1288,25 +1334,18 @@ class Monitor:
             self._scheduler.resume()
 
     def run_once(self):
-        print(f"\n{'─'*40}\n  [{datetime.now().strftime('%H:%M:%S')}] 抓取轮次\n{'─'*40}")
+        logger.info("──────────────── 抓取轮次 [%s] ────────────────", datetime.now().strftime('%H:%M:%S'))
         total_new = 0
         for name, fetcher in self.fetchers.items():
-            print(f"  [{name}] 抓取中...")
+            logger.info("[%s] 抓取中...", name)
             try:
                 items = fetcher.fetch()
-                new_count = 0
-                for item in items:
-                    if store.upsert(
-                        source=name, title=item.get("title",""),
-                        url=item.get("url",""), description=item.get("description",""),
-                        tags=item.get("tags",[]), extra=item.get("extra",{}),
-                    ):
-                        new_count += 1
+                new_count = store.upsert_many(name, items)
                 label = SOURCE_LABELS.get(name, name)
-                print(f"  [{label}] {len(items)} 条, +{new_count} 新")
+                logger.info("[%s] %d 条, +%d 新", label, len(items), new_count)
                 total_new += new_count
             except Exception as e:
-                print(f"  [{name}] 错误: {e}")
+                logger.error("[%s] 错误: %s", name, e)
         if total_new:
             self.notifier.send(
                 title=f"{total_new} 条新内容",
@@ -1314,28 +1353,21 @@ class Monitor:
                 items=[SOURCE_LABELS.get(n, n) for n in self.fetchers],
             )
         store.cleanup_old()
-        print(f"  [完成] +{total_new}, 总计 {store.stats()['total']} 条")
+        logger.info("[完成] +%d, 总计 %d 条", total_new, store.stats()['total'])
 
     def _job_wrapper(self, name, fetcher):
-        print(f"\n  [{SOURCE_LABELS.get(name, name)}] 定时触发")
+        logger.info("[%s] 定时触发", SOURCE_LABELS.get(name, name))
         try:
             items = fetcher.fetch()
-            new_count = 0
-            for item in items:
-                if store.upsert(
-                    source=name, title=item.get("title",""),
-                    url=item.get("url",""), description=item.get("description",""),
-                    tags=item.get("tags",[]), extra=item.get("extra",{}),
-                ):
-                    new_count += 1
-            print(f"  [{SOURCE_LABELS.get(name, name)}] {len(items)} 条, +{new_count} 新")
+            new_count = store.upsert_many(name, items)
+            logger.info("[%s] %d 条, +%d 新", SOURCE_LABELS.get(name, name), len(items), new_count)
             if new_count > 10:
                 self.notifier.send(
                     title=f"[{SOURCE_LABELS.get(name, name)}] {new_count} 条新内容",
                     items=[item.get("title","") for item in items[:5]],
                 )
         except Exception as e:
-            print(f"  [{name}] 错误: {e}")
+            logger.error("[%s] 错误: %s", name, e)
 
     def start(self, run_first=False):
         self._scheduler = BackgroundScheduler()
@@ -1346,9 +1378,9 @@ class Monitor:
                 trigger=IntervalTrigger(minutes=minutes),
                 args=[name, fetcher], id=name, name=name, replace_existing=True,
             )
-            print(f"  [{SOURCE_LABELS.get(name, name)}] 每 {minutes} 分钟")
+            logger.info("[%s] 每 %d 分钟", SOURCE_LABELS.get(name, name), minutes)
         self._scheduler.start()
-        print(f"  调度器已启动 ({len(self.fetchers)} 个任务)\n")
+        logger.info("调度器已启动 (%d 个任务)", len(self.fetchers))
         if run_first:
             self.run_once()
         return self._scheduler
@@ -1366,15 +1398,14 @@ if __name__ == "__main__":
 
     if not args.no_fetch:
         _monitor.start()
-        print(f"\n  Web 面板: http://localhost:{args.port}\n")
+        logger.info("Web 面板: http://localhost:%d", args.port)
         # 把首次全量抓取放到后台线程，不阻塞 Flask 启动
-        import threading
         threading.Thread(target=_monitor.run_once, daemon=True).start()
     else:
-        print(f"\n  Web 面板 (仅浏览): http://localhost:{args.port}\n")
+        logger.info("Web 面板 (仅浏览): http://localhost:%d", args.port)
 
     try:
         app.run(host="0.0.0.0", port=args.port, debug=False, use_reloader=False, threaded=True)
     except KeyboardInterrupt:
-        print("\n  已停止")
+        logger.info("已停止")
         store.close()

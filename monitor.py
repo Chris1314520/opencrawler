@@ -2,11 +2,12 @@
 """统一事件监视器 —— 周期性抓取 + 存储 + 通知"""
 
 import argparse
+import logging
 import os
 import sys
 import time
 import yaml
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -16,12 +17,14 @@ from storage import Store
 from notifier import Notifier
 from fetchers.github_trending import GitHubTrendingFetcher
 from fetchers.hackernews import HackerNewsFetcher
-from fetchers.rss_feeds import RSSFetcherWithProxy
+from fetchers.rss_feeds import RSSFetcher
 from fetchers.curl_cffi_rss import CurlCffiRSSFetcher
 from fetchers.nvd_cve import NVDCVEFetcher
 from fetchers.shortvideo_trending import ShortVideoTrendingFetcher
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
+
+logger = logging.getLogger(__name__)
 
 
 def load_config() -> dict:
@@ -61,7 +64,7 @@ class Monitor:
         # RSS Feeds (标准 requests)
         rss_feeds = self.cfg.get("rss_feeds", [])
         if rss_feeds:
-            self.fetchers["rss"] = RSSFetcherWithProxy(
+            self.fetchers["rss"] = RSSFetcher(
                 proxy=self.proxy,
                 feeds=rss_feeds,
             )
@@ -90,40 +93,38 @@ class Monitor:
             )
 
     def run_once(self):
-        """执行一轮抓取"""
-        print(f"\n{'─'*40}\n  [{datetime.now().strftime('%H:%M:%S')}] 开始一轮抓取\n{'─'*40}")
+        """执行一轮抓取（并发）"""
+        logger.info("开始一轮抓取")
         total_new = 0
-        for source_name, fetcher in self.fetchers.items():
-            print(f"\n  [{source_name}] 抓取中...")
-            try:
-                items = fetcher.fetch()
-                new_count = 0
-                for item in items:
-                    is_new = self.store.upsert(
-                        source=source_name,
-                        title=item.get("title", ""),
-                        url=item.get("url", ""),
-                        description=item.get("description", ""),
-                        tags=item.get("tags", []),
-                        extra=item.get("extra", {}),
-                    )
-                    if is_new:
-                        new_count += 1
-                print(f"  [{source_name}] 获取 {len(items)} 条，新增 {new_count} 条")
-                total_new += new_count
-            except Exception as e:
-                print(f"  [{source_name}] 错误: {e}")
+        source_counts = {}
+        # 并发执行所有 fetcher
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            future_to_source = {}
+            for source_name, fetcher in self.fetchers.items():
+                future_to_source[pool.submit(fetcher.fetch)] = source_name
+
+            for future in as_completed(future_to_source):
+                source_name = future_to_source[future]
+                try:
+                    items = future.result()
+                    new_count = self.store.upsert_many(source_name, items)
+                    logger.info(f"[{source_name}] 获取 {len(items)} 条，新增/更新 {new_count} 条")
+                    source_counts[source_name] = new_count
+                    total_new += new_count
+                except Exception as e:
+                    logger.error(f"[{source_name}] 错误: {e}")
+                    source_counts[source_name] = 0
 
         if total_new > 0:
             self.notifier.send(
                 title=f"监视器 - {total_new} 条新内容",
                 body=f"本轮共发现 {total_new} 条新条目",
-                items=[f"[{source_name}] {total_new} 条" for source_name in self.fetchers],
+                items=[f"[{src}] {cnt} 条" for src, cnt in source_counts.items() if cnt > 0],
             )
 
         # 清理过期数据
         self.store.cleanup_old()
-        print(f"\n  [完成] 新增 {total_new} 条, 总计 {self.store.stats()['total']} 条")
+        logger.info(f"本轮完成，新增/更新 {total_new} 条，总计 {self.store.stats()['total']} 条")
 
     def start_scheduler(self):
         """启动定时调度"""
@@ -138,10 +139,10 @@ class Monitor:
                 name=source_name,
                 replace_existing=True,
             )
-            print(f"  [{source_name}] 每 {minutes} 分钟抓取一次")
+            logger.info(f"[{source_name}] 每 {minutes} 分钟抓取一次")
 
         scheduler.start()
-        print(f"\n  调度器已启动，共 {len(self.fetchers)} 个任务\n")
+        logger.info(f"调度器已启动，共 {len(self.fetchers)} 个任务")
 
         # 立即执行一轮
         self.run_once()
@@ -150,39 +151,34 @@ class Monitor:
             while True:
                 time.sleep(60)
         except KeyboardInterrupt:
-            print("\n  正在停止...")
+            logger.info("正在停止...")
             scheduler.shutdown()
             self.store.close()
-            print("  已停止")
+            logger.info("已停止")
 
     def _job_wrapper(self, source_name: str, fetcher):
         """定时任务包装器"""
-        print(f"\n  [{source_name}] 定时任务触发 ({datetime.now().strftime('%H:%M:%S')})")
+        logger.info(f"[{source_name}] 定时任务触发")
         try:
             items = fetcher.fetch()
-            new_count = 0
-            for item in items:
-                is_new = self.store.upsert(
-                    source=source_name,
-                    title=item.get("title", ""),
-                    url=item.get("url", ""),
-                    description=item.get("description", ""),
-                    tags=item.get("tags", []),
-                    extra=item.get("extra", {}),
-                )
-                if is_new:
-                    new_count += 1
-            print(f"  [{source_name}] 获取 {len(items)} 条，新增 {new_count} 条")
+            new_count = self.store.upsert_many(source_name, items)
+            logger.info(f"[{source_name}] 获取 {len(items)} 条，新增/更新 {new_count} 条")
             if new_count > 10:
                 self.notifier.send(
                     title=f"[{source_name}] {new_count} 条新内容",
-                    items=[item.get("title","") for item in items[:5]],
+                    items=[item.get("title", "") for item in items[:5]],
                 )
         except Exception as e:
-            print(f"  [{source_name}] 定时任务错误: {e}")
+            logger.error(f"[{source_name}] 定时任务错误: {e}")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
     parser = argparse.ArgumentParser(description="统一事件监视器")
     parser.add_argument("--once", action="store_true", help="只运行一轮后退出")
     parser.add_argument("--config", default=CONFIG_PATH, help="配置文件路径")
@@ -194,6 +190,6 @@ if __name__ == "__main__":
     if args.once:
         monitor.run_once()
         monitor.store.close()
-        print("  单次运行完成")
+        logger.info("单次运行完成")
     else:
         monitor.start_scheduler()
